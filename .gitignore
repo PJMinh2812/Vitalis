@@ -55,3 +55,13 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Visual Studio
+.vs/
+*.user
+
+# Project planning docs / DB reference scripts - not part of the shipped codebase
+material/
+
+# Claude Code - local-only, not shared via source control
+.claude/
