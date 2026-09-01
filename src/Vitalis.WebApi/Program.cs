@@ -1,4 +1,10 @@
+using Microsoft.EntityFrameworkCore;
+using Vitalis.Infrastructure.Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<VitalisDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
