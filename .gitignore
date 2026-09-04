@@ -66,3 +66,6 @@ review db/
 
 # Claude Code - local-only, not shared via source control
 .claude/
+
+# Serilog file sink output
+**/logs/
