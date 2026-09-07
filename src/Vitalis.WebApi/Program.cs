@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using Serilog;
-using Vitalis.Infrastructure.Persistence;
+using Vitalis.Application;
+using Vitalis.Infrastructure;
+using Vitalis.WebApi.Filters;
 using Vitalis.WebApi.Middleware;
 
 // Bootstrap logger: catches any failure that happens before the host (and its
@@ -18,10 +19,11 @@ try
         .ReadFrom.Services(services)
         .Enrich.FromLogContext());
 
-    builder.Services.AddDbContext<VitalisDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    builder.Services.AddApplication();
+    builder.Services.AddInfrastructure(builder.Configuration);
 
     // Add services to the container.
+    builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
     builder.Services.AddProblemDetails();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
@@ -39,6 +41,8 @@ try
     app.UseSerilogRequestLogging();
 
     app.UseHttpsRedirection();
+
+    app.MapControllers();
 
     var summaries = new[]
     {
