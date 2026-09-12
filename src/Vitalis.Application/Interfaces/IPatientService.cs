@@ -17,5 +17,10 @@ public interface IPatientService
     // VC-09: reception creating a walk-in/phone patient with just a name and phone.
     Task<PatientDto> QuickCreateAsync(QuickCreatePatientRequest request, CancellationToken cancellationToken = default);
 
+    // VC-02: on self-registration, link the new account to a pre-existing walk-in
+    // profile with the same phone (so appointment history isn't lost), or create
+    // a fresh one if none exists.
+    Task<PatientDto> LinkOrCreateAsync(int userId, string fullName, string phone, DateOnly? dateOfBirth, CancellationToken cancellationToken = default);
+
     Task<PatientDto> UpdateAsync(int id, UpdatePatientRequest request, CancellationToken cancellationToken = default);
 }

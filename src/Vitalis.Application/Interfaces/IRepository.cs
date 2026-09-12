@@ -12,6 +12,8 @@ public interface IRepository<T> where T : BaseEntity
 
     Task<T?> FirstOrDefaultAsync(IQueryable<T> query, CancellationToken cancellationToken = default);
 
+    Task<List<T>> ToListAsync(IQueryable<T> query, CancellationToken cancellationToken = default);
+
     Task<PagedResult<T>> GetPagedAsync(IQueryable<T> query, int page, int pageSize, CancellationToken cancellationToken = default);
 
     Task AddAsync(T entity, CancellationToken cancellationToken = default);

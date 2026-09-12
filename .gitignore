@@ -69,3 +69,6 @@ review db/
 
 # Serilog file sink output
 **/logs/
+
+# Q&A notes generated for the mentor-mode learning flow — not part of the graded codebase
+learning-notes/

@@ -17,6 +17,9 @@ public class Repository<T>(VitalisDbContext context) : IRepository<T> where T : 
     public Task<T?> FirstOrDefaultAsync(IQueryable<T> query, CancellationToken cancellationToken = default) =>
         query.FirstOrDefaultAsync(cancellationToken);
 
+    public Task<List<T>> ToListAsync(IQueryable<T> query, CancellationToken cancellationToken = default) =>
+        query.ToListAsync(cancellationToken);
+
     public async Task<PagedResult<T>> GetPagedAsync(IQueryable<T> query, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         page = Math.Max(page, 1);

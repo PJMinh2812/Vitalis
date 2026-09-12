@@ -96,6 +96,30 @@ public class PatientService(IUnitOfWork unitOfWork) : IPatientService
         return patient.ToDto();
     }
 
+    public async Task<PatientDto> LinkOrCreateAsync(int userId, string fullName, string phone, DateOnly? dateOfBirth, CancellationToken cancellationToken = default)
+    {
+        var repository = unitOfWork.Repository<Patient>();
+        var existing = await repository.FirstOrDefaultAsync(
+            repository.Query().Where(p => p.Phone == phone && p.UserId == null), cancellationToken);
+
+        if (existing is not null)
+        {
+            existing.UserId = userId;
+            existing.UpdatedAt = DateTime.UtcNow;
+            repository.Update(existing);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return existing.ToDto();
+        }
+
+        return await SaveNewPatientAsync(new Patient
+        {
+            UserId = userId,
+            FullName = fullName,
+            Phone = phone,
+            DateOfBirth = dateOfBirth,
+        }, cancellationToken);
+    }
+
     // Two round trips, on purpose: the code is derived from the IDENTITY value SQL
     // Server assigns on insert, so it can never collide even if two patients are
     // created at the exact same time (see the AppointmentStatus/slot discussion for
