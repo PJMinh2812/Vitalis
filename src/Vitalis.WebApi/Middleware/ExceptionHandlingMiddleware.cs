@@ -36,6 +36,9 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             if (ex is ValidationException validationException)
                 problemDetails.Extensions["errors"] = validationException.Errors;
 
+            if (ex is SlotUnavailableException slotException)
+                problemDetails.Extensions["availableSlots"] = slotException.AvailableSlots;
+
             await problemDetailsService.WriteAsync(new ProblemDetailsContext
             {
                 HttpContext = context,
@@ -49,7 +52,8 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         NotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
         ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
         ValidationException => (StatusCodes.Status400BadRequest, "Validation Failed"),
-        UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
+        UnauthorizedException or UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
+        ForbiddenException => (StatusCodes.Status403Forbidden, "Forbidden"),
         _ => (StatusCodes.Status500InternalServerError, "Internal Server Error"),
     };
 }
