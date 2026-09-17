@@ -6,4 +6,7 @@
     <Project Path="src/Vitalis.Web/Vitalis.Web.csproj" />
     <Project Path="src/Vitalis.WebApi/Vitalis.WebApi.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Vitalis.Application.UnitTests/Vitalis.Application.UnitTests.csproj" />
+  </Folder>
 </Solution>
