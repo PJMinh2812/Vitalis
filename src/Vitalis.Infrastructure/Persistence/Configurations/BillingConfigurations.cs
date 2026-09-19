@@ -51,8 +51,12 @@ public class InvoiceItemConfiguration : IEntityTypeConfiguration<InvoiceItem>
     {
         b.ToTable("invoice_items", "billing", t =>
         {
-            t.HasCheckConstraint("CK_invoice_items_exactly_one_ref",
-                "(CASE WHEN medical_record_service_id IS NOT NULL THEN 1 ELSE 0 END) + (CASE WHEN medicine_id IS NOT NULL THEN 1 ELSE 0 END) = 1");
+            // Relaxed from db.sql's "exactly one of" to "at most one of": a plain
+            // line item (the visit's consultation fee, from doctors.consultation_fee
+            // via appointments.fee_snapshot) references neither a service nor a
+            // medicine — see the finalize logic in MedicalRecordsService.
+            t.HasCheckConstraint("CK_invoice_items_at_most_one_ref",
+                "(CASE WHEN medical_record_service_id IS NOT NULL THEN 1 ELSE 0 END) + (CASE WHEN medicine_id IS NOT NULL THEN 1 ELSE 0 END) <= 1");
             t.HasCheckConstraint("CK_invoice_items_quantity", "quantity > 0");
             t.HasCheckConstraint("CK_invoice_items_amount", "amount >= 0");
             t.HasCheckConstraint("CK_invoice_items_discount", "discount_amount >= 0");
