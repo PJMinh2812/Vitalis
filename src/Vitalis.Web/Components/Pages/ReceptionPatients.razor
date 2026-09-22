@@ -1,0 +1,596 @@
+@page "/reception/patients"
+@layout ReceptionLayout
+
+<PageTitle>Hồ sơ bệnh nhân · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full">
+<!-- Top Context Header & Breadcrumb -->
+<div class="px-space-xl pt-space-lg pb-space-md flex flex-col gap-2">
+<!-- Breadcrumb -->
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="hover:text-primary cursor-pointer transition-colors">Bàn tiếp đón</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="hover:text-primary cursor-pointer transition-colors">Danh sách bệnh nhân</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-semibold">Hồ sơ BN0012</span>
+</div>
+<!-- Title Block with Clinical Stats Mini-Pills -->
+<div class="flex items-end justify-between flex-wrap gap-4 pt-1">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Quản lý Hồ sơ Bệnh nhân</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Tra cứu, tạo mới và cập nhật thông tin hành chính, thẻ BHYT và tiền sử dị ứng</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high/60 text-on-surface">
+<span class="material-symbols-outlined text-[18px] text-primary">id_card</span>
+<span class="font-label-sm text-label-sm">CCCD / VNeID cấp độ 2: <strong class="text-tertiary">Đã xác thực</strong></span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high/60 text-on-surface">
+<span class="material-symbols-outlined text-[18px] text-tertiary-container">health_and_safety</span>
+<span class="font-label-sm text-label-sm">Cập nhật lúc: <strong>08:45, 24/10/2024</strong></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Master - Detail Main Frame -->
+<div class="px-space-xl pb-space-xl grid grid-cols-12 gap-space-lg items-start">
+<!-- LEFT PANEL: Search & Record Selector (Width ~ 340px -> 3.5 cols on xl) -->
+<div class="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-space-md">
+<!-- Primary Action Card: Quick search + New Button -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-3">
+<button class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-on-primary py-2.5 px-4 rounded-lg font-label-md text-label-md transition-all shadow-sm active:scale-[0.99]" type="button">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+<span>+ Tạo bệnh nhân mới</span>
+</button>
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">search</span>
+<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Tìm theo tên, SĐT, CCCD hoặc mã BN..." type="text" value="Nguyễn Văn An"/>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant px-1 font-label-xs text-label-xs">
+<span>Kết quả tra cứu: <strong>4 hồ sơ</strong></span>
+<button class="text-primary hover:underline flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+            Bộ lọc
+          </button>
+</div>
+</div>
+<!-- Patient Cards List -->
+<div class="flex flex-col gap-2.5">
+<!-- Patient Item 1: ACTIVE / SELECTED -->
+<div class="relative bg-surface-container-lowest rounded-xl p-3.5 shadow-sm bg-gradient-to-r from-primary-fixed/25 via-surface-container-lowest to-surface-container-lowest cursor-pointer transition-all">
+<div class="absolute left-0 top-3 bottom-3 w-1.5 rounded-r bg-primary"></div>
+<div class="flex items-start justify-between gap-2 pl-2">
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md flex items-center justify-center shrink-0">
+                AN
+              </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">Nguyễn Văn An</span>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">Đang xem</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm mt-0.5">
+<span class="font-mono font-semibold text-primary">BN0012</span>
+<span>•</span>
+<span>1988 (38t, Nam)</span>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+</div>
+<div class="mt-3 pt-2.5 pl-2 flex items-center justify-between text-on-surface-variant font-label-xs text-label-xs bg-surface-container-low/50 rounded-lg p-2">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-tertiary">call</span>
+              0912 345 678
+            </span>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-semibold">3 dị ứng</span>
+</div>
+</div>
+<!-- Patient Item 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-3.5 shadow-sm hover:bg-surface-container-low/60 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-lg bg-surface-container-high text-on-surface font-title-md text-title-md flex items-center justify-center shrink-0">
+                LH
+              </div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">Lê Thị Lan Hương</span>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm mt-0.5">
+<span class="font-mono font-semibold">BN0024</span>
+<span>•</span>
+<span>1995 (31t, Nữ)</span>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[18px]">chevron_right</span>
+</div>
+<div class="mt-3 pt-2 flex items-center justify-between text-on-surface-variant font-label-xs text-label-xs">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">call</span>
+              0988 123 456
+            </span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">Không dị ứng</span>
+</div>
+</div>
+<!-- Patient Item 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-3.5 shadow-sm hover:bg-surface-container-low/60 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-lg bg-surface-container-high text-on-surface font-title-md text-title-md flex items-center justify-center shrink-0">
+                TD
+              </div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">Trần Mạnh Dũng</span>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm mt-0.5">
+<span class="font-mono font-semibold">BN0031</span>
+<span>•</span>
+<span>1976 (50t, Nam)</span>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[18px]">chevron_right</span>
+</div>
+<div class="mt-3 pt-2 flex items-center justify-between text-on-surface-variant font-label-xs text-label-xs">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">call</span>
+              0903 789 012
+            </span>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-semibold">Tăng huyết áp</span>
+</div>
+</div>
+<!-- Patient Item 4 -->
+<div class="bg-surface-container-lowest rounded-xl p-3.5 shadow-sm hover:bg-surface-container-low/60 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-lg bg-surface-container-high text-on-surface font-title-md text-title-md flex items-center justify-center shrink-0">
+                TM
+              </div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">Hoàng Thảo My</span>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm mt-0.5">
+<span class="font-mono font-semibold">BN0040</span>
+<span>•</span>
+<span>2002 (24t, Nữ)</span>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[18px]">chevron_right</span>
+</div>
+<div class="mt-3 pt-2 flex items-center justify-between text-on-surface-variant font-label-xs text-label-xs">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">call</span>
+              0934 567 890
+            </span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant">Hồ sơ mới</span>
+</div>
+</div>
+</div>
+<!-- Quick Support / Policy Tip Card -->
+<div class="p-3.5 rounded-xl bg-surface-container-low text-on-surface flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
+<div class="flex flex-col gap-0.5 font-body-sm text-body-sm">
+<span class="font-label-sm text-label-sm font-semibold">Quy chuẩn dữ liệu y tế</span>
+<span class="text-on-surface-variant leading-snug">Vui lòng rà soát số định danh CCCD và BHYT khớp với cơ sở dữ liệu quốc gia trước khi in phiếu khám.</span>
+</div>
+</div>
+</div>
+<!-- RIGHT PANEL: Record Details Workbench (Main Form Canvas) -->
+<div class="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-space-lg">
+<!-- Top Record Banner Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex items-center justify-between flex-wrap gap-4">
+<div class="flex items-center gap-4">
+<div class="relative">
+<div class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center text-on-primary font-display text-headline-lg shadow-sm">
+              AN
+            </div>
+<span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-tertiary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[13px]">verified</span>
+</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3 flex-wrap">
+<h2 class="font-headline-md text-headline-md text-on-surface font-semibold tracking-tight">
+                Hồ sơ: Nguyễn Văn An - <span class="font-mono text-primary font-bold">BN0012</span>
+</h2>
+<!-- Badges -->
+<span class="font-label-xs text-label-xs px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">person_off</span>
+                Vãng lai (Chưa kích hoạt tài khoản online)
+              </span>
+<span class="font-label-xs text-label-xs px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">card_membership</span>
+                Đã liên kết BHYT
+              </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-4 flex-wrap">
+<span>Đăng ký lần đầu: <strong>14/03/2022</strong></span>
+<span>•</span>
+<span>Lần khám gần nhất: <strong>12/09/2024 (Khoa Nội tổng quát)</strong></span>
+<span>•</span>
+<span>Bác sĩ phụ trách: <strong>BS. CKII Lê Hoàng Nam</strong></span>
+</p>
+</div>
+</div>
+<!-- Quick Top Utility Action -->
+<div class="flex items-center gap-2">
+<button class="px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span>Nhật ký sửa</span>
+</button>
+<button class="px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+<span>Quét thẻ BHYT/CCCD</span>
+</button>
+</div>
+</div>
+<!-- SECTION 1: Administrative Patient Information Form -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-5">
+<div class="flex items-center justify-between pb-1">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">1. Thông tin hành chính bệnh nhân</h3>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant italic">Dấu (*) là trường thông tin bắt buộc</span>
+</div>
+<form class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4">
+<!-- Field: Mã bệnh nhân (Readonly with lock) -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface flex items-center justify-between">
+<span>Mã bệnh nhân</span>
+<span class="material-symbols-outlined text-[15px] text-outline">lock</span>
+</label>
+<div class="h-10 px-3 rounded-lg bg-surface-container-high/50 text-on-surface font-mono font-semibold flex items-center select-none cursor-not-allowed">
+              BN0012
+            </div>
+</div>
+<!-- Field: Họ và tên -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">
+              Họ và tên <span class="text-error">*</span>
+</label>
+<input class="h-10 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" type="text" value="Nguyễn Văn An"/>
+</div>
+<!-- Field: Giới tính (Radio) -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">
+              Giới tính <span class="text-error">*</span>
+</label>
+<div class="h-10 flex items-center gap-4 px-2">
+<label class="flex items-center gap-2 cursor-pointer font-body-sm text-body-sm">
+<input checked="" class="accent-primary w-4 h-4" name="gender" type="radio" value="nam"/>
+<span class="font-medium text-on-surface">Nam</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer font-body-sm text-body-sm">
+<input class="accent-primary w-4 h-4" name="gender" type="radio" value="nu"/>
+<span class="text-on-surface-variant">Nữ</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer font-body-sm text-body-sm">
+<input class="accent-primary w-4 h-4" name="gender" type="radio" value="khac"/>
+<span class="text-on-surface-variant">Khác</span>
+</label>
+</div>
+</div>
+<!-- Field: Ngày sinh -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">
+              Ngày sinh <span class="text-error">*</span>
+</label>
+<div class="relative">
+<input class="w-full h-10 px-3 pr-16 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" type="text" value="15/08/1988"/>
+<span class="absolute right-3 top-2.5 font-label-xs text-label-xs text-on-surface-variant font-semibold">38 tuổi</span>
+</div>
+</div>
+<!-- Field: Số điện thoại -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">
+              Số điện thoại <span class="text-error">*</span>
+</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">phone</span>
+<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" type="tel" value="0912 345 678"/>
+</div>
+</div>
+<!-- Field: Email -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">
+              Email liên hệ
+            </label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">mail</span>
+<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" type="email" value="an.nguyen@@example.com"/>
+</div>
+</div>
+<!-- Field: CCCD / Định danh -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">
+              Số CCCD / Mã định danh
+            </label>
+<div class="relative">
+<input class="w-full h-10 px-3 pr-8 rounded-lg bg-surface-container-low text-on-surface font-mono font-medium focus:outline-none focus:ring-1 focus:ring-primary" type="text" value="001088009988"/>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-tertiary-container text-[18px]">verified</span>
+</div>
+</div>
+<!-- Field: Thẻ BHYT (Spans 2 cols for rich data) -->
+<div class="flex flex-col gap-1.5 md:col-span-2">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface">
+                Số thẻ Bảo hiểm Y tế (BHYT)
+              </label>
+<span class="font-label-xs text-label-xs text-tertiary-container font-semibold">Mức hưởng BHYT: 80% • Tuyến đúng</span>
+</div>
+<div class="relative flex items-center">
+<input class="w-full h-10 px-3 pr-44 rounded-lg bg-surface-container-low text-on-surface font-mono font-medium focus:outline-none focus:ring-1 focus:ring-primary" type="text" value="DN4790123456789"/>
+<div class="absolute right-2 px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-label-xs text-label-xs">
+                Hạn dùng: 31/12/2026
+              </div>
+</div>
+</div>
+<!-- Field: Địa chỉ thường trú (Full row) -->
+<div class="flex flex-col gap-1.5 md:col-span-2 lg:col-span-3">
+<label class="font-label-md text-label-md text-on-surface">
+              Địa chỉ thường trú (theo sổ hộ khẩu / CCCD)
+            </label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" type="text" value="142 Nguyễn Thị Minh Khai, Phường Võ Thị Sáu, Quận 3, TP. Hồ Chí Minh"/>
+</div>
+<!-- Field: Nhóm máu -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">
+              Nhóm máu & Yếu tố Rhesus
+            </label>
+<div class="relative">
+<select class="w-full h-10 px-3 pr-8 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md appearance-none focus:outline-none focus:ring-1 focus:ring-primary">
+<option selected="" value="O+">O+ (Rh dương)</option>
+<option value="O-">O- (Rh âm)</option>
+<option value="A+">A+ (Rh dương)</option>
+<option value="A-">A- (Rh âm)</option>
+<option value="B+">B+ (Rh dương)</option>
+<option value="B-">B- (Rh âm)</option>
+<option value="AB+">AB+ (Rh dương)</option>
+<option value="AB-">AB- (Rh âm)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-outline pointer-events-none text-[20px]">arrow_drop_down</span>
+</div>
+</div>
+<!-- Field: Người liên hệ khẩn cấp (Spans 2 cols) -->
+<div class="flex flex-col gap-1.5 md:col-span-2">
+<label class="font-label-md text-label-md text-on-surface">
+              Người liên hệ khẩn cấp (Thân nhân)* <span class="text-error">*</span>
+</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">contact_emergency</span>
+<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" type="text" value="Nguyễn Thị Bích (Vợ) - SĐT: 0918 888 999"/>
+</div>
+</div>
+</form>
+</div>
+<!-- SECTION 2: Allergies & Clinical Safety Alerts (CRITICAL) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-4">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-error-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">2. Tiền sử dị ứng & Cảnh báo an toàn người bệnh</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Dữ liệu an toàn đồng bộ tự động tới màn hình kê đơn của Bác sĩ và Dược sĩ</p>
+</div>
+</div>
+<button class="px-3.5 py-2 rounded-lg bg-error-container hover:bg-error/20 text-on-error-container font-label-md text-label-md font-semibold flex items-center gap-1.5 transition-colors shadow-sm" onclick="document.getElementById('allergy-modal').classList.remove('hidden')" type="button">
+<span class="material-symbols-outlined text-[18px]">add_alert</span>
+<span>+ Thêm dị ứng</span>
+</button>
+</div>
+<!-- Clinical Safety Table -->
+<div class="overflow-hidden rounded-lg bg-surface-container-low/40">
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
+<th class="py-3 px-4">Dị nguyên (Tác nhân)</th>
+<th class="py-3 px-4">Phân loại</th>
+<th class="py-3 px-4">Mức độ nghiêm trọng</th>
+<th class="py-3 px-4">Biểu hiện lâm sàng & Ghi chú</th>
+<th class="py-3 px-4 text-right">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body-sm text-body-sm">
+<!-- Row 1: Penicillin (Severe) -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low/50 transition-colors">
+<td class="py-3.5 px-4 font-semibold text-error flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">emergency</span>
+<span>Penicillin</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">Kháng sinh nhóm Beta-lactam</td>
+<td class="py-3.5 px-4">
+<span class="px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-xs text-label-xs font-bold inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                      Nặng (Sốc phản vệ)
+                    </span>
+</td>
+<td class="py-3.5 px-4 max-w-xs text-on-surface-variant leading-relaxed">
+                    Nổi mề đay toàn thân, tụt huyết áp, khó thở cấp khi dùng đường tiêm năm 2021. Chống chỉ định tuyệt đối nhóm Cephalosporin thế hệ I.
+                  </td>
+<td class="py-3.5 px-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors" title="Chỉnh sửa">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 rounded hover:bg-error-container text-on-surface-variant hover:text-error transition-colors" title="Xoá mục này">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Hải sản (Moderate) -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low/50 transition-colors">
+<td class="py-3.5 px-4 font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-tertiary">set_meal</span>
+<span>Hải sản (Tôm, cua biển)</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">Thực phẩm</td>
+<td class="py-3.5 px-4">
+<span class="px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-xs text-label-xs font-bold inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                      Vừa
+                    </span>
+</td>
+<td class="py-3.5 px-4 max-w-xs text-on-surface-variant leading-relaxed">
+                    Ngứa ran cổ họng, nổi mẩn đỏ quanh miệng, đau bụng quặn thắt sau khi ăn khoảng 30 phút.
+                  </td>
+<td class="py-3.5 px-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors" title="Chỉnh sửa">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 rounded hover:bg-error-container text-on-surface-variant hover:text-error transition-colors" title="Xoá mục này">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Aspirin (Mild) -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low/50 transition-colors">
+<td class="py-3.5 px-4 font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-secondary">medication</span>
+<span>Aspirin (NSAIDs)</span>
+</td>
+<td class="py-3.5 px-4 text-on-surface-variant">Thuốc giảm đau hạ sốt</td>
+<td class="py-3.5 px-4">
+<span class="px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface font-label-xs text-label-xs font-bold inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                      Nhẹ
+                    </span>
+</td>
+<td class="py-3.5 px-4 max-w-xs text-on-surface-variant leading-relaxed">
+                    Buồn nôn nhẹ, ợ nóng kích ứng dạ dày. Không có biểu hiện co thắt phế quản hay phát ban.
+                  </td>
+<td class="py-3.5 px-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors" title="Chỉnh sửa">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 rounded hover:bg-error-container text-on-surface-variant hover:text-error transition-colors" title="Xoá mục này">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Clinical Warning Footnote -->
+<div class="flex items-center gap-2 px-3 py-2 bg-error-container/40 rounded-lg text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[18px] text-error shrink-0">report</span>
+<span>Bệnh nhân có phản ứng sốc phản vệ với Penicillin. Cảnh báo tự động đã được ghim vào bệnh án ngoại trú.</span>
+</div>
+</div>
+<!-- SECTION 3: Persistent Action Bar at Bottom -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex items-center justify-between flex-wrap gap-3">
+<div class="flex items-center gap-2">
+<button class="px-4 py-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-primary font-label-md text-label-md font-semibold flex items-center gap-2 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">medical_services</span>
+<span>Xem lịch sử khám bệnh</span>
+</button>
+<button class="px-4 py-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold flex items-center gap-2 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">print</span>
+<span>In phiếu thông tin / Thẻ khám bệnh</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-on-surface-variant font-label-xs text-label-xs hidden sm:inline">Thay đổi chưa lưu: <strong>0</strong></span>
+<button class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold flex items-center gap-2 transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">save</span>
+<span>+ Lưu thay đổi hồ sơ</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- MODAL: Add New Allergy Form (Simulated Functional Overlay) -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm" id="allergy-modal">
+<div class="w-full max-w-xl bg-surface-container-lowest rounded-xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+<!-- Modal Header -->
+<div class="p-space-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-error-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[20px]">add_alert</span>
+</div>
+<div>
+<h4 class="font-title-md text-title-md text-on-surface font-bold">Thêm thông tin dị ứng mới</h4>
+<p class="font-label-xs text-label-xs text-on-surface-variant">BN0012 - Nguyễn Văn An</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-container-high text-on-surface-variant transition-colors" onclick="document.getElementById('allergy-modal').classList.add('hidden')" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="p-space-lg flex flex-col gap-4">
+<!-- Field 1: Dị nguyên -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface font-medium">
+            Tên dị nguyên / Tác nhân dị ứng <span class="text-error">*</span>
+</label>
+<input class="h-10 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Ví dụ: Cefalexin, Đậu phộng, Phấn hoa..." type="text"/>
+</div>
+<!-- Field 2: Loại dị nguyên & Mức độ (2 cols) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface font-medium">
+              Phân loại dị nguyên <span class="text-error">*</span>
+</label>
+<div class="relative">
+<select class="w-full h-10 px-3 pr-8 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md appearance-none focus:outline-none focus:ring-1 focus:ring-primary">
+<option value="thuoc">Thuốc điều trị</option>
+<option value="thucpham">Thực phẩm</option>
+<option value="moitruong">Môi trường / Thời tiết</option>
+<option value="khac">Khác</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-outline pointer-events-none text-[20px]">arrow_drop_down</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface font-medium">
+              Mức độ nghiêm trọng <span class="text-error">*</span>
+</label>
+<div class="relative">
+<select class="w-full h-10 px-3 pr-8 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md appearance-none focus:outline-none focus:ring-1 focus:ring-primary">
+<option class="text-error font-semibold" value="nang">Nặng (Sốc phản vệ / Nguy kịch)</option>
+<option value="vua">Vừa (Nổi mề đay, khó thở nhẹ)</option>
+<option value="nhe">Nhẹ (Ngứa, kích ứng nhẹ tiêu hóa)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-outline pointer-events-none text-[20px]">arrow_drop_down</span>
+</div>
+</div>
+</div>
+<!-- Field 3: Triệu chứng lâm sàng -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface font-medium">
+            Triệu chứng lâm sàng & Ghi chú xử trí
+          </label>
+<textarea class="p-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary resize-none" placeholder="Mô tả cụ thể biểu hiện khi tiếp xúc, thời gian khởi phát và hướng xử trí trước đây..." rows="3"></textarea>
+</div>
+<!-- Safe Check Notice -->
+<div class="p-3 rounded-lg bg-surface-container-high/60 flex items-start gap-2.5 text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[18px] text-tertiary-container shrink-0 mt-0.5">verified_user</span>
+<span>Dữ liệu này sẽ được gắn cờ đỏ trong hệ thống quản lý kho Dược để chặn phát nhầm nhóm thuốc.</span>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="p-space-lg bg-surface-container-low/60 flex items-center justify-end gap-3">
+<button class="px-4 py-2.5 rounded-lg bg-surface-container-highest hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" onclick="document.getElementById('allergy-modal').classList.add('hidden')" type="button">
+          Huỷ bỏ
+        </button>
+<button class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold flex items-center gap-1.5 transition-colors shadow-sm" onclick="document.getElementById('allergy-modal').classList.add('hidden')" type="button">
+<span class="material-symbols-outlined text-[18px]">check</span>
+<span>Lưu thông tin dị ứng</span>
+</button>
+</div>
+</div>
+</div>
+
+</div>
+<script src="js/pages/ReceptionPatients.js"></script>
