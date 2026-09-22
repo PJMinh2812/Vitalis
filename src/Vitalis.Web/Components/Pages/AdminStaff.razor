@@ -1,0 +1,758 @@
+@page "/admin/staff"
+@layout AdminLayout
+
+<PageTitle>Nhân sự &amp; ca trực · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full gap-space-lg">
+<!-- 1. Header & Executive Controls Toolbar -->
+<section class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<div class="flex flex-col gap-1.5">
+<div class="flex flex-wrap items-center gap-2">
+<span class="px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-xs text-label-xs tracking-wider font-semibold uppercase flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-on-primary-container animate-pulse"></span>
+          VC-29 • ISO 9001:2015 &amp; BYT Standard
+        </span>
+<span class="px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+          Hệ thống Phân ca &amp; Giám sát CCHN Tự Động
+        </span>
+<span class="text-on-surface-variant font-label-xs text-label-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+          Cập nhật: 24/10/2026 08:30:14
+        </span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+        Quản Lý Nhân Sự Y Tế &amp; Điều Phối Ca Trực Toàn Viện
+      </h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        Phân hệ điều hành Ban Giám Đốc • Giám sát an toàn kíp trực, định mức giờ làm và thẩm quyền chứng chỉ hành nghề.
+      </p>
+</div>
+<!-- Executive Action Suite -->
+<div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+        Xuất Bảng Trực (Excel/PDF)
+      </button>
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+        Cấu Hình Định Mức
+      </button>
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-secondary-container hover:bg-secondary text-on-secondary-container font-label-sm text-label-sm transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+        Xếp Ca Tự Động (AI)
+      </button>
+<button class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary/90 font-label-md text-label-md font-semibold transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+        + Bổ Sung Nhân Sự / Đổi Ca
+      </button>
+</div>
+</section>
+<!-- Filter & Time Segment Selection Ribbon -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-space-sm bg-surface-container-low p-space-sm rounded-xl">
+<div class="md:col-span-4 flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-xl shadow-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Khoảng thời gian</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Tuần 43 (20/10/2026 - 26/10/2026)</span>
+</div>
+<span class="ml-auto text-on-surface-variant material-symbols-outlined text-[18px]">expand_more</span>
+</div>
+<div class="md:col-span-4 flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-xl shadow-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">apartment</span>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Khoa / Phòng</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Toàn Viện (Tất cả 12 đơn vị)</span>
+</div>
+<span class="ml-auto text-on-surface-variant material-symbols-outlined text-[18px]">expand_more</span>
+</div>
+<div class="md:col-span-4 flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-xl shadow-sm">
+<span class="material-symbols-outlined text-tertiary text-[20px]">badge</span>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Khối chức danh</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Tất cả (BS, Điều dưỡng, KTV, DS)</span>
+</div>
+<span class="ml-auto text-on-surface-variant material-symbols-outlined text-[18px]">expand_more</span>
+</div>
+</section>
+<!-- 2. Top 4 KPIs Scorecards -->
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Card 1 -->
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Tổng Quân Số Đi Làm</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-display text-display text-on-surface font-bold">68</span>
+<span class="font-headline-sm text-headline-sm text-on-surface-variant">/ 74</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">group</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex flex-col gap-2 bg-surface-container-low -mx-space-md -mb-space-md p-space-md rounded-b-xl">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span class="text-on-surface-variant">4 nghỉ phép năm • 2 đào tạo CME</span>
+<span class="px-2 py-0.5 rounded-full bg-primary text-on-primary font-bold">91.9%</span>
+</div>
+<div class="w-full bg-surface-dim h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 91.9%"></div>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Kíp Trực Đêm Nay (24/10)</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-display text-display text-primary font-bold">12</span>
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">nhân sự chốt</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[24px]">bedtime</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex flex-col gap-1 bg-surface-container-low -mx-space-md -mb-space-md p-space-md rounded-b-xl">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span class="text-on-surface font-semibold">Trưởng kíp: BS.CKII Nguyễn Văn Linh</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-bold">PASS 100%</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">4 BS Chuyên khoa • 6 ĐD Cấp cứu • 2 KTV</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Định Mức &amp; Tải Giờ Làm</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-display text-display text-on-surface font-bold">94.6%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">an toàn</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-tertiary-fixed flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[24px]">health_and_safety</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex flex-col gap-1 bg-surface-container-low -mx-space-md -mb-space-md p-space-md rounded-b-xl">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span class="text-error font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">warning</span>
+            02 BS vượt ngưỡng &gt;48h/tuần
+          </span>
+<span class="text-on-surface-variant">Burnout Risk</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Đã gửi thông báo cân đối ca trực bù nghỉ</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Chứng Chỉ Hành Nghề (CCHN)</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-display text-display text-on-surface font-bold">100%</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Hợp lệ</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-primary-fixed-dim flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[24px]">verified_user</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex flex-col gap-1 bg-surface-container-low -mx-space-md -mb-space-md p-space-md rounded-b-xl">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span class="text-on-surface font-medium">03 chứng chỉ an toàn sắp hạn &lt;45 ngày</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold">GCP / CME</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Đã đăng ký lớp bồi dưỡng Sở Y Tế T11/2026</span>
+</div>
+</div>
+</section>
+<!-- 3. Active Incident Response & Safety Alert Banner -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- Live Shortage Alert & AI Recommendation -->
+<div class="lg:col-span-8 p-space-md rounded-xl bg-error-container text-on-error-container flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md shadow-sm">
+<div class="flex items-start gap-3">
+<div class="p-2 rounded-xl bg-error text-on-error mt-0.5">
+<span class="material-symbols-outlined text-[22px]">notification_important</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md font-bold">Cảnh báo: Khoa Cấp Cứu thiếu 01 Điều dưỡng ca chiều (14:00 - 22:00)</span>
+<span class="px-2 py-0.5 rounded-full bg-error text-on-error font-label-xs text-label-xs font-bold uppercase">Cấp thiết</span>
+</div>
+<p class="font-body-sm text-body-sm">
+            ĐD. Lê Thị Hòa xin nghỉ ốm đột xuất. <strong>AI Vitalis Đề Xuất:</strong> Tăng cường <strong>ĐD. Trần Thu Thủy</strong> từ Ngoại trú sang (công suất phòng khám chiều nay đạt 32%, đáp ứng tiêu chuẩn thay thế an toàn).
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
+<button class="w-full sm:w-auto px-4 py-2 rounded-xl bg-error text-on-error hover:bg-error/90 font-label-md text-label-md font-semibold transition-all" type="button">
+          Xác Nhận Điều Chuyển
+        </button>
+</div>
+</div>
+<!-- Ready On-Call Cardiac Interventional Alert -->
+<div class="lg:col-span-4 p-space-md rounded-xl bg-primary text-on-primary flex items-center justify-between gap-space-md shadow-sm">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-on-primary/15 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary-fixed text-[24px]">cardiology</span>
+</div>
+<div class="flex flex-col">
+<div class="font-label-xs text-label-xs text-on-primary-container tracking-wider uppercase font-semibold">Tình Trạng Sẵn Sàng 24/7</div>
+<div class="font-title-md text-title-md font-bold leading-tight mt-0.5">Kíp Tim Mạch &amp; Can Thiệp Cấp Cứu</div>
+<div class="font-body-sm text-body-sm text-on-primary/80 mt-0.5">BS.CKII Nguyễn Văn Linh + Ekip Gây mê</div>
+</div>
+</div>
+<span class="w-3 h-3 rounded-full bg-primary-fixed animate-ping shrink-0 mr-1"></span>
+</div>
+</section>
+<!-- 4. Interactive Weekly Roster Matrix (Tuần 43) -->
+<section class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<!-- Matrix Header Bar -->
+<div class="p-space-md flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm bg-surface-container-low">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-xl bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[20px]">view_timeline</span>
+</div>
+<div>
+<h2 class="font-title-md text-title-md text-on-surface font-bold">Ma Trận Lịch Trực &amp; Phân Ca Lâm Sàng Tuần 43</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Lưới phân ca chuẩn ISO/BYT - Nhấn vào ô để sửa ca, gán phòng khám hoặc ủy quyền kíp trực</p>
+</div>
+</div>
+<!-- Shift Legend Pills -->
+<div class="flex flex-wrap items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> Ca Sáng (07:00 - 15:00)
+        </span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span> Ca Chiều (14:30 - 21:30)
+        </span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-inverse-surface text-inverse-on-surface font-label-xs text-label-xs font-semibold">
+<span class="material-symbols-outlined text-[12px]">bedtime</span> Trực Đêm (21:00 - 07:00)
+        </span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface-variant font-label-xs text-label-xs font-semibold">
+<span class="w-2 h-2 rounded-full bg-outline"></span> On-Call
+        </span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
+          Nghỉ / Bù
+        </span>
+</div>
+</div>
+<!-- Matrix Grid Table -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse min-w-[1100px]">
+<thead>
+<tr class="bg-surface-container text-on-surface font-label-sm text-label-sm">
+<th class="p-3 w-72 sticky left-0 bg-surface-container z-20">Nhân Sự &amp; Phạm Vi Hoạt Động</th>
+<th class="p-3 text-center w-36">Thứ 2 <span class="block font-normal text-on-surface-variant font-label-xs">20/10</span></th>
+<th class="p-3 text-center w-36">Thứ 3 <span class="block font-normal text-on-surface-variant font-label-xs">21/10</span></th>
+<th class="p-3 text-center w-36">Thứ 4 <span class="block font-normal text-on-surface-variant font-label-xs">22/10</span></th>
+<th class="p-3 text-center w-36">Thứ 5 <span class="block font-normal text-on-surface-variant font-label-xs">23/10</span></th>
+<th class="p-3 text-center w-40 bg-primary-fixed/40 text-on-primary-fixed font-bold">
+<span class="inline-flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+                Hôm nay: Thứ 6
+              </span>
+<span class="block font-semibold text-primary font-label-xs">24/10/2026</span>
+</th>
+<th class="p-3 text-center w-36">Thứ 7 <span class="block font-normal text-on-surface-variant font-label-xs">25/10</span></th>
+<th class="p-3 text-center w-36">Chủ Nhật <span class="block font-normal text-on-surface-variant font-label-xs">26/10</span></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-sm text-body-sm">
+<!-- Row 1: BS.CKII Nguyễn Văn Linh -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-label-sm shrink-0">
+                  NL
+                </div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">BS.CKII Nguyễn Văn Linh</span>
+<span class="font-label-xs text-label-xs text-primary font-medium">Khoa Tim Mạch • BS-014</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 004819/BYT-CCHN</span>
+</div>
+</div>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Sáng • P.203
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Sáng • P.203
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Chiều • Can thiệp
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Sáng • P.203
+              </span>
+</td>
+<!-- Today Highlight -->
+<td class="p-2 text-center bg-primary-fixed/20">
+<span class="block p-1.5 rounded-lg bg-inverse-surface text-inverse-on-surface font-label-xs text-label-xs font-semibold shadow-sm">
+                Trực Đêm (Kíp trưởng)
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
+                Nghỉ bù trực
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Sáng • P.203
+              </span>
+</td>
+</tr>
+<!-- Row 2: BS.CKI Đặng Minh Tuấn -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-label-sm shrink-0">
+                  MT
+                </div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">BS.CKI Đặng Minh Tuấn</span>
+<span class="font-label-xs text-label-xs text-secondary font-medium">Trưởng khoa CĐHA • BS-022</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 019234/BYT-CCHN</span>
+</div>
+</div>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Đọc MRI/CT
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Đọc PACS
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Hội chẩn Liên viện
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Đọc PACS
+              </span>
+</td>
+<!-- Today -->
+<td class="p-2 text-center bg-primary-fixed/20">
+<span class="block p-1.5 rounded-lg bg-surface-container-highest text-on-surface-variant font-label-xs text-label-xs font-semibold">
+                Trực On-call CĐHA
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
+                Nghỉ cuối tuần
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Khám Chuyên gia
+              </span>
+</td>
+</tr>
+<!-- Row 3: ThS.BS Vũ Kiều Oanh -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-bold text-label-sm shrink-0">
+                  KO
+                </div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">ThS.BS Vũ Kiều Oanh</span>
+<span class="font-label-xs text-label-xs text-tertiary font-medium">Khoa Tiêu Hóa • BS-031</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 028445/BYT-CCHN</span>
+</div>
+</div>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Nội soi Sáng
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Nội soi Sáng
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Khám Ngoại trú
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Khám Ngoại trú
+              </span>
+</td>
+<!-- Today -->
+<td class="p-2 text-center bg-primary-fixed/20">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Nội soi Can thiệp
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
+                Nghỉ
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
+                Nghỉ
+              </span>
+</td>
+</tr>
+<!-- Row 4: DS.CKI Lê Hoàng Nam -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-label-sm shrink-0">
+                  HN
+                </div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">DS.CKI Lê Hoàng Nam</span>
+<span class="font-label-xs text-label-xs text-primary font-medium">Khoa Dược Bệnh Viện • DS-005</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 009214/BYT-CCDS</span>
+</div>
+</div>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Kho GSP • Nhập hàng
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Cấp phát BHYT
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Kho GSP • Vaccine
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Kiểm kê Thuốc GN
+              </span>
+</td>
+<!-- Today -->
+<td class="p-2 text-center bg-primary-fixed/20">
+<span class="block p-1.5 rounded-lg bg-inverse-surface text-inverse-on-surface font-label-xs text-label-xs font-semibold">
+                Trực Dược 24/7
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
+                Nghỉ bù
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Kho GSP
+              </span>
+</td>
+</tr>
+<!-- Row 5: KTV. Trần Quốc Hùng -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-label-sm shrink-0">
+                  QH
+                </div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">KTV. Trần Quốc Hùng</span>
+<span class="font-label-xs text-label-xs text-secondary font-medium">Trung tâm LIS &amp; QC • KT-018</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 031128/BYT-CCKTV</span>
+</div>
+</div>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                QC Máy Cobas
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Sinh hóa - Miễn dịch
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-inverse-surface text-inverse-on-surface font-label-xs text-label-xs font-semibold">
+                Trực Đêm LIS
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                QC Huyết học
+              </span>
+</td>
+<!-- Today -->
+<td class="p-2 text-center bg-primary-fixed/20">
+<span class="block p-1.5 rounded-lg bg-inverse-surface text-inverse-on-surface font-label-xs text-label-xs font-semibold">
+                Trực Cấp Cứu LIS
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
+                Nghỉ bù trực
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Chạy mẫu LIS
+              </span>
+</td>
+</tr>
+<!-- Row 6: ĐD. Phạm Thanh Vân -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-bold text-label-sm shrink-0">
+                  TV
+                </div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">ĐD. Phạm Thanh Vân</span>
+<span class="font-label-xs text-label-xs text-tertiary font-medium">Thăm dò CN &amp; ECG • DD-042</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 042918/BYT-CCDD</span>
+</div>
+</div>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Điện tim ECG
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Điện não EEG
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Hỗ trợ CĐHA
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Điện tim ECG
+              </span>
+</td>
+<!-- Today -->
+<td class="p-2 text-center bg-primary-fixed/20">
+<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+                Trực Đo Chức năng
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
+                Nghỉ
+              </span>
+</td>
+<td class="p-2 text-center">
+<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
+                Nghỉ
+              </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Matrix Footnote & Quick Summary -->
+<div class="p-space-sm bg-surface-container-low flex flex-wrap items-center justify-between text-on-surface-variant font-label-xs text-label-xs">
+<div class="flex items-center gap-4">
+<span>Hiển thị 6 / 74 nhân sự ưu tiên điều phối trực ban</span>
+<span>•</span>
+<span class="text-primary font-medium">Bảo mật chuẩn ISO 27799 y tế</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="text-primary hover:underline font-semibold flex items-center gap-1" type="button">
+          Xem toàn bộ 74 nhân sự
+          <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+<!-- 5. Bottom Panels: CCHN Supervision & Workload Analytics -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- Left Column: CCHN, CME & Regulatory Compliance (6 cols) -->
+<div class="lg:col-span-6 flex flex-col p-space-md rounded-xl bg-surface-container-lowest shadow-sm gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="p-2 rounded-xl bg-primary-fixed text-primary">
+<span class="material-symbols-outlined text-[20px]">verified</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Giám Sát CCHN &amp; Đào Tạo Y Khoa (CME)</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Quy định tối thiểu ≥ 24 tiết CME/năm (Thông tư BYT)</span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-xs text-label-xs font-bold">
+          Quý 4/2026
+        </span>
+</div>
+<!-- Training Progress Bars -->
+<div class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-surface-container-low">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Bác Sĩ</span>
+<span class="font-bold text-primary">92% đạt chuẩn</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 92%"></div>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">23/25 BS đủ 24 tín chỉ</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Điều Dưỡng</span>
+<span class="font-bold text-secondary">88% đạt chuẩn</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 88%"></div>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">28/32 ĐD đủ 24 tín chỉ</span>
+</div>
+</div>
+<!-- Pending Verification Table -->
+<div class="flex flex-col gap-2">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold uppercase tracking-wider">Hồ sơ thẩm định Sở Y Tế cần xử lý</span>
+<div class="flex flex-col divide-y divide-surface-container bg-surface-container-low rounded-xl p-2">
+<div class="py-2 px-2 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-[18px]">radiology</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface font-medium">BS.CKI Đặng Minh Tuấn</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Chứng chỉ An Toàn Bức Xạ Hạt Nhân</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-xs text-label-xs font-bold">Còn 24 ngày</span>
+</div>
+<div class="py-2 px-2 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">science</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface font-medium">DS.CKI Lê Hoàng Nam</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Thực hành tốt thử thuốc trên lâm sàng (GCP)</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-xs text-label-xs font-bold">Còn 41 ngày</span>
+</div>
+<div class="py-2 px-2 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[18px]">emergency</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface font-medium">ĐD. Trương Mỹ Lan</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Chứng chỉ Hồi sức Cấp cứu Nâng cao (ACLS)</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-xs text-label-xs font-bold">Đã nộp Sở Y Tế</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Workload & Executive Sign-off (6 cols) -->
+<div class="lg:col-span-6 flex flex-col justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm gap-space-md">
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="p-2 rounded-xl bg-secondary-fixed text-secondary">
+<span class="material-symbols-outlined text-[20px]">monitoring</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Phân Tích Tải Công Việc &amp; Hiệu Suất</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Cân bằng khối lượng lâm sàng, chống quá tải điều trị</span>
+</div>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Giới hạn BYT: ≤ 48h/tuần</span>
+</div>
+<!-- Inline Visual Comparison Bar Chart -->
+<div class="flex flex-col gap-2.5 mt-2 bg-surface-container-low p-3.5 rounded-xl">
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Lâm Sàng (BS Điều trị)</span>
+<span class="font-bold text-on-surface">44.5h / tuần</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 88%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Điều Dưỡng &amp; Chăm Sóc</span>
+<span class="font-bold text-on-surface">43.8h / tuần</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 86%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Cận Lâm Sàng (CĐHA, LIS)</span>
+<span class="font-bold text-on-surface">41.2h / tuần</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full rounded-full" style="width: 79%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Dược Bệnh Viện</span>
+<span class="font-bold text-on-surface">40.0h / tuần</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-surface-tint h-full rounded-full" style="width: 75%"></div>
+</div>
+</div>
+</div>
+<!-- Metrics Row -->
+<div class="grid grid-cols-2 gap-3 mt-1">
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Chỉ số Hài lòng NV (eNPS)</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold mt-0.5">+68 điểm</span>
+</div>
+<span class="material-symbols-outlined text-primary text-[28px]">sentiment_very_satisfied</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Tỷ lệ biến động nhân sự</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold mt-0.5">1.8% / năm</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[28px]">trending_down</span>
+</div>
+</div>
+</div>
+<!-- Executive CA Digital Signature Area -->
+<div class="p-3.5 rounded-xl bg-primary-fixed/30 flex flex-col sm:flex-row items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-xl bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[22px]">draw</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface font-bold">Ký Duyệt Bảng Trực Toàn Viện Tuần 43</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Người ký: BS.CKII Trần Nam Phong (Tổng Giám Đốc) • Viettel-CA</div>
+</div>
+</div>
+<button class="w-full sm:w-auto px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary/90 font-label-md text-label-md font-semibold transition-all flex items-center justify-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+          Ký Số Điện Tử
+        </button>
+</div>
+</div>
+</section>
+</div>
