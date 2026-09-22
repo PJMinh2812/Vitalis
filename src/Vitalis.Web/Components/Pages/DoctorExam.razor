@@ -1,0 +1,510 @@
+@page "/doctor/exam"
+@layout DoctorLayout
+
+<PageTitle>Khám bệnh · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full pb-16">
+<!-- PATIENT WORKBENCH STICKY HEADER -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm mb-space-lg overflow-hidden">
+<!-- Row 1: Demographics & Urgent Medical Warnings -->
+<div class="p-space-md flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-gradient-to-r from-surface-container-lowest via-surface-container-lowest to-surface-container-low/60">
+<div class="flex items-start sm:items-center gap-space-md min-w-0">
+<div class="relative shrink-0">
+<div class="w-14 h-14 rounded-xl bg-primary-container text-on-primary font-headline-md text-headline-md flex items-center justify-center font-bold shadow-sm">
+            04
+          </div>
+<span class="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full bg-secondary text-on-secondary font-label-xs text-label-xs">P.203</span>
+</div>
+<div class="min-w-0">
+<div class="flex flex-wrap items-center gap-x-space-sm gap-y-1">
+<h1 class="font-headline-sm text-headline-sm font-bold text-on-surface tracking-tight uppercase">PHẠM QUỐC BẢO</h1>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs">Nam • 58 tuổi (1968)</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-xs text-label-xs font-semibold">Mã: BN0048</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-secondary font-label-xs text-label-xs font-semibold">BHYT: DN4790123456789 (80% Đúng tuyến)</span>
+</div>
+<div class="flex items-center gap-2 mt-1.5 text-outline">
+<span class="font-label-xs text-label-xs flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[15px] text-primary">schedule</span>
+              Bắt đầu khám: 08:42 AM (Đã khám 14 phút)
+            </span>
+<span class="text-outline-variant">•</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Khám chuyên khoa: Nội Tim Mạch</span>
+</div>
+</div>
+</div>
+<!-- High Risk Clinical Alerts -->
+<div class="flex flex-wrap items-center gap-2">
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-error-container text-on-error-container shadow-xs">
+<span class="material-symbols-outlined text-[18px] text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs font-bold leading-none uppercase">DỊ ỨNG PENICILLIN</span>
+<span class="font-label-xs text-label-xs opacity-90 leading-tight">Tiền sử Sốc phản vệ độ III</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-error-container/70 text-on-error-container">
+<span class="material-symbols-outlined text-[16px]">egg_alt</span>
+<span class="font-label-xs text-label-xs font-semibold uppercase">Dị ứng Hải sản (Vừa)</span>
+</div>
+<div class="hidden 2xl:flex items-center gap-1 pl-2">
+<button class="p-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-colors" title="Lịch sử dị ứng" type="button">
+<span class="material-symbols-outlined text-[18px]">history_edu</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Row 2: Vitals Bar & Quick Action Controls -->
+<div class="px-space-md py-2.5 bg-surface-container-low/70 flex flex-wrap items-center justify-between gap-y-space-sm gap-x-space-md">
+<!-- Vitals Metrics Ribbon -->
+<div class="flex flex-wrap items-center gap-space-sm sm:gap-space-md text-on-surface">
+<div class="flex items-center gap-2 px-2.5 py-1 rounded-md bg-surface-container-lowest shadow-xs">
+<span class="material-symbols-outlined text-[17px] text-error">cardiology</span>
+<div>
+<span class="font-label-xs text-label-xs text-outline block leading-none">Huyết áp</span>
+<span class="font-label-md text-label-md font-bold text-error">145/90 <span class="font-label-xs text-label-xs font-normal">mmHg</span></span>
+</div>
+<span class="px-1.5 py-0.2 rounded bg-error-container text-on-error-container font-label-xs text-[10px] font-bold">Cao</span>
+</div>
+<div class="flex items-center gap-2 px-2.5 py-1 rounded-md bg-surface-container-lowest shadow-xs">
+<span class="material-symbols-outlined text-[17px] text-primary">favorite</span>
+<div>
+<span class="font-label-xs text-label-xs text-outline block leading-none">Mạch</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">88 <span class="font-label-xs text-label-xs font-normal text-outline">ck/p</span></span>
+</div>
+</div>
+<div class="flex items-center gap-2 px-2.5 py-1 rounded-md bg-surface-container-lowest shadow-xs">
+<span class="material-symbols-outlined text-[17px] text-tertiary">thermostat</span>
+<div>
+<span class="font-label-xs text-label-xs text-outline block leading-none">Nhiệt độ</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">36.8 <span class="font-label-xs text-label-xs font-normal text-outline">°C</span></span>
+</div>
+</div>
+<div class="flex items-center gap-2 px-2.5 py-1 rounded-md bg-surface-container-lowest shadow-xs">
+<span class="material-symbols-outlined text-[17px] text-secondary">air</span>
+<div>
+<span class="font-label-xs text-label-xs text-outline block leading-none">SpO2</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">97 <span class="font-label-xs text-label-xs font-normal text-outline">%</span></span>
+</div>
+</div>
+<div class="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-md bg-surface-container-lowest shadow-xs">
+<span class="material-symbols-outlined text-[17px] text-outline">accessibility</span>
+<div>
+<span class="font-label-xs text-label-xs text-outline block leading-none">Thể trạng (BMI)</span>
+<span class="font-label-md text-label-md font-semibold text-on-surface">168cm / 70kg • <span class="font-bold text-tertiary">24.8</span></span>
+</div>
+</div>
+<button class="text-primary hover:text-primary-container font-label-xs text-label-xs font-semibold flex items-center gap-1 transition-colors px-1" type="button">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+<span>Cập nhật sinh hiệu</span>
+</button>
+</div>
+<!-- Quick Action Operations -->
+<div class="flex items-center gap-1.5 shrink-0">
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary">folder_open</span>
+<span>Lịch sử EMR (4 ca)</span>
+</button>
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs" type="button">
+<span class="material-symbols-outlined text-[16px] text-outline">pause_circle</span>
+<span>Tạm hoãn</span>
+</button>
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs" type="button">
+<span class="material-symbols-outlined text-[16px] text-outline">sync_alt</span>
+<span>Chuyển buồng</span>
+</button>
+</div>
+</div>
+</section>
+<!-- MAIN 2-COLUMN CLINICAL WORKSPACE -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- LEFT COLUMN (60%): ANAMNESIS, CLINICAL EXAM & ICD-10 -->
+<div class="lg:col-span-7 flex flex-col gap-space-lg">
+<!-- SECTION 1: Chief Complaint & Medical History -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden p-space-md flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-5 rounded-full bg-primary"></span>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">1. Lý do khám &amp; Bệnh sử lâm sàng</h2>
+</div>
+<span class="font-label-xs text-label-xs text-outline bg-surface-container px-2 py-0.5 rounded">Ghi nhận lúc tiếp nhận</span>
+</div>
+<!-- Chief Complaint -->
+<div class="p-space-sm bg-surface-container-low rounded-lg">
+<label class="font-label-sm text-label-sm font-semibold text-primary block mb-1">
+            Lý do vào viện (Chief Complaint) <span class="text-error">*</span>
+</label>
+<p class="font-body-md text-body-md text-on-surface font-medium leading-relaxed">
+            Đau tức ngực trái âm ỉ từng cơn, cảm giác đè nặng sau xương ức, khó thở nhẹ khi leo cầu thang bộ 3 ngày nay.
+          </p>
+</div>
+<!-- History of Present Illness -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface flex items-center justify-between">
+<span>Bệnh sử chi tiết (HPI) <span class="text-error">*</span></span>
+<span class="text-outline font-normal font-label-xs text-label-xs">Mẫu gợi ý: Đau ngực / Tim mạch</span>
+</label>
+<textarea class="w-full p-space-sm rounded-lg bg-surface-container-lowest text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-xs resize-none" placeholder="Nhập tiến trình bệnh lý..." rows="3">Bệnh nhân khởi phát đau tức vùng ngực trái trước xương ức cách đây 3 ngày, cơn đau lan nhẹ lên vai trái và mặt trong cánh tay trái. Cơn kéo dài 5-10 phút, thường xuất hiện khi đi bộ nhanh hoặc gắng sức leo cầu thang tầng 2, nghỉ ngơi tĩnh thì triệu chứng thuyên giảm dần. Kèm mệt mỏi, vã mồ hôi nhẹ, cảm giác hồi hộp trống ngực. Không sốt, không ho ra máu.</textarea>
+</div>
+<!-- Past Medical History Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
+<div class="p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-1.5 text-primary mb-1">
+<span class="material-symbols-outlined text-[16px]">history</span>
+<span class="font-label-xs text-label-xs font-bold uppercase">Tiền sử bản thân</span>
+</div>
+<ul class="font-body-sm text-body-sm text-on-surface space-y-1 list-disc list-inside">
+<li>Tăng huyết áp 05 năm (Amlodipine 5mg/ngày - uống không đều).</li>
+<li>Rối loạn lipid máu hỗn hợp chẩn đoán 2024.</li>
+<li>Tiền sử viêm dạ dày tá tràng nhẹ (cách 1 năm).</li>
+<li>Không hút thuốc lá, uống bia rượu xã giao.</li>
+</ul>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-1.5 text-tertiary mb-1">
+<span class="material-symbols-outlined text-[16px]">family_restroom</span>
+<span class="font-label-xs text-label-xs font-bold uppercase">Tiền sử gia đình &amp; Dị ứng</span>
+</div>
+<ul class="font-body-sm text-body-sm text-on-surface space-y-1 list-disc list-inside">
+<li>Cha đẻ mất năm 64 tuổi do Tai biến mạch máu não.</li>
+<li>Chị ruột: Đái tháo đường Tuýp 2.</li>
+<li class="text-error font-semibold">Dị ứng Penicillin (Phù Quinke &amp; Sốc nhẹ).</li>
+<li class="text-error">Dị ứng Tôm, Cua biển (Mề đay cấp).</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- SECTION 2: Physical Examination -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-5 rounded-full bg-primary"></span>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">2. Khám lâm sàng &amp; Thực thể</h2>
+</div>
+<button class="text-primary hover:text-primary-container font-label-xs text-label-xs font-semibold flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[15px]">auto_fix_high</span>
+            Điền mẫu bình thường
+          </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- General -->
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs font-semibold text-outline uppercase tracking-wider">Toàn thân</label>
+<div class="p-space-sm bg-surface-container-low rounded-lg font-body-sm text-body-sm text-on-surface">
+              Bệnh nhân tỉnh táo, tiếp xúc tốt (GCS 15đ). Da niêm mạc hồng hào, không phù ngoại biên, không xuất huyết dưới da. Tuyến giáp không to, hạch ngoại vi không sờ chạm.
+            </div>
+</div>
+<!-- Cardiovascular (Core Focus) -->
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs font-semibold text-primary uppercase tracking-wider flex items-center justify-between">
+<span>Tuần hoàn &amp; Tim mạch</span>
+<span class="material-symbols-outlined text-[15px] text-primary">stethoscope</span>
+</label>
+<div class="p-space-sm bg-primary-fixed/20 rounded-lg font-body-sm text-body-sm text-on-surface">
+              Mỏm tim đập ở khoang liên sườn 5 trên đường trung đòn trái, diện đập 1.5cm. Nhịp tim đều, T1, T2 rõ, không nghe tiếng cọ màng tim, không phát hiện tiếng thổi tâm thu hay tâm trương bất thường. Mạch ngoại vi bắt rõ đều hai bên.
+            </div>
+</div>
+<!-- Respiratory -->
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs font-semibold text-outline uppercase tracking-wider">Hô hấp</label>
+<div class="p-space-sm bg-surface-container-low rounded-lg font-body-sm text-body-sm text-on-surface">
+              Lồng ngực cân đối, di động đều theo nhịp thở. Rì rào phế nang êm dịu khắp hai phế trường, không rale rít, không rale ẩm.
+            </div>
+</div>
+<!-- Abdomen & Others -->
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs font-semibold text-outline uppercase tracking-wider">Tiêu hóa - Bụng</label>
+<div class="p-space-sm bg-surface-container-low rounded-lg font-body-sm text-body-sm text-on-surface">
+              Bụng mềm, không chướng, ấn không điểm đau khu trú. Gan lách không sờ chạm dưới bờ sườn. Chạm thận (-), bập bềnh thận (-).
+            </div>
+</div>
+</div>
+</div>
+<!-- SECTION 3: ICD-10 Medical Diagnosis -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-5 rounded-full bg-primary"></span>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">3. Chẩn đoán y khoa (ICD-10)</h2>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-bold">Chuẩn Bộ Y Tế</span>
+</div>
+<!-- Primary Diagnosis Search & Value -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface flex items-center justify-between">
+<span class="text-primary font-bold">Chẩn đoán bệnh chính (Mã ICD-10) <span class="text-error">*</span></span>
+<span class="font-label-xs text-label-xs text-outline">Bắt buộc theo thông tư BHYT</span>
+</label>
+<div class="flex items-center gap-2 p-2.5 rounded-lg bg-surface-container-low">
+<div class="px-2.5 py-1 rounded bg-primary text-on-primary font-label-sm text-label-sm font-bold tracking-wider shrink-0">
+              I20.8
+            </div>
+<div class="flex-1 min-w-0">
+<span class="font-label-md text-label-md font-bold text-on-surface block truncate">Cơn đau thắt ngực ổn định khác (Other forms of angina pectoris)</span>
+<span class="font-label-xs text-label-xs text-outline">Phân độ CCS: Độ II • Nghi ngờ thiểu năng vành mạn</span>
+</div>
+<button class="p-1 rounded text-outline hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">search</span>
+</button>
+</div>
+</div>
+<!-- Secondary Diagnoses -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface">
+            Chẩn đoán bệnh kèm theo (Bệnh nền)
+          </label>
+<div class="space-y-2">
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low/70">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-surface-container-highest font-label-xs text-label-xs font-bold text-on-surface">I10</span>
+<span class="font-body-sm text-body-sm text-on-surface">Bệnh tăng huyết áp nguyên phát (vô căn) - Giai đoạn 2</span>
+</div>
+<span class="material-symbols-outlined text-[16px] text-outline cursor-pointer hover:text-error">close</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low/70">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-surface-container-highest font-label-xs text-label-xs font-bold text-on-surface">E78.0</span>
+<span class="font-body-sm text-body-sm text-on-surface">Tăng cholesterol máu thuần túy (Pure hypercholesterolaemia)</span>
+</div>
+<span class="material-symbols-outlined text-[16px] text-outline cursor-pointer hover:text-error">close</span>
+</div>
+</div>
+<button class="self-start text-primary hover:text-primary-container font-label-xs text-label-xs font-semibold flex items-center gap-1 mt-1" type="button">
+<span class="material-symbols-outlined text-[16px]">add_circle</span>
+            Thêm mã bệnh kèm theo (ICD-10)
+          </button>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN (40%): PARACLINICAL TESTS & E-PRESCRIPTION -->
+<div class="lg:col-span-5 flex flex-col gap-space-lg">
+<!-- SECTION 4: Paraclinical Orders & Realtime Status -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-5 rounded-full bg-secondary"></span>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">4. Cận lâm sàng (CLS)</h2>
+</div>
+<button class="px-2.5 py-1 rounded-md bg-secondary text-on-secondary font-label-xs text-label-xs font-semibold flex items-center gap-1 shadow-xs hover:bg-secondary/90 transition-colors" type="button">
+<span class="material-symbols-outlined text-[15px]">add</span>
+            Chỉ định thêm CLS
+          </button>
+</div>
+<div class="flex flex-col gap-2.5">
+<!-- Item 1: ECG (Completed with results) -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">ecg_heart</span>
+<div>
+<span class="font-label-sm text-label-sm font-bold text-on-surface block">Điện tâm đồ (ECG) 12 đạo trình</span>
+<span class="font-label-xs text-label-xs text-outline">Mã: CLS-00104 • P.102 Thăm dò chức năng</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-bold shrink-0">
+                ĐÃ CÓ KẾT QUẢ
+              </span>
+</div>
+<!-- ECG Result Snippet with SVG Sparkline -->
+<div class="p-2 bg-surface-container-lowest rounded-md">
+<div class="flex items-center justify-between mb-1.5">
+<span class="font-label-xs text-label-xs font-bold text-error">KL: ST chênh xuống 0.5mm V4-V6 • Nhịp xoang 85 ck/p</span>
+<span class="font-label-xs text-label-xs text-outline">09:05 AM</span>
+</div>
+<!-- Mini ECG wave chart -->
+<div class="w-full h-8 overflow-hidden bg-surface-container-lowest flex items-center">
+<svg class="w-full h-8 text-primary" fill="none" viewbox="0 0 300 40">
+<path d="M0,20 L40,20 L45,18 L50,22 L55,20 L70,20 L75,5 L80,35 L85,15 L90,23 L95,20 L115,20 L125,12 L135,22 L150,20 L190,20 L195,18 L200,22 L205,20 L220,20 L225,5 L230,35 L235,15 L240,23 L245,20 L265,20 L275,12 L285,22 L300,20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"></path>
+</svg>
+</div>
+<div class="flex justify-end mt-1">
+<button class="text-secondary font-label-xs text-label-xs font-bold flex items-center gap-1 hover:underline" type="button">
+<span class="material-symbols-outlined text-[14px]">visibility</span>
+                  Xem dải biểu đồ đầy đủ
+                </button>
+</div>
+</div>
+</div>
+<!-- Item 2: Echocardiogram (In Progress) -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[20px]">monitor_heart</span>
+<div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface block">Siêu âm tim Doppler màu thành ngực</span>
+<span class="font-label-xs text-label-xs text-outline">Mã: CLS-0082 • P.104 Siêu âm tim</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-bold animate-pulse">
+              Đang thực hiện
+            </span>
+</div>
+<!-- Item 3: Biomarkers / Blood Test (Sent) -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[20px]">bloodtype</span>
+<div>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface block">Troponin T hs, Bộ Lipid máu, Creatinine</span>
+<span class="font-label-xs text-label-xs text-outline">Mã: CLS-LAB09 • Khoa Xét nghiệm</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs font-semibold">
+              Đang gửi mẫu (10p)
+            </span>
+</div>
+</div>
+</div>
+<!-- SECTION 5: Smart e-Prescription with AI Interaction Check -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-5 rounded-full bg-primary"></span>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">5. Kê đơn thuốc ngoại trú</h2>
+</div>
+<div class="flex items-center gap-1.5">
+<button class="px-2 py-1 rounded bg-surface-container-low text-primary hover:bg-surface-container-high font-label-xs text-label-xs font-semibold flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+              Áp dụng đơn mẫu
+            </button>
+<button class="px-2 py-1 rounded bg-primary-container text-on-primary font-label-xs text-label-xs font-semibold flex items-center gap-1 hover:bg-primary transition-colors shadow-xs" type="button">
+<span class="material-symbols-outlined text-[15px]">add</span>
+              Thêm thuốc
+            </button>
+</div>
+</div>
+<!-- AI Safety Assistant Banner -->
+<div class="p-space-sm rounded-lg bg-tertiary-fixed/40 flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5">verified_user</span>
+<div class="flex-1 min-w-0">
+<span class="font-label-xs text-label-xs font-bold text-on-surface block">Hệ thống an toàn thuốc (Vitalis AI Guardian):</span>
+<p class="font-label-xs text-label-xs text-on-surface-variant leading-relaxed">
+              Không phát hiện kháng sinh nhóm Beta-lactam/Penicillin trong đơn. Đơn thuốc phù hợp với hồ sơ dị ứng bệnh nhân.
+            </p>
+</div>
+</div>
+<!-- Prescription Medication Items -->
+<div class="space-y-space-sm">
+<!-- Drug 1 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1.5">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">1. Nitromint 2.6mg</span>
+<span class="font-label-xs text-label-xs text-outline ml-1">(Nitroglycerin phóng thích chậm)</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold text-primary">SL: 30 viên</span>
+</div>
+<div class="p-2 bg-surface-container-lowest rounded font-body-sm text-body-sm text-on-surface">
+              Uống: Ngày 02 lần, mỗi lần 01 viên (Sáng 08:00 - Chiều 14:00 sau ăn).
+            </div>
+</div>
+<!-- Drug 2 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1.5">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">2. Concor 2.5mg</span>
+<span class="font-label-xs text-label-xs text-outline ml-1">(Bisoprolol fumarate)</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold text-primary">SL: 30 viên</span>
+</div>
+<div class="p-2 bg-surface-container-lowest rounded font-body-sm text-body-sm text-on-surface">
+              Uống: Ngày 01 lần, 01 viên vào buổi sáng sau ăn. (Hạ áp &amp; làm chậm nhịp tim).
+            </div>
+</div>
+<!-- Drug 3 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1.5">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">3. Lipitor 20mg</span>
+<span class="font-label-xs text-label-xs text-outline ml-1">(Atorvastatin calcium)</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold text-primary">SL: 30 viên</span>
+</div>
+<div class="p-2 bg-surface-container-lowest rounded font-body-sm text-body-sm text-on-surface">
+              Uống: Ngày 01 lần, 01 viên vào buổi tối trước khi đi ngủ.
+            </div>
+</div>
+<!-- Drug 4: Clinical Contraindication & Auto Alternate Suggestion -->
+<div class="p-space-sm rounded-lg bg-error-container/40 flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm font-bold text-error">4. Aspirin pH8 500mg</span>
+<span class="font-label-xs text-label-xs text-error/80 ml-1">(Acid acetylsalicylic)</span>
+</div>
+<span class="font-label-xs text-label-xs font-bold text-error bg-error-container px-2 py-0.5 rounded">Cảnh báo loét</span>
+</div>
+<div class="p-2 bg-surface-container-lowest rounded flex flex-col gap-1.5">
+<div class="flex items-center gap-1.5 text-error font-label-xs text-label-xs">
+<span class="material-symbols-outlined text-[15px]">report_problem</span>
+<span>BN có tiền sử viêm dạ dày tá tràng: Nguy cơ xuất huyết tiêu hóa.</span>
+</div>
+<!-- Swap Option Card -->
+<div class="p-2 rounded bg-primary-fixed/30 flex items-center justify-between">
+<div class="min-w-0">
+<span class="font-label-xs text-label-xs text-outline block">Thuốc thay thế an toàn được đề xuất:</span>
+<span class="font-label-sm text-label-sm font-bold text-on-primary-fixed">Clopidogrel 75mg (Plavix) • 30 viên</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant block">Uống 1 viên/ngày buổi sáng</span>
+</div>
+<button class="px-2.5 py-1 rounded bg-primary text-on-primary font-label-xs text-label-xs font-semibold hover:bg-primary-container transition-colors shrink-0 shadow-xs" type="button">
+                  Chấp nhận đổi
+                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 6: Advice & Follow-up Schedule -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-5 rounded-full bg-primary"></span>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">6. Dặn dò &amp; Hẹn tái khám</h2>
+</div>
+<div class="space-y-space-sm">
+<div>
+<label class="font-label-sm text-label-sm font-semibold text-on-surface block mb-1">Lời dặn của bác sĩ điều trị:</label>
+<textarea class="w-full p-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none" rows="2">Kiêng thức ăn nhiều dầu mỡ mặn, không vận động gắng sức nặng đột ngột. Uống thuốc đều đặn đúng giờ. Nếu xuất hiện cơn đau ngực kéo dài trên 20 phút không thuyên giảm kèm khó thở dữ dội phải đến ngay khoa Cấp cứu bệnh viện gần nhất.</textarea>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
+<div>
+<span class="font-label-xs text-label-xs text-outline block">Hẹn tái khám sau:</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">14 Ngày (Thứ Hai, ngày 10/10/2026)</span>
+</div>
+</div>
+<span class="px-2 py-1 rounded bg-surface-container-highest text-primary font-label-xs text-label-xs font-bold">
+              Phòng 203 - Tầng 2
+            </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- PERSISTENT CLINICAL FOOTER ACTION BAR -->
+<div class="fixed bottom-0 left-64 right-0 h-16 bg-surface-container-lowest shadow-[0_-2px_10px_rgba(0,0,0,0.06)] z-30 px-gutter flex items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></div>
+<span class="font-label-xs text-label-xs text-outline hidden sm:inline">Hồ sơ khám ngoại trú số: <strong class="text-on-surface font-semibold">KB-2026-0048-VN</strong></span>
+<span class="text-outline-variant hidden sm:inline">•</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Tự động sao lưu nháp lúc 08:52:10</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold transition-colors flex items-center gap-1.5 shadow-xs" type="button">
+<span class="material-symbols-outlined text-[17px]">save</span>
+<span>Lưu nháp</span>
+</button>
+<button class="px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold transition-colors flex items-center gap-1.5 shadow-xs" type="button">
+<span class="material-symbols-outlined text-[17px]">print</span>
+<span class="hidden md:inline">In phiếu khám &amp; Đơn (Ctrl+P)</span>
+<span class="md:hidden">In</span>
+</button>
+<button class="px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold transition-colors flex items-center gap-1.5 shadow-xs" type="button">
+<span class="material-symbols-outlined text-[17px]">draw</span>
+<span class="hidden md:inline">Ký số SmartCA</span>
+</button>
+<!-- Primary Grand Action -->
+<button class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-bold transition-all shadow-md flex items-center gap-2 ml-2" type="button">
+<span class="material-symbols-outlined text-[19px]">done_all</span>
+<span>HOÀN THÀNH KHÁM &amp; CHUYỂN DƯỢC (F10)</span>
+</button>
+</div>
+</div>
+</div>
+
+<script src="js/pages/DoctorExam.js"></script>
