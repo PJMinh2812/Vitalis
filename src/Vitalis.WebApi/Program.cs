@@ -1,6 +1,13 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Vitalis.Application;
+using Vitalis.Application.Common;
+using Vitalis.Application.Interfaces;
 using Vitalis.Infrastructure;
+using Vitalis.Infrastructure.HealthChecks;
+using Vitalis.Infrastructure.Persistence;
 using Vitalis.WebApi.Filters;
 using Vitalis.WebApi.Middleware;
 
@@ -22,6 +29,30 @@ try
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
 
+    builder.Services.AddHealthChecks()
+        .AddCheck<DatabaseHealthCheck>("database")
+        .AddCheck<RedisHealthCheck>("redis");
+
+    var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
+        ?? throw new InvalidOperationException("Missing 'Jwt' configuration section.");
+
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = jwtSettings.Issuer,
+                ValidateAudience = true,
+                ValidAudience = jwtSettings.Audience,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromSeconds(30),
+            };
+        });
+    builder.Services.AddAuthorization();
+
     // Add services to the container.
     builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
     builder.Services.AddProblemDetails();
@@ -42,7 +73,18 @@ try
 
     app.UseHttpsRedirection();
 
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<VitalisDbContext>();
+        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        await DbSeeder.SeedAsync(db, hasher);
+    }
+
     app.MapControllers();
+    app.MapHealthChecks("/health");
 
     var summaries = new[]
     {
