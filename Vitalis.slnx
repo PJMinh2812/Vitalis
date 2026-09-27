@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Vitalis.Application/Vitalis.Application.csproj" />
+    <Project Path="src/Vitalis.Domain/Vitalis.Domain.csproj" />
+    <Project Path="src/Vitalis.Infrastructure/Vitalis.Infrastructure.csproj" />
+    <Project Path="src/Vitalis.Web/Vitalis.Web.csproj" />
+    <Project Path="src/Vitalis.WebApi/Vitalis.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Vitalis.Application.UnitTests/Vitalis.Application.UnitTests.csproj" />
+  </Folder>
+</Solution>

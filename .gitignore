@@ -55,3 +55,24 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Visual Studio
+.vs/
+*.user
+
+# Project planning docs / DB reference scripts - not part of the shipped codebase
+material/
+review db/
+
+# Claude Code - local-only, not shared via source control
+.claude/
+
+# Serilog file sink output
+**/logs/
+
+# Q&A notes generated for the mentor-mode learning flow — not part of the graded codebase
+learning-notes/
+
+# Generated secrets for the Azure deploy (never commit credentials)
+.azure-sql-password.txt
+.azure-jwt-secret.txt

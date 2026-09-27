@@ -1,0 +1,647 @@
+@page "/booking"
+@layout PatientLayout
+@attribute [Authorize(Roles = "Patient")]
+@using Vitalis.Application.Common
+@using Vitalis.Application.DTOs.Appointments
+@using Vitalis.Application.DTOs.Doctors
+@using Vitalis.Domain.Enums
+@inject VitalisApiClient Api
+@inject AuthTokenStore TokenStore
+
+<PageTitle>Đặt lịch khám · Vitalis</PageTitle>
+
+<div class="max-w-7xl mx-auto px-6 lg:px-12 py-8"><div class="flex flex-col w-full">
+<!-- Progress & Stepper Trail -->
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-2 font-label-sm text-label-sm text-on-surface-variant">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[16px]">home</span>
+<span>Trang chủ</span>
+</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-semibold">Đặt lịch khám chuyên khoa</span>
+</div>
+<!-- Live Status Pill -->
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high/80 text-primary font-label-xs text-label-xs">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span>Hệ thống đồng bộ lịch hẹn theo thời gian thực</span>
+</div>
+</div>
+@if (ErrorMessage is not null && !ShowConflict)
+{
+<div class="mb-6 flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">error</span>
+<div class="flex-1 text-left">
+<p class="font-body-sm text-body-sm text-on-error-container/90">@ErrorMessage</p>
+</div>
+<button class="text-on-error-container hover:opacity-75" @onclick="() => ErrorMessage = null" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+}
+<!-- Realtime Alert Banner: Slot Conflict Warning -->
+@if (ShowConflict)
+{
+<div class="mb-6 p-4 rounded-xl bg-error-container text-on-error-container shadow-sm flex items-start justify-between gap-4">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-error text-[22px] shrink-0 mt-0.5">warning</span>
+<div class="flex flex-col">
+<p class="font-title-md text-title-md text-error leading-tight">Khung giờ vừa được người khác đặt mất</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+          @ErrorMessage Danh sách khung giờ trống đã được cập nhật lại, vui lòng chọn khung giờ khác.
+        </p>
+</div>
+</div>
+<button class="p-1 text-on-surface-variant hover:text-on-surface transition-colors" @onclick="() => ShowConflict = false" title="Đóng">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+}
+<!-- Main Grid Layout (65% Left / 35% Right) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- LEFT COLUMN: Main Booking Workflow Form (lg:col-span-8 ~ 66.6%) -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- Header Card with Clinic Overview -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs mb-2">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+              Mã chuẩn hoá VC-03
+            </div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Đặt lịch khám chuyên khoa</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+              Chọn chuyên khoa, bác sĩ phụ trách và thời gian phù hợp. Kết quả xác nhận sẽ hiển thị ngay và lưu vào lịch hẹn của bạn.
+            </p>
+</div>
+<div class="shrink-0 flex items-center gap-3 bg-surface-container-low p-3 rounded-xl">
+<span class="material-symbols-outlined text-primary text-[28px]">medical_services</span>
+<div class="flex flex-col text-right sm:text-left">
+<span class="font-label-xs text-label-xs text-on-surface-variant uppercase">Thời gian phục vụ</span>
+<span class="font-title-md text-title-md text-primary font-bold">07:30 - 17:00</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Step 1: Select Specialty -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<label class="flex items-center gap-2 font-title-md text-title-md text-on-surface" for="specialty-select">
+<span class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-xs text-label-xs">1</span>
+            Chuyên khoa khám <span class="text-error">*</span>
+</label>
+<span class="font-label-xs text-label-xs text-on-surface-variant">@Specialties.Count chuyên khoa đang hoạt động</span>
+</div>
+<div class="relative">
+<select class="w-full h-11 pl-4 pr-10 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md appearance-none focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer transition-all" id="specialty-select" @bind="SelectedSpecialtyId" @bind:after="LoadDoctorsAsync">
+@foreach (var specialty in Specialties)
+{
+<option value="@specialty.Id">@specialty.Name</option>
+}
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-on-surface-variant">
+<span class="material-symbols-outlined">unfold_more</span>
+</div>
+</div>
+</div>
+<!-- Step 2: Doctor Selection Grid -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<label class="flex items-center gap-2 font-title-md text-title-md text-on-surface">
+<span class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-xs text-label-xs">2</span>
+            Chọn bác sĩ khám <span class="text-error">*</span>
+</label>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+@if (IsLoadingDoctors)
+{
+<p class="md:col-span-3 font-body-sm text-body-sm text-on-surface-variant">Đang tải danh sách bác sĩ...</p>
+}
+else if (Doctors.Count == 0)
+{
+<p class="md:col-span-3 font-body-sm text-body-sm text-on-surface-variant">Chuyên khoa này hiện chưa có bác sĩ nhận khám.</p>
+}
+else
+{
+@foreach (var doctor in Doctors)
+{
+var selected = doctor.Id == SelectedDoctorId;
+<div class="relative p-4 rounded-xl shadow-sm flex flex-col justify-between cursor-pointer transition-all hover:shadow-md @(selected ? "bg-surface-container-low ring-2 ring-primary" : "bg-surface-container-lowest hover:bg-surface-container-low")" @onclick="() => SelectDoctorAsync(doctor.Id)">
+@if (selected)
+{
+<div class="absolute top-3 right-3 bg-primary text-on-primary rounded-full p-1 shadow-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+}
+<div class="flex items-start gap-3">
+<div class="relative shrink-0 w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-title-lg">
+@Initials(doctor.FullName)
+</div>
+<div class="flex flex-col min-w-0 pr-4">
+@if (!string.IsNullOrWhiteSpace(doctor.Title))
+{
+<span class="font-label-xs text-label-xs text-primary font-semibold uppercase tracking-wider">@doctor.Title</span>
+}
+<h4 class="font-title-md text-title-md text-on-surface truncate">@doctor.FullName</h4>
+</div>
+</div>
+<div class="mt-4 pt-3 flex flex-col gap-1.5 bg-surface-container-lowest p-2.5 rounded-lg">
+<div class="flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">meeting_room</span>
+                  @(doctor.Room ?? "Chưa xếp phòng")
+                </span>
+<span class="font-label-sm text-label-sm text-primary font-bold">@(doctor.ConsultationFee is null ? "—" : $"{doctor.ConsultationFee:N0}đ")</span>
+</div>
+</div>
+</div>
+}
+}
+</div>
+</div>
+<!-- Step 3: Date Picker - 7-Day Horizontal Strip -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-3">
+<label class="flex items-center gap-2 font-title-md text-title-md text-on-surface">
+<span class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-xs text-label-xs">3</span>
+            Ngày khám dự kiến <span class="text-error">*</span>
+</label>
+</div>
+<!-- Horizontal 7-Day Strip -->
+<div class="grid grid-cols-7 gap-2">
+@foreach (var date in DateStrip)
+{
+var selected = date == SelectedDate;
+<button class="flex flex-col items-center justify-center py-3 px-1 rounded-xl transition-colors @(selected ? "bg-primary text-on-primary shadow-md relative ring-2 ring-primary ring-offset-2" : "bg-surface-container-low hover:bg-surface-container")" type="button" @onclick="() => SelectDateAsync(date)">
+<span class="font-label-xs text-label-xs @(selected ? "text-on-primary/90 font-medium" : "text-on-surface-variant")">@(date == Today ? "Hôm nay" : WeekdayLabel(date))</span>
+<span class="font-headline-sm text-headline-sm font-bold my-0.5 @(selected ? "text-on-primary" : "text-on-surface")">@date.Day.ToString("00")</span>
+<span class="font-label-xs text-label-xs @(selected ? "text-on-primary-container font-semibold" : "text-on-surface-variant")">@(selected ? "Đang chọn" : "")</span>
+</button>
+}
+</div>
+</div>
+<!-- Step 4: Time Slot Selector (Morning & Afternoon) -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<label class="flex items-center gap-2 font-title-md text-title-md text-on-surface">
+<span class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-xs text-label-xs">4</span>
+            Khung giờ khám trống <span class="text-error">*</span>
+</label>
+</div>
+@if (IsLoadingSlots)
+{
+<p class="font-body-sm text-body-sm text-on-surface-variant">Đang tải khung giờ trống...</p>
+}
+else if (SelectedDoctorId is null)
+{
+<p class="font-body-sm text-body-sm text-on-surface-variant">Vui lòng chọn bác sĩ để xem khung giờ trống.</p>
+}
+else if (Slots.Count == 0)
+{
+<p class="font-body-sm text-body-sm text-on-surface-variant">Bác sĩ không có khung giờ trống vào ngày đã chọn.</p>
+}
+else
+{
+<!-- Morning Slots Group -->
+if (MorningSlots.Count > 0)
+{
+<div class="mb-5">
+<div class="flex items-center gap-2 mb-2.5">
+<span class="material-symbols-outlined text-amber-500 text-[18px]">light_mode</span>
+<span class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider font-semibold">Buổi sáng</span>
+</div>
+<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
+@foreach (var slot in MorningSlots)
+{
+@if (!slot.IsAvailable)
+{
+<div class="py-2.5 px-2 rounded-lg bg-surface-container-high/40 text-on-surface-variant/40 font-label-md text-label-md line-through flex items-center justify-center cursor-not-allowed select-none" title="Đã có người đặt">
+              @slot.StartTime.ToString("HH:mm")
+            </div>
+}
+else
+{
+var isSelected = SelectedSlotStart == slot.StartTime;
+<button class="@(isSelected ? "py-2.5 px-2 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md font-bold shadow-md ring-2 ring-primary ring-offset-2 flex flex-col items-center justify-center" : "py-2.5 px-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-all shadow-sm")" type="button" @onclick="() => SelectSlot(slot.StartTime)">
+<span>@slot.StartTime.ToString("HH:mm")</span>
+@if (isSelected)
+{
+<span class="font-label-xs text-label-xs text-on-primary-container mt-0.5 font-medium">Đã chọn</span>
+}
+</button>
+}
+}
+</div>
+</div>
+}
+<!-- Afternoon Slots Group -->
+if (AfternoonSlots.Count > 0)
+{
+<div>
+<div class="flex items-center gap-2 mb-2.5">
+<span class="material-symbols-outlined text-secondary text-[18px]">wb_twilight</span>
+<span class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider font-semibold">Buổi chiều</span>
+</div>
+<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+@foreach (var slot in AfternoonSlots)
+{
+@if (!slot.IsAvailable)
+{
+<div class="py-2.5 px-2 rounded-lg bg-surface-container-high/40 text-on-surface-variant/40 font-label-md text-label-md line-through flex items-center justify-center cursor-not-allowed select-none" title="Đã có người đặt">
+              @slot.StartTime.ToString("HH:mm")
+            </div>
+}
+else
+{
+var isSelected = SelectedSlotStart == slot.StartTime;
+<button class="@(isSelected ? "py-2.5 px-2 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md font-bold shadow-md ring-2 ring-primary ring-offset-2 flex flex-col items-center justify-center" : "py-2.5 px-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-all shadow-sm")" type="button" @onclick="() => SelectSlot(slot.StartTime)">
+<span>@slot.StartTime.ToString("HH:mm")</span>
+@if (isSelected)
+{
+<span class="font-label-xs text-label-xs text-on-primary-container mt-0.5 font-medium">Đã chọn</span>
+}
+</button>
+}
+}
+</div>
+</div>
+}
+}
+<p class="mt-4 font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">schedule</span>
+          Mỗi lượt khám dự kiến kéo dài 20-30 phút. Vui lòng có mặt trước 15 phút để làm thủ tục tiếp đón.
+        </p>
+</div>
+<!-- Step 5: Clinical Notes -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+<label class="flex items-center gap-2 font-title-md text-title-md text-on-surface mb-4">
+<span class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-xs text-label-xs">5</span>
+          Thông tin triệu chứng
+        </label>
+<div class="space-y-4">
+<!-- Medical Reason / Symptoms -->
+<div>
+<div class="flex items-center justify-between mb-1.5">
+<label class="font-label-md text-label-md text-on-surface font-semibold" for="symptoms-input">
+                Lý do khám bệnh &amp; Triệu chứng <span class="text-error">*</span>
+</label>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Tối đa 500 ký tự</span>
+</div>
+<textarea class="w-full p-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none" id="symptoms-input" maxlength="500" placeholder="Mô tả triệu chứng hiện tại của bạn (sốt, ho, đau đầu, mức độ kéo dài...)" rows="3" @bind="Symptoms"></textarea>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Sticky Summary Card (lg:col-span-4 ~ 33.3%) -->
+<div class="lg:col-span-4 lg:sticky lg:top-20 flex flex-col gap-6">
+<!-- Summary Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-lg relative overflow-hidden">
+<!-- Header Banner Accent -->
+<div class="flex items-center justify-between pb-4 mb-4 bg-surface-container-low -mx-6 -mt-6 p-6">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[20px]">fact_check</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-title-md text-title-md text-on-surface">Tóm tắt lịch hẹn</h2>
+<span class="font-label-xs text-label-xs text-primary font-semibold">Xem xét kỹ trước khi xác nhận</span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-bold">Chờ gửi</span>
+</div>
+<!-- Patient Demographics Section -->
+<div class="space-y-4">
+<div class="p-3.5 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-title-md">
+                @Initials(TokenStore.CurrentUser?.FullName ?? "?")
+              </div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-semibold">@(TokenStore.CurrentUser?.FullName ?? "")</span>
+</div>
+</div>
+</div>
+<!-- Clinical Details -->
+<div class="space-y-3 font-body-sm text-body-sm">
+<div class="flex items-start justify-between">
+<span class="text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-primary">local_hospital</span>
+                Chuyên khoa:
+              </span>
+<span class="font-label-md text-label-md text-on-surface font-semibold text-right">@(SelectedSpecialty?.Name ?? "—")</span>
+</div>
+<div class="flex items-start justify-between">
+<span class="text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-primary">person_outline</span>
+                Bác sĩ phụ trách:
+              </span>
+<span class="font-label-md text-label-md text-on-surface font-semibold text-right">@(SelectedDoctor is null ? "—" : $"{SelectedDoctor.Title} {SelectedDoctor.FullName}".Trim())</span>
+</div>
+<div class="flex items-start justify-between">
+<span class="text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-primary">location_on</span>
+                Phòng khám:
+              </span>
+<span class="font-body-sm text-body-sm text-on-surface text-right">@(SelectedDoctor?.Room ?? "—")</span>
+</div>
+<div class="flex items-start justify-between">
+<span class="text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-primary">event_available</span>
+                Thời gian:
+              </span>
+<span class="font-label-md text-label-md text-primary font-bold text-right">@(SelectedSlotStart is null ? "—" : $"{SelectedSlotStart:HH:mm} - {WeekdayLabel(SelectedDate)}, {SelectedDate:dd/MM/yyyy}")</span>
+</div>
+</div>
+<!-- Dashed Separator -->
+<div class="my-4" style="background-image: linear-gradient(to right, #6e7977 40%, rgba(255, 255, 255, 0) 0%); background-position: bottom; background-size: 8px 1px; background-repeat: repeat-x; height: 1px;"></div>
+<!-- Financial Breakdown -->
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-on-surface-variant">Phí khám chuyên khoa:</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">@(SelectedDoctor?.ConsultationFee is null ? "—" : $"{SelectedDoctor.ConsultationFee:N0}đ")</span>
+</div>
+<div class="flex items-center justify-between font-label-xs text-label-xs text-on-surface-variant">
+<span>Hình thức thanh toán:</span>
+<span>Tại quầy / Ví điện tử / Thẻ</span>
+</div>
+</div>
+<!-- Alert / Policy Notification Box -->
+<div class="p-3.5 rounded-lg bg-surface-container-low text-on-surface flex items-start gap-2.5">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">verified_user</span>
+<p class="font-label-xs text-label-xs leading-relaxed text-on-surface-variant">
+<strong class="text-primary font-semibold">Chính sách linh hoạt:</strong> Quý khách được phép huỷ hoặc đổi khung giờ khám trước giờ hẹn tối thiểu <strong>02 tiếng</strong> miễn phí qua cổng này hoặc hotline <strong class="text-primary">1900 6868</strong>.
+            </p>
+</div>
+<!-- Primary Submit Action -->
+<button class="w-full py-3.5 px-4 rounded-xl bg-primary-container hover:bg-primary text-on-primary font-title-md text-title-md font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-60" disabled="@IsSubmitting" type="button" @onclick="SubmitAsync">
+@if (IsSubmitting)
+{
+<span>Đang xử lý...</span>
+}
+else
+{
+<span>Xác nhận đặt lịch khám</span>
+<span class="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+}
+</button>
+<!-- Clinic Pledge / Trust Metric -->
+<div class="flex items-center justify-center gap-4 pt-2 font-label-xs text-label-xs text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">lock</span> Bảo mật y tế
+            </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">sms</span> Nhắc lịch SMS
+            </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">timer</span> Không chờ đợi
+            </span>
+</div>
+</div>
+</div>
+<!-- Quick Doctor Schedule Mini Insight -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">contact_support</span>
+</div>
+<div class="flex flex-col">
+<p class="font-title-md text-title-md text-on-surface">Cần trợ giúp đặc biệt?</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Điều phối viên y tế sẵn sàng xếp lịch theo yêu cầu hội chẩn.</p>
+<a class="font-label-sm text-label-sm text-primary font-semibold mt-1 hover:underline" href="#">Liên hệ tổng đài 1900 6868</a>
+</div>
+</div>
+</div>
+</div>
+<!-- SUCCESS CONFIRMATION MODAL -->
+@if (ShowSuccessModal && BookedAppointment is not null)
+{
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-background/50 backdrop-blur-sm transition-all">
+<div class="bg-surface-container-lowest rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+<!-- Close icon -->
+<button class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface p-1 rounded-full hover:bg-surface-container-low transition-colors" title="Đóng modal" @onclick="() => ShowSuccessModal = false">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+<!-- Success Visual & Title -->
+<div class="flex flex-col items-center text-center">
+<div class="w-16 h-16 rounded-full bg-surface-container-high text-primary flex items-center justify-center mb-4 shadow-inner ring-4 ring-surface-container-low">
+<span class="material-symbols-outlined text-[36px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<span class="px-3 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-bold uppercase tracking-wider mb-1">Đặt lịch thành công</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Lịch hẹn đã được xác nhận</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+          Hệ thống đã ghi nhận lịch hẹn khám của bạn.
+        </p>
+<!-- Appointment Code Box -->
+<div class="w-full my-5 p-4 rounded-xl bg-surface-container-low flex flex-col items-center justify-center">
+<span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">Mã lịch hẹn (Appointment Code)</span>
+<span class="font-headline-lg text-headline-lg font-mono font-bold text-primary mt-0.5 tracking-wider">@(BookedAppointment.AppointmentCode ?? $"#{BookedAppointment.Id}")</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary">qr_code_2</span> Xuất trình mã này tại Kiosk tiếp đón
+          </span>
+</div>
+<!-- Appointment Key Facts in Modal -->
+<div class="w-full space-y-2.5 p-4 rounded-xl bg-surface-container-lowest shadow-sm mb-6 text-left font-body-sm text-body-sm">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Bác sĩ phụ trách:</span>
+<span class="font-semibold text-on-surface">@BookedAppointment.DoctorName</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Chuyên khoa:</span>
+<span class="font-semibold text-on-surface">@(SelectedSpecialty?.Name) (@(SelectedDoctor?.Room ?? "—"))</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Thời gian khám:</span>
+<span class="font-bold text-primary">@BookedAppointment.StartTime.ToString("HH:mm") - @WeekdayLabel(DateOnly.FromDateTime(BookedAppointment.StartTime)), @BookedAppointment.StartTime.ToString("dd/MM/yyyy")</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Phí khám tạm tính:</span>
+<span class="font-semibold text-on-surface">@(BookedAppointment.FeeSnapshot is null ? "—" : $"{BookedAppointment.FeeSnapshot:N0}đ")</span>
+</div>
+</div>
+<!-- Actions -->
+<div class="w-full flex flex-col sm:flex-row items-center gap-3">
+<a href="/my-appointments" data-path="lich-hen-cua-toi" class="w-full sm:w-1/2 py-3 px-4 rounded-xl bg-primary-container hover:bg-primary text-on-primary font-title-md text-title-md font-semibold text-center transition-all shadow-md">
+            Xem lịch hẹn của tôi
+          </a>
+<button class="w-full sm:w-1/2 py-3 px-4 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-title-md text-title-md font-semibold text-center transition-all" type="button" @onclick="() => ShowSuccessModal = false">
+            Về trang chủ
+          </button>
+</div>
+</div>
+</div>
+</div>
+}
+</div></div>
+
+@code {
+    private List<SpecialtyDto> Specialties = new();
+    private int? SelectedSpecialtyId;
+    private List<DoctorDto> Doctors = new();
+    private int? SelectedDoctorId;
+    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Today);
+    private readonly List<DateOnly> DateStrip = Enumerable.Range(0, 7).Select(i => Today.AddDays(i)).ToList();
+    private DateOnly SelectedDate = Today;
+    private List<SlotDto> Slots = new();
+    private TimeOnly? SelectedSlotStart;
+    private string Symptoms = "";
+    private bool IsSubmitting;
+    private bool IsLoadingDoctors;
+    private bool IsLoadingSlots;
+    private string? ErrorMessage;
+    private bool ShowConflict;
+    private AppointmentDto? BookedAppointment;
+    private bool ShowSuccessModal;
+
+    private SpecialtyDto? SelectedSpecialty => Specialties.FirstOrDefault(s => s.Id == SelectedSpecialtyId);
+    private DoctorDto? SelectedDoctor => Doctors.FirstOrDefault(d => d.Id == SelectedDoctorId);
+    private List<SlotDto> MorningSlots => Slots.Where(s => s.StartTime.Hour < 12).ToList();
+    private List<SlotDto> AfternoonSlots => Slots.Where(s => s.StartTime.Hour >= 12).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Specialties = await Api.GetAsync<List<SpecialtyDto>>("api/specialties?active=true");
+            if (Specialties.Count > 0)
+            {
+                SelectedSpecialtyId = Specialties[0].Id;
+                await LoadDoctorsAsync();
+            }
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task LoadDoctorsAsync()
+    {
+        if (SelectedSpecialtyId is null)
+            return;
+
+        IsLoadingDoctors = true;
+        Doctors = new();
+        SelectedDoctorId = null;
+        Slots = new();
+        SelectedSlotStart = null;
+        try
+        {
+            var result = await Api.GetAsync<PagedResult<DoctorDto>>($"api/doctors?specialtyId={SelectedSpecialtyId}&pageSize=50");
+            Doctors = result.Items.ToList();
+            if (Doctors.Count > 0)
+            {
+                SelectedDoctorId = Doctors[0].Id;
+                await LoadSlotsAsync();
+            }
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoadingDoctors = false;
+        }
+    }
+
+    private async Task SelectDoctorAsync(int doctorId)
+    {
+        SelectedDoctorId = doctorId;
+        await LoadSlotsAsync();
+    }
+
+    private async Task SelectDateAsync(DateOnly date)
+    {
+        SelectedDate = date;
+        await LoadSlotsAsync();
+    }
+
+    private async Task LoadSlotsAsync()
+    {
+        SelectedSlotStart = null;
+        if (SelectedDoctorId is null)
+        {
+            Slots = new();
+            return;
+        }
+
+        IsLoadingSlots = true;
+        try
+        {
+            Slots = await Api.GetAsync<List<SlotDto>>($"api/doctors/{SelectedDoctorId}/available-slots?date={SelectedDate:yyyy-MM-dd}");
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoadingSlots = false;
+        }
+    }
+
+    private void SelectSlot(TimeOnly start) => SelectedSlotStart = start;
+
+    private async Task SubmitAsync()
+    {
+        ErrorMessage = null;
+        ShowConflict = false;
+
+        if (SelectedDoctorId is null || SelectedSlotStart is null || string.IsNullOrWhiteSpace(Symptoms))
+        {
+            ErrorMessage = "Vui lòng chọn bác sĩ, khung giờ khám và nhập triệu chứng.";
+            return;
+        }
+
+        var patientId = TokenStore.CurrentUser?.PatientId;
+        if (patientId is null)
+        {
+            ErrorMessage = "Tài khoản chưa liên kết hồ sơ bệnh nhân.";
+            return;
+        }
+
+        IsSubmitting = true;
+        try
+        {
+            var request = new CreateAppointmentRequest(
+                patientId.Value,
+                SelectedDoctorId.Value,
+                SelectedDate.ToDateTime(SelectedSlotStart.Value),
+                Symptoms,
+                AppointmentSource.Online);
+
+            BookedAppointment = await Api.PostAsync<CreateAppointmentRequest, AppointmentDto>("api/appointments", request);
+            ShowSuccessModal = true;
+        }
+        catch (ApiException ex) when (ex.StatusCode == 409)
+        {
+            ErrorMessage = ex.Message;
+            ShowConflict = true;
+            await LoadSlotsAsync();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private static string WeekdayLabel(DateOnly date) => date.DayOfWeek switch
+    {
+        DayOfWeek.Sunday => "Chủ nhật",
+        DayOfWeek.Monday => "Thứ 2",
+        DayOfWeek.Tuesday => "Thứ 3",
+        DayOfWeek.Wednesday => "Thứ 4",
+        DayOfWeek.Thursday => "Thứ 5",
+        DayOfWeek.Friday => "Thứ 6",
+        _ => "Thứ 7",
+    };
+
+    private static string Initials(string fullName)
+    {
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 0 ? "?" : parts[^1][..1].ToUpperInvariant();
+    }
+}

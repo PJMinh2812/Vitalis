@@ -1,0 +1,506 @@
+@page "/doctor/exam"
+@layout DoctorLayout
+@attribute [Authorize(Roles = "Doctor")]
+@using Vitalis.Application.DTOs.Appointments
+@using Vitalis.Application.DTOs.MedicalRecords
+@using Vitalis.Application.DTOs.Medicines
+@using Vitalis.Application.DTOs.Billing
+@using Vitalis.Domain.Enums
+@inject VitalisApiClient Api
+@inject NavigationManager Navigation
+
+<PageTitle>Khám bệnh · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full pb-24">
+
+@if (ErrorMessage is not null)
+{
+    <div class="mb-space-lg p-4 rounded-xl bg-error-container text-on-error-container shadow-sm flex items-center gap-3">
+        <span class="material-symbols-outlined text-error text-[22px]">warning</span>
+        <p class="font-body-sm text-body-sm">@ErrorMessage</p>
+    </div>
+}
+
+@if (AppointmentId is null)
+{
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg text-center text-on-surface-variant">
+        Chưa chọn lịch hẹn. Vui lòng vào từ <a class="text-primary font-semibold hover:underline" href="/doctor/queue">Hàng chờ khám</a>.
+    </div>
+}
+else if (IsLoading)
+{
+    <div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg text-center text-on-surface-variant">Đang tải hồ sơ khám...</div>
+}
+else if (Record is not null && Appointment is not null)
+{
+    <section class="bg-surface-container-lowest rounded-xl shadow-sm mb-space-lg overflow-hidden p-space-md">
+        <div class="flex flex-wrap items-center gap-x-space-sm gap-y-1">
+            <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface tracking-tight uppercase">@Appointment.PatientName</h1>
+            <span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-xs text-label-xs font-semibold">Mã lịch hẹn: @(Appointment.AppointmentCode ?? Appointment.Id.ToString())</span>
+            @if (Record.Status == MedicalRecordStatus.Finalized)
+            {
+                <span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-bold">ĐÃ CHỐT BỆNH ÁN</span>
+            }
+        </div>
+        <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Lý do khám: <strong class="text-on-surface">@Appointment.Reason</strong></p>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+        <div class="lg:col-span-7 flex flex-col gap-space-lg">
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden p-space-md flex flex-col gap-space-md">
+                <h2 class="font-title-md text-title-md font-bold text-on-surface">1. Triệu chứng &amp; Chẩn đoán</h2>
+                <div class="flex flex-col gap-1">
+                    <label class="font-label-sm text-label-sm font-semibold text-on-surface">Triệu chứng <span class="text-error">*</span></label>
+                    <textarea class="w-full p-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none" rows="3" @bind="Symptoms" disabled="@IsFinalized"></textarea>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="font-label-sm text-label-sm font-semibold text-on-surface">Chẩn đoán <span class="text-error">*</span></label>
+                    <textarea class="w-full p-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none" rows="2" @bind="Diagnosis" disabled="@IsFinalized"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
+                    <div class="flex flex-col gap-1">
+                        <label class="font-label-sm text-label-sm font-semibold text-on-surface">Mã ICD-10</label>
+                        <input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary" @bind="Icd10Code" disabled="@IsFinalized" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="font-label-sm text-label-sm font-semibold text-on-surface">Hẹn tái khám</label>
+                        <input type="date" class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary" @bind="FollowUpDate" disabled="@IsFinalized" />
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="font-label-sm text-label-sm font-semibold text-on-surface">Hướng điều trị / Dặn dò</label>
+                    <textarea class="w-full p-space-sm rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none" rows="2" @bind="TreatmentPlan" disabled="@IsFinalized"></textarea>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-space-sm">
+                    <div class="flex flex-col gap-1">
+                        <label class="font-label-xs text-label-xs text-outline">Nhiệt độ (°C)</label>
+                        <input type="number" step="0.1" class="w-full h-9 px-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm" @bind="Temperature" disabled="@IsFinalized" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="font-label-xs text-label-xs text-outline">Mạch (ck/p)</label>
+                        <input type="number" class="w-full h-9 px-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm" @bind="Pulse" disabled="@IsFinalized" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="font-label-xs text-label-xs text-outline">Huyết áp</label>
+                        <input class="w-full h-9 px-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm" placeholder="120/80" @bind="BloodPressure" disabled="@IsFinalized" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="font-label-xs text-label-xs text-outline">Cân nặng (kg)</label>
+                        <input type="number" step="0.1" class="w-full h-9 px-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm" @bind="Weight" disabled="@IsFinalized" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="font-label-xs text-label-xs text-outline">Chiều cao (cm)</label>
+                        <input type="number" step="0.1" class="w-full h-9 px-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm" @bind="Height" disabled="@IsFinalized" />
+                    </div>
+                </div>
+                @if (!IsFinalized)
+                {
+                    <button class="self-start px-3 py-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-sm text-label-sm font-semibold transition-colors flex items-center gap-1.5" type="button" @onclick="SaveDraftAsync" disabled="@IsSavingDraft">
+                        <span class="material-symbols-outlined text-[17px]">save</span>
+                        <span>Lưu nháp</span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="lg:col-span-5 flex flex-col gap-space-lg">
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-md">
+                <h2 class="font-title-md text-title-md font-bold text-on-surface">2. Chỉ định dịch vụ / CLS</h2>
+                @if (!IsFinalized)
+                {
+                    <div class="flex items-center gap-2">
+                        <select class="flex-1 h-10 px-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm" @bind="SelectedServiceId">
+                            <option value="0">-- Chọn dịch vụ --</option>
+                            @foreach (var service in AvailableServices)
+                            {
+                                <option value="@service.Id">@service.Name (@service.Price.ToString("N0")đ)</option>
+                            }
+                        </select>
+                        <input type="number" min="1" class="w-16 h-10 px-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm" @bind="NewServiceQuantity" />
+                        <button class="px-3 py-2 rounded-lg bg-secondary text-on-secondary font-label-sm text-label-sm font-semibold" type="button" @onclick="OrderServiceAsync" disabled="@(SelectedServiceId == 0)">Chỉ định</button>
+                    </div>
+                }
+                <div class="flex flex-col gap-2">
+                    @if (Record.Services.Count == 0)
+                    {
+                        <span class="font-body-sm text-body-sm text-on-surface-variant">Chưa có chỉ định nào.</span>
+                    }
+                    @foreach (var mrs in Record.Services)
+                    {
+                        <div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-2">
+                            <div class="flex items-start justify-between gap-2">
+                                <span class="font-label-sm text-label-sm font-bold text-on-surface">@mrs.ServiceName (SL: @mrs.Quantity)</span>
+                                <span class="font-label-xs text-label-xs font-bold uppercase px-2 py-0.5 rounded-full @ServiceStatusClass(mrs.Status)">@ServiceStatusLabel(mrs.Status)</span>
+                            </div>
+                            @if (mrs.Result is not null)
+                            {
+                                <div class="p-2 bg-surface-container-lowest rounded font-body-sm text-body-sm">
+                                    <p><strong>Kết quả:</strong> @mrs.Result.ResultValue</p>
+                                    @if (!string.IsNullOrWhiteSpace(mrs.Result.Conclusion))
+                                    {
+                                        <p><strong>Kết luận:</strong> @mrs.Result.Conclusion</p>
+                                    }
+                                </div>
+                            }
+                            @if (!IsFinalized && mrs.Status == MedicalRecordServiceStatus.Ordered)
+                            {
+                                <div class="flex items-center gap-2">
+                                    <button class="text-error font-label-xs text-label-xs font-semibold hover:underline" type="button" @onclick="() => CancelServiceAsync(mrs.Id)">Huỷ chỉ định</button>
+                                    <button class="text-primary font-label-xs text-label-xs font-semibold hover:underline" type="button" @onclick="() => ToggleResultForm(mrs.Id)">Nhập kết quả</button>
+                                </div>
+                                @if (ResultFormServiceId == mrs.Id)
+                                {
+                                    <div class="p-2 bg-surface-container-lowest rounded-lg flex flex-col gap-1.5">
+                                        <input class="h-9 px-2 rounded bg-surface-container-low text-on-surface font-body-sm text-body-sm" placeholder="Giá trị kết quả" @bind="ResultValue" />
+                                        <input class="h-9 px-2 rounded bg-surface-container-low text-on-surface font-body-sm text-body-sm" placeholder="Kết luận (tuỳ chọn)" @bind="ResultConclusion" />
+                                        <button class="self-start px-3 py-1.5 rounded-lg bg-primary text-on-primary font-label-xs text-label-xs font-semibold" type="button" @onclick="() => EnterResultAsync(mrs.Id)">Lưu kết quả</button>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-md">
+                <h2 class="font-title-md text-title-md font-bold text-on-surface">3. Kê đơn thuốc</h2>
+                @if (!IsFinalized)
+                {
+                    <div class="flex flex-col gap-2">
+                        <input class="h-10 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm" placeholder="Tìm thuốc theo tên..." @bind="MedicineKeyword" @bind:event="oninput" @onkeyup="SearchMedicinesAsync" />
+                        @if (MedicineResults.Count > 0)
+                        {
+                            <div class="flex flex-col gap-1.5 max-h-48 overflow-y-auto">
+                                @foreach (var medicine in MedicineResults)
+                                {
+                                    <div class="p-2 rounded-lg bg-surface-container-low flex items-center justify-between gap-2 @(medicine.AllergyWarning ? "ring-1 ring-error" : "")">
+                                        <div class="min-w-0">
+                                            <span class="font-label-sm text-label-sm font-semibold text-on-surface block truncate">@medicine.Name</span>
+                                            <span class="font-label-xs text-label-xs text-outline">Tồn: @medicine.AvailableStock • @medicine.Price.ToString("N0")đ</span>
+                                            @if (medicine.AllergyWarning)
+                                            {
+                                                <span class="font-label-xs text-label-xs text-error font-bold block">Cảnh báo dị ứng với bệnh nhân này</span>
+                                            }
+                                        </div>
+                                        <button class="px-2.5 py-1 rounded bg-primary-container text-on-primary font-label-xs text-label-xs font-semibold shrink-0" type="button" @onclick="() => SelectMedicine(medicine)">Chọn</button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                    @if (PendingMedicine is not null)
+                    {
+                        <div class="p-space-sm rounded-lg bg-primary-fixed/20 flex flex-col gap-1.5">
+                            <span class="font-label-sm text-label-sm font-bold text-on-surface">@PendingMedicine.Name</span>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <input type="number" min="1" class="h-9 px-2 rounded bg-surface-container-lowest text-on-surface font-body-sm text-body-sm" placeholder="Số lượng" @bind="PendingQuantity" />
+                                <input type="number" class="h-9 px-2 rounded bg-surface-container-lowest text-on-surface font-body-sm text-body-sm" placeholder="Số ngày dùng" @bind="PendingDurationDays" />
+                            </div>
+                            <input class="h-9 px-2 rounded bg-surface-container-lowest text-on-surface font-body-sm text-body-sm" placeholder="Liều dùng (VD: Ngày 2 lần, mỗi lần 1 viên)" @bind="PendingDosage" />
+                            <input class="h-9 px-2 rounded bg-surface-container-lowest text-on-surface font-body-sm text-body-sm" placeholder="Hướng dẫn thêm (tuỳ chọn)" @bind="PendingInstruction" />
+                            @if (PendingMedicine.AllergyWarning)
+                            {
+                                <label class="flex items-center gap-2 font-label-xs text-label-xs text-error font-semibold">
+                                    <input type="checkbox" @bind="PendingAllergyConfirmed" />
+                                    <span>Xác nhận đã cân nhắc cảnh báo dị ứng và vẫn kê thuốc này</span>
+                                </label>
+                            }
+                            <button class="self-start px-3 py-1.5 rounded-lg bg-primary text-on-primary font-label-xs text-label-xs font-semibold" type="button" @onclick="AddPrescriptionItem" disabled="@(string.IsNullOrWhiteSpace(PendingDosage) || (PendingMedicine.AllergyWarning && !PendingAllergyConfirmed))">Thêm vào đơn</button>
+                        </div>
+                    }
+                }
+                <div class="flex flex-col gap-2">
+                    @if (PrescriptionItems.Count == 0)
+                    {
+                        <span class="font-body-sm text-body-sm text-on-surface-variant">Chưa có thuốc trong đơn.</span>
+                    }
+                    @foreach (var item in PrescriptionDisplayItems)
+                    {
+                        <div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1">
+                            <div class="flex items-start justify-between">
+                                <span class="font-label-sm text-label-sm font-bold text-on-surface">@item.MedicineName</span>
+                                <span class="font-label-sm text-label-sm font-bold text-primary">SL: @item.Quantity</span>
+                            </div>
+                            <span class="font-body-sm text-body-sm text-on-surface-variant">@item.Dosage</span>
+                        </div>
+                    }
+                </div>
+                @if (!IsFinalized)
+                {
+                    <button class="self-start px-3 py-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-sm text-label-sm font-semibold transition-colors" type="button" @onclick="SavePrescriptionAsync" disabled="@(PrescriptionItems.Count == 0)">Lưu đơn thuốc</button>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (!IsFinalized)
+    {
+        <div class="fixed bottom-0 left-64 right-0 h-16 bg-surface-container-lowest shadow-[0_-2px_10px_rgba(0,0,0,0.06)] z-30 px-gutter flex items-center justify-end gap-space-md">
+            <button class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-bold transition-all shadow-md flex items-center gap-2" type="button" @onclick="FinalizeAsync" disabled="@IsFinalizing">
+                <span class="material-symbols-outlined text-[19px]">done_all</span>
+                <span>CHỐT BỆNH ÁN &amp; HOÀN TẤT KHÁM</span>
+            </button>
+        </div>
+    }
+}
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int? AppointmentId { get; set; }
+
+    private AppointmentDto? Appointment { get; set; }
+    private MedicalRecordDto? Record { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+    private bool IsFinalized => Record?.Status == MedicalRecordStatus.Finalized;
+
+    private string Symptoms { get; set; } = "";
+    private string Diagnosis { get; set; } = "";
+    private string? Icd10Code { get; set; }
+    private string? TreatmentPlan { get; set; }
+    private DateOnly? FollowUpDate { get; set; }
+    private decimal? Temperature { get; set; }
+    private int? Pulse { get; set; }
+    private string? BloodPressure { get; set; }
+    private decimal? Weight { get; set; }
+    private decimal? Height { get; set; }
+    private bool IsSavingDraft { get; set; }
+
+    private List<ServiceDto> AvailableServices { get; set; } = [];
+    private int SelectedServiceId { get; set; }
+    private int NewServiceQuantity { get; set; } = 1;
+    private int? ResultFormServiceId { get; set; }
+    private string ResultValue { get; set; } = "";
+    private string ResultConclusion { get; set; } = "";
+
+    private string MedicineKeyword { get; set; } = "";
+    private List<MedicineSearchDto> MedicineResults { get; set; } = [];
+    private MedicineSearchDto? PendingMedicine { get; set; }
+    private int PendingQuantity { get; set; } = 1;
+    private int? PendingDurationDays { get; set; }
+    private string PendingDosage { get; set; } = "";
+    private string? PendingInstruction { get; set; }
+    private bool PendingAllergyConfirmed { get; set; }
+    private List<PrescriptionItemRequest> PrescriptionItems { get; set; } = [];
+    private List<(string MedicineName, int Quantity, string Dosage)> PrescriptionDisplayItems { get; set; } = [];
+    private bool IsFinalizing { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AppointmentId is null)
+        {
+            IsLoading = false;
+            return;
+        }
+
+        try
+        {
+            Appointment = await Api.GetAsync<AppointmentDto>($"api/appointments/{AppointmentId}");
+            Record = await Api.PatchAsync<object?, MedicalRecordDto>($"api/appointments/{AppointmentId}/start-exam", null);
+            LoadFormFromRecord();
+            AvailableServices = (await Api.GetAsync<IReadOnlyList<ServiceDto>>("api/services?active=true")).ToList();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void LoadFormFromRecord()
+    {
+        if (Record is null) return;
+        Symptoms = Record.Symptoms ?? "";
+        Diagnosis = Record.Diagnosis ?? "";
+        Icd10Code = Record.Icd10Code;
+        TreatmentPlan = Record.TreatmentPlan;
+        FollowUpDate = Record.FollowUpDate;
+        Temperature = Record.Vitals?.Temperature;
+        Pulse = Record.Vitals?.Pulse;
+        BloodPressure = Record.Vitals?.BloodPressure;
+        Weight = Record.Vitals?.Weight;
+        Height = Record.Vitals?.Height;
+
+        PrescriptionItems.Clear();
+        PrescriptionDisplayItems.Clear();
+        if (Record.Prescription is not null)
+        {
+            foreach (var item in Record.Prescription.Items)
+            {
+                PrescriptionItems.Add(new PrescriptionItemRequest(item.MedicineId, item.Quantity, item.Dosage ?? "", item.Instruction, item.DurationDays, true));
+                PrescriptionDisplayItems.Add((item.MedicineName ?? "", item.Quantity, item.Dosage ?? ""));
+            }
+        }
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        if (Record is null) return;
+        IsSavingDraft = true;
+        ErrorMessage = null;
+        try
+        {
+            var vitals = new VitalsDto(Temperature, Pulse, BloodPressure, Weight, Height);
+            var request = new MedicalRecordRequest(Symptoms, Diagnosis, Icd10Code, TreatmentPlan, FollowUpDate, vitals);
+            Record = await Api.PutAsync<MedicalRecordRequest, MedicalRecordDto>($"api/medical-records/{Record.Id}", request);
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSavingDraft = false;
+        }
+    }
+
+    private async Task OrderServiceAsync()
+    {
+        if (Record is null || SelectedServiceId == 0) return;
+        ErrorMessage = null;
+        try
+        {
+            await Api.PostAsync<OrderServiceRequest, MedicalRecordServiceDto>($"api/medical-records/{Record.Id}/services", new OrderServiceRequest(SelectedServiceId, NewServiceQuantity));
+            Record = await Api.GetAsync<MedicalRecordDto>($"api/medical-records/{Record.Id}");
+            SelectedServiceId = 0;
+            NewServiceQuantity = 1;
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task CancelServiceAsync(int medicalRecordServiceId)
+    {
+        if (Record is null) return;
+        ErrorMessage = null;
+        try
+        {
+            await Api.PatchNoContentAsync<object?>($"api/medical-record-services/{medicalRecordServiceId}/cancel", null);
+            Record = await Api.GetAsync<MedicalRecordDto>($"api/medical-records/{Record.Id}");
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private void ToggleResultForm(int medicalRecordServiceId)
+    {
+        ResultFormServiceId = ResultFormServiceId == medicalRecordServiceId ? null : medicalRecordServiceId;
+        ResultValue = "";
+        ResultConclusion = "";
+    }
+
+    private async Task EnterResultAsync(int medicalRecordServiceId)
+    {
+        if (Record is null || string.IsNullOrWhiteSpace(ResultValue)) return;
+        ErrorMessage = null;
+        try
+        {
+            var request = new LabResultRequest(ResultValue, null, string.IsNullOrWhiteSpace(ResultConclusion) ? null : ResultConclusion, DateTime.UtcNow);
+            await Api.PostAsync<LabResultRequest, MedicalRecordServiceDto>($"api/medical-record-services/{medicalRecordServiceId}/result", request);
+            Record = await Api.GetAsync<MedicalRecordDto>($"api/medical-records/{Record.Id}");
+            ResultFormServiceId = null;
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task SearchMedicinesAsync()
+    {
+        if (string.IsNullOrWhiteSpace(MedicineKeyword) || Appointment is null)
+        {
+            MedicineResults = [];
+            return;
+        }
+        try
+        {
+            MedicineResults = (await Api.GetAsync<IReadOnlyList<MedicineSearchDto>>($"api/medicines/search?keyword={Uri.EscapeDataString(MedicineKeyword)}&patientId={Appointment.PatientId}")).ToList();
+        }
+        catch (ApiException)
+        {
+            MedicineResults = [];
+        }
+    }
+
+    private void SelectMedicine(MedicineSearchDto medicine)
+    {
+        PendingMedicine = medicine;
+        PendingQuantity = 1;
+        PendingDurationDays = null;
+        PendingDosage = "";
+        PendingInstruction = null;
+        PendingAllergyConfirmed = false;
+    }
+
+    private void AddPrescriptionItem()
+    {
+        if (PendingMedicine is null || string.IsNullOrWhiteSpace(PendingDosage)) return;
+
+        PrescriptionItems.Add(new PrescriptionItemRequest(PendingMedicine.Id, PendingQuantity, PendingDosage, PendingInstruction, PendingDurationDays, PendingAllergyConfirmed));
+        PrescriptionDisplayItems.Add((PendingMedicine.Name, PendingQuantity, PendingDosage));
+        PendingMedicine = null;
+        MedicineKeyword = "";
+        MedicineResults = [];
+    }
+
+    private async Task SavePrescriptionAsync()
+    {
+        if (Record is null || PrescriptionItems.Count == 0) return;
+        ErrorMessage = null;
+        try
+        {
+            var request = new PrescriptionRequest(null, PrescriptionItems);
+            await Api.PutAsync<PrescriptionRequest, PrescriptionDto>($"api/medical-records/{Record.Id}/prescription", request);
+            Record = await Api.GetAsync<MedicalRecordDto>($"api/medical-records/{Record.Id}");
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task FinalizeAsync()
+    {
+        if (Record is null) return;
+        IsFinalizing = true;
+        ErrorMessage = null;
+        try
+        {
+            await Api.PostAsync<object?, InvoiceDto>($"api/medical-records/{Record.Id}/finalize", null);
+            Navigation.NavigateTo("/doctor/queue");
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsFinalizing = false;
+        }
+    }
+
+    private static string ServiceStatusLabel(MedicalRecordServiceStatus status) => status switch
+    {
+        MedicalRecordServiceStatus.Ordered => "Chờ thực hiện",
+        MedicalRecordServiceStatus.InProgress => "Đang thực hiện",
+        MedicalRecordServiceStatus.Completed => "Đã có kết quả",
+        MedicalRecordServiceStatus.Cancelled => "Đã huỷ",
+        _ => status.ToString(),
+    };
+
+    private static string ServiceStatusClass(MedicalRecordServiceStatus status) => status switch
+    {
+        MedicalRecordServiceStatus.Completed => "bg-tertiary-fixed text-on-tertiary-fixed-variant",
+        MedicalRecordServiceStatus.Cancelled => "bg-surface-container-high text-on-surface-variant",
+        _ => "bg-secondary-fixed text-on-secondary-fixed",
+    };
+}

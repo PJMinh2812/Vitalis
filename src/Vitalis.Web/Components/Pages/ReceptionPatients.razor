@@ -1,0 +1,374 @@
+@page "/reception/patients"
+@layout ReceptionLayout
+@attribute [Authorize(Roles = "Receptionist")]
+@inject VitalisApiClient Api
+@using Vitalis.Application.Common
+@using Vitalis.Application.DTOs.Patients
+@using Vitalis.Domain.Enums
+
+<PageTitle>Hồ sơ bệnh nhân · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full">
+<div class="px-space-xl pt-space-lg pb-space-md flex flex-col gap-2">
+<div class="flex items-end justify-between flex-wrap gap-4 pt-1">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Quản lý Hồ sơ Bệnh nhân</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Tra cứu, tạo mới và cập nhật thông tin hành chính bệnh nhân</p>
+</div>
+</div>
+</div>
+<div class="px-space-xl pb-space-xl grid grid-cols-12 gap-space-lg items-start">
+<!-- LEFT PANEL -->
+<div class="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-space-md">
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-3">
+<button class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-on-primary py-2.5 px-4 rounded-lg font-label-md text-label-md transition-all shadow-sm active:scale-[0.99]" type="button" @onclick="StartCreate">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+<span>+ Tạo bệnh nhân mới</span>
+</button>
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">search</span>
+<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Tìm theo tên, SĐT, CCCD hoặc mã BN..." type="text" @bind="Keyword" @bind:event="oninput" @onkeyup="SearchAsync"/>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant px-1 font-label-xs text-label-xs">
+<span>Kết quả tra cứu: <strong>@Patients.Count hồ sơ</strong></span>
+</div>
+</div>
+@if (ErrorMessage is not null)
+{
+<div class="p-3 rounded-lg bg-error-container text-on-error-container font-body-sm text-body-sm">@ErrorMessage</div>
+}
+<div class="flex flex-col gap-2.5">
+@if (IsSearching)
+{
+<div class="p-4 text-center text-on-surface-variant font-body-sm text-body-sm">Đang tìm kiếm...</div>
+}
+else if (Patients.Count == 0)
+{
+<div class="p-4 text-center text-on-surface-variant font-body-sm text-body-sm">Nhập từ khóa để tìm bệnh nhân</div>
+}
+else
+{
+@foreach (var p in Patients)
+{
+<div class="relative bg-surface-container-lowest rounded-xl p-3.5 shadow-sm cursor-pointer transition-all @(Selected?.Id == p.Id ? "bg-gradient-to-r from-primary-fixed/25 via-surface-container-lowest to-surface-container-lowest" : "hover:bg-surface-container-low/60")" @onclick="() => SelectPatient(p)">
+@if (Selected?.Id == p.Id)
+{
+<div class="absolute left-0 top-3 bottom-3 w-1.5 rounded-r bg-primary"></div>
+}
+<div class="flex items-start justify-between gap-2 @(Selected?.Id == p.Id ? "pl-2" : "")">
+<div class="flex items-center gap-3">
+<div class="w-11 h-11 rounded-lg @(Selected?.Id == p.Id ? "bg-primary-container text-on-primary" : "bg-surface-container-high text-on-surface") font-title-md text-title-md flex items-center justify-center shrink-0">
+@Initials(p.FullName)
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">@p.FullName</span>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm mt-0.5">
+<span class="font-mono font-semibold @(Selected?.Id == p.Id ? "text-primary" : "")">@p.PatientCode</span>
+@if (p.DateOfBirth is not null)
+{
+<span>• @(DateTime.Today.Year - p.DateOfBirth.Value.Year) tuổi</span>
+}
+</div>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2.5 flex items-center justify-between text-on-surface-variant font-label-xs text-label-xs bg-surface-container-low/50 rounded-lg p-2">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-tertiary">call</span>
+@p.Phone
+            </span>
+</div>
+</div>
+}
+}
+</div>
+</div>
+<!-- RIGHT PANEL -->
+<div class="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-space-lg">
+@if (Selected is null && !IsCreating)
+{
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex items-center justify-center text-on-surface-variant font-body-md text-body-md min-h-[300px]">
+    Chọn một hồ sơ bên trái, hoặc tạo bệnh nhân mới
+  </div>
+}
+else
+{
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex items-center justify-between flex-wrap gap-4">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center text-on-primary font-display text-headline-lg shadow-sm">
+@Initials(Form.FullName)
+</div>
+<div class="flex flex-col gap-1">
+<h2 class="font-headline-md text-headline-md text-on-surface font-semibold tracking-tight">
+@(IsCreating ? "Tạo hồ sơ bệnh nhân mới" : $"Hồ sơ: {Selected?.FullName} - {Selected?.PatientCode}")
+</h2>
+</div>
+</div>
+</div>
+@if (SaveError is not null)
+{
+<div class="p-3 rounded-lg bg-error-container text-on-error-container font-body-sm text-body-sm">@SaveError</div>
+}
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-5">
+<div class="flex items-center justify-between pb-1">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Thông tin hành chính bệnh nhân</h3>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant italic">Dấu (*) là trường thông tin bắt buộc</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4">
+@if (!IsCreating)
+{
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface flex items-center justify-between">
+<span>Mã bệnh nhân</span>
+<span class="material-symbols-outlined text-[15px] text-outline">lock</span>
+</label>
+<div class="h-10 px-3 rounded-lg bg-surface-container-high/50 text-on-surface font-mono font-semibold flex items-center select-none cursor-not-allowed">
+@Selected?.PatientCode
+</div>
+</div>
+}
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Họ và tên <span class="text-error">*</span></label>
+<input class="h-10 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" type="text" @bind="Form.FullName"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Giới tính</label>
+<div class="h-10 flex items-center gap-4 px-2">
+<label class="flex items-center gap-2 cursor-pointer font-body-sm text-body-sm">
+<input class="accent-primary w-4 h-4" type="radio" checked="@(Form.Gender == Gender.Male)" @onchange="() => Form.Gender = Gender.Male"/>
+<span class="font-medium text-on-surface">Nam</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer font-body-sm text-body-sm">
+<input class="accent-primary w-4 h-4" type="radio" checked="@(Form.Gender == Gender.Female)" @onchange="() => Form.Gender = Gender.Female"/>
+<span class="text-on-surface-variant">Nữ</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer font-body-sm text-body-sm">
+<input class="accent-primary w-4 h-4" type="radio" checked="@(Form.Gender == Gender.Other)" @onchange="() => Form.Gender = Gender.Other"/>
+<span class="text-on-surface-variant">Khác</span>
+</label>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Ngày sinh</label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" type="date" @bind="Form.DateOfBirth"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Số điện thoại <span class="text-error">*</span></label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">phone</span>
+<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" type="tel" @bind="Form.Phone"/>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Email liên hệ</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">mail</span>
+<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" type="email" @bind="Form.Email"/>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Số CCCD / Mã định danh</label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface font-mono font-medium focus:outline-none focus:ring-1 focus:ring-primary" type="text" @bind="Form.NationalId"/>
+</div>
+<div class="flex flex-col gap-1.5 md:col-span-2">
+<label class="font-label-md text-label-md text-on-surface">Số thẻ Bảo hiểm Y tế (BHYT)</label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface font-mono font-medium focus:outline-none focus:ring-1 focus:ring-primary" type="text" @bind="Form.InsuranceNumber"/>
+</div>
+<div class="flex flex-col gap-1.5 md:col-span-2 lg:col-span-3">
+<label class="font-label-md text-label-md text-on-surface">Địa chỉ thường trú</label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-1 focus:ring-primary" type="text" @bind="Form.Address"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Nhóm máu</label>
+<select class="w-full h-10 px-3 pr-8 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md appearance-none focus:outline-none focus:ring-1 focus:ring-primary" @bind="Form.BloodType">
+<option value="">-- Chưa rõ --</option>
+<option value="O+">O+ (Rh dương)</option>
+<option value="O-">O- (Rh âm)</option>
+<option value="A+">A+ (Rh dương)</option>
+<option value="A-">A- (Rh âm)</option>
+<option value="B+">B+ (Rh dương)</option>
+<option value="B-">B- (Rh âm)</option>
+<option value="AB+">AB+ (Rh dương)</option>
+<option value="AB-">AB- (Rh âm)</option>
+</select>
+</div>
+@if (!IsCreating && Selected is not null && (Selected.EmergencyContactName is not null || Selected.EmergencyContactPhone is not null))
+{
+<div class="flex flex-col gap-1.5 md:col-span-2">
+<label class="font-label-md text-label-md text-on-surface flex items-center justify-between">
+<span>Người liên hệ khẩn cấp</span>
+<span class="material-symbols-outlined text-[15px] text-outline">lock</span>
+</label>
+<div class="h-10 px-3 rounded-lg bg-surface-container-high/50 text-on-surface flex items-center select-none">
+@Selected.EmergencyContactName @(Selected.EmergencyContactPhone is not null ? $"- SĐT: {Selected.EmergencyContactPhone}" : "")
+</div>
+</div>
+}
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex items-center justify-between flex-wrap gap-3">
+<div></div>
+<div class="flex items-center gap-3">
+<button class="px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold flex items-center gap-2 transition-colors shadow-sm disabled:opacity-60" type="button" disabled="@IsSaving" @onclick="SaveAsync">
+<span class="material-symbols-outlined text-[18px]">save</span>
+<span>@(IsSaving ? "Đang lưu..." : (IsCreating ? "+ Tạo hồ sơ" : "Lưu thay đổi hồ sơ"))</span>
+</button>
+</div>
+</div>
+}
+</div>
+</div>
+</div>
+
+@code {
+    private string Keyword { get; set; } = "";
+    private List<PatientDto> Patients { get; set; } = new();
+    private bool IsSearching { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    private PatientDto? Selected { get; set; }
+    private bool IsCreating { get; set; }
+    private bool IsSaving { get; set; }
+    private string? SaveError { get; set; }
+
+    private PatientFormModel Form { get; set; } = new();
+
+    private async Task SearchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Keyword))
+        {
+            Patients = new();
+            return;
+        }
+
+        IsSearching = true;
+        ErrorMessage = null;
+        try
+        {
+            var result = await Api.GetAsync<PagedResult<PatientDto>>($"api/patients?keyword={Uri.EscapeDataString(Keyword)}&pageSize=20");
+            Patients = result.Items.ToList();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSearching = false;
+        }
+    }
+
+    private void SelectPatient(PatientDto p)
+    {
+        Selected = p;
+        IsCreating = false;
+        SaveError = null;
+        Form = new PatientFormModel
+        {
+            FullName = p.FullName,
+            Phone = p.Phone ?? "",
+            Gender = p.Gender,
+            DateOfBirth = p.DateOfBirth,
+            Email = p.Email,
+            Address = p.Address,
+            NationalId = p.NationalId,
+            InsuranceNumber = p.InsuranceNumber,
+            BloodType = p.BloodType,
+        };
+    }
+
+    private void StartCreate()
+    {
+        Selected = null;
+        IsCreating = true;
+        SaveError = null;
+        Form = new PatientFormModel();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Form.FullName) || string.IsNullOrWhiteSpace(Form.Phone))
+        {
+            SaveError = "Vui lòng nhập đầy đủ họ tên và số điện thoại.";
+            return;
+        }
+
+        IsSaving = true;
+        SaveError = null;
+        try
+        {
+            if (IsCreating)
+            {
+                var request = new CreatePatientRequest
+                {
+                    FullName = Form.FullName,
+                    Phone = Form.Phone,
+                    Gender = Form.Gender,
+                    DateOfBirth = Form.DateOfBirth,
+                    Email = Form.Email,
+                    Address = Form.Address,
+                    NationalId = Form.NationalId,
+                    InsuranceNumber = Form.InsuranceNumber,
+                    BloodType = Form.BloodType,
+                };
+                var created = await Api.PostAsync<CreatePatientRequest, PatientDto>("api/patients", request);
+                Patients.Insert(0, created);
+                SelectPatient(created);
+            }
+            else if (Selected is not null)
+            {
+                var request = new UpdatePatientRequest
+                {
+                    FullName = Form.FullName,
+                    Phone = Form.Phone,
+                    Gender = Form.Gender,
+                    DateOfBirth = Form.DateOfBirth,
+                    Email = Form.Email,
+                    Address = Form.Address,
+                    NationalId = Form.NationalId,
+                    InsuranceNumber = Form.InsuranceNumber,
+                    BloodType = Form.BloodType,
+                };
+                var updated = await Api.PutAsync<UpdatePatientRequest, PatientDto>($"api/patients/{Selected.Id}", request);
+                var index = Patients.FindIndex(p => p.Id == updated.Id);
+                if (index >= 0)
+                    Patients[index] = updated;
+                SelectPatient(updated);
+            }
+        }
+        catch (ApiException ex)
+        {
+            SaveError = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private static string Initials(string fullName)
+    {
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+            return "?";
+        return parts.Length == 1 ? parts[0][..1].ToUpper() : $"{parts[^2][..1]}{parts[^1][..1]}".ToUpper();
+    }
+
+    private class PatientFormModel
+    {
+        public string FullName { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public Gender? Gender { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
+        public string? Email { get; set; }
+        public string? Address { get; set; }
+        public string? NationalId { get; set; }
+        public string? InsuranceNumber { get; set; }
+        public string? BloodType { get; set; }
+    }
+}

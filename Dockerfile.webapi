@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY src/Vitalis.Domain/Vitalis.Domain.csproj src/Vitalis.Domain/
+COPY src/Vitalis.Application/Vitalis.Application.csproj src/Vitalis.Application/
+COPY src/Vitalis.Infrastructure/Vitalis.Infrastructure.csproj src/Vitalis.Infrastructure/
+COPY src/Vitalis.WebApi/Vitalis.WebApi.csproj src/Vitalis.WebApi/
+RUN dotnet restore src/Vitalis.WebApi/Vitalis.WebApi.csproj
+
+COPY src/Vitalis.Domain/ src/Vitalis.Domain/
+COPY src/Vitalis.Application/ src/Vitalis.Application/
+COPY src/Vitalis.Infrastructure/ src/Vitalis.Infrastructure/
+COPY src/Vitalis.WebApi/ src/Vitalis.WebApi/
+RUN dotnet publish src/Vitalis.WebApi/Vitalis.WebApi.csproj -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "Vitalis.WebApi.dll"]

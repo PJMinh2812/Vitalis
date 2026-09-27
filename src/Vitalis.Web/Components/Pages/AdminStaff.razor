@@ -1,0 +1,817 @@
+﻿@page "/admin/staff"
+@layout AdminLayout
+@attribute [Authorize(Roles = "Admin")]
+@inject VitalisApiClient Api
+@using Vitalis.Application.Common
+@using Vitalis.Application.DTOs.Doctors
+
+<PageTitle>Nhân sự &amp; ca trực · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full gap-space-lg">
+<!-- 1. Header & Executive Controls Toolbar -->
+<section class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<div class="flex flex-col gap-1.5">
+<div class="flex flex-wrap items-center gap-2">
+<span class="px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-xs text-label-xs tracking-wider font-semibold uppercase flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-on-primary-container animate-pulse"></span>
+          VC-29 • ISO 9001:2015 &amp; BYT Standard
+        </span>
+<span class="px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+          Hệ thống Phân ca &amp; Giám sát CCHN Tự Động
+        </span>
+<span class="text-on-surface-variant font-label-xs text-label-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+          Cập nhật: 24/10/2026 08:30:14
+        </span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+        Quản Lý Nhân Sự Y Tế &amp; Điều Phối Ca Trực Toàn Viện
+      </h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        Phân hệ điều hành Ban Giám Đốc • Giám sát an toàn kíp trực, định mức giờ làm và thẩm quyền chứng chỉ hành nghề.
+      </p>
+</div>
+<!-- Executive Action Suite -->
+<div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+        Xuất Bảng Trực (Excel/PDF)
+      </button>
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+        Cấu Hình Định Mức
+      </button>
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-secondary-container hover:bg-secondary text-on-secondary-container font-label-sm text-label-sm transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+        Xếp Ca Tự Động (AI)
+      </button>
+<button class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary/90 font-label-md text-label-md font-semibold transition-all shadow-sm" type="button" @onclick="OpenCreateDoctorForm">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+        + Thêm Bác Sĩ
+      </button>
+</div>
+</section>
+@if (ErrorMessage is not null)
+{
+<div class="flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@ErrorMessage</p>
+<button class="text-on-error-container hover:opacity-75" @onclick="() => ErrorMessage = null" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+}
+<!-- Filter & Time Segment Selection Ribbon -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-space-sm bg-surface-container-low p-space-sm rounded-xl">
+<div class="md:col-span-4 flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-xl shadow-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Khoảng thời gian</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Tuần 43 (20/10/2026 - 26/10/2026)</span>
+</div>
+<span class="ml-auto text-on-surface-variant material-symbols-outlined text-[18px]">expand_more</span>
+</div>
+<div class="md:col-span-4 flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-xl shadow-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">apartment</span>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Khoa / Phòng</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Toàn Viện (Tất cả 12 đơn vị)</span>
+</div>
+<span class="ml-auto text-on-surface-variant material-symbols-outlined text-[18px]">expand_more</span>
+</div>
+<div class="md:col-span-4 flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-xl shadow-sm">
+<span class="material-symbols-outlined text-tertiary text-[20px]">badge</span>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Khối chức danh</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Tất cả (BS, Điều dưỡng, KTV, DS)</span>
+</div>
+<span class="ml-auto text-on-surface-variant material-symbols-outlined text-[18px]">expand_more</span>
+</div>
+</section>
+<!-- 2. Top 4 KPIs Scorecards -->
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Card 1 -->
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Tổng Quân Số Đi Làm</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-display text-display text-on-surface font-bold">68</span>
+<span class="font-headline-sm text-headline-sm text-on-surface-variant">/ 74</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">group</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex flex-col gap-2 bg-surface-container-low -mx-space-md -mb-space-md p-space-md rounded-b-xl">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span class="text-on-surface-variant">4 nghỉ phép năm • 2 đào tạo CME</span>
+<span class="px-2 py-0.5 rounded-full bg-primary text-on-primary font-bold">91.9%</span>
+</div>
+<div class="w-full bg-surface-dim h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 91.9%"></div>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Kíp Trực Đêm Nay (24/10)</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-display text-display text-primary font-bold">12</span>
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">nhân sự chốt</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[24px]">bedtime</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex flex-col gap-1 bg-surface-container-low -mx-space-md -mb-space-md p-space-md rounded-b-xl">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span class="text-on-surface font-semibold">Trưởng kíp: BS.CKII Nguyễn Văn Linh</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-bold">PASS 100%</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">4 BS Chuyên khoa • 6 ĐD Cấp cứu • 2 KTV</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Định Mức &amp; Tải Giờ Làm</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-display text-display text-on-surface font-bold">94.6%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">an toàn</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-tertiary-fixed flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[24px]">health_and_safety</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex flex-col gap-1 bg-surface-container-low -mx-space-md -mb-space-md p-space-md rounded-b-xl">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span class="text-error font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">warning</span>
+            02 BS vượt ngưỡng &gt;48h/tuần
+          </span>
+<span class="text-on-surface-variant">Burnout Risk</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Đã gửi thông báo cân đối ca trực bù nghỉ</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="flex flex-col justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Chứng Chỉ Hành Nghề (CCHN)</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-display text-display text-on-surface font-bold">100%</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Hợp lệ</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-xl bg-primary-fixed-dim flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[24px]">verified_user</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex flex-col gap-1 bg-surface-container-low -mx-space-md -mb-space-md p-space-md rounded-b-xl">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span class="text-on-surface font-medium">03 chứng chỉ an toàn sắp hạn &lt;45 ngày</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold">GCP / CME</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Đã đăng ký lớp bồi dưỡng Sở Y Tế T11/2026</span>
+</div>
+</div>
+</section>
+<!-- 3. Active Incident Response & Safety Alert Banner -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- Live Shortage Alert & AI Recommendation -->
+<div class="lg:col-span-8 p-space-md rounded-xl bg-error-container text-on-error-container flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md shadow-sm">
+<div class="flex items-start gap-3">
+<div class="p-2 rounded-xl bg-error text-on-error mt-0.5">
+<span class="material-symbols-outlined text-[22px]">notification_important</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md font-bold">Cảnh báo: Khoa Cấp Cứu thiếu 01 Điều dưỡng ca chiều (14:00 - 22:00)</span>
+<span class="px-2 py-0.5 rounded-full bg-error text-on-error font-label-xs text-label-xs font-bold uppercase">Cấp thiết</span>
+</div>
+<p class="font-body-sm text-body-sm">
+            ĐD. Lê Thị Hòa xin nghỉ ốm đột xuất. <strong>AI Vitalis Đề Xuất:</strong> Tăng cường <strong>ĐD. Trần Thu Thủy</strong> từ Ngoại trú sang (công suất phòng khám chiều nay đạt 32%, đáp ứng tiêu chuẩn thay thế an toàn).
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
+<button class="w-full sm:w-auto px-4 py-2 rounded-xl bg-error text-on-error hover:bg-error/90 font-label-md text-label-md font-semibold transition-all" type="button">
+          Xác Nhận Điều Chuyển
+        </button>
+</div>
+</div>
+<!-- Ready On-Call Cardiac Interventional Alert -->
+<div class="lg:col-span-4 p-space-md rounded-xl bg-primary text-on-primary flex items-center justify-between gap-space-md shadow-sm">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-on-primary/15 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary-fixed text-[24px]">cardiology</span>
+</div>
+<div class="flex flex-col">
+<div class="font-label-xs text-label-xs text-on-primary-container tracking-wider uppercase font-semibold">Tình Trạng Sẵn Sàng 24/7</div>
+<div class="font-title-md text-title-md font-bold leading-tight mt-0.5">Kíp Tim Mạch &amp; Can Thiệp Cấp Cứu</div>
+<div class="font-body-sm text-body-sm text-on-primary/80 mt-0.5">BS.CKII Nguyễn Văn Linh + Ekip Gây mê</div>
+</div>
+</div>
+<span class="w-3 h-3 rounded-full bg-primary-fixed animate-ping shrink-0 mr-1"></span>
+</div>
+</section>
+<!-- 4. Doctor management (real data: GET/POST/PUT/PATCH /api/doctors, /api/admin/doctors) -->
+<section class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="p-space-md flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm bg-surface-container-low">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-xl bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[20px]">stethoscope</span>
+</div>
+<div>
+<h2 class="font-title-md text-title-md text-on-surface font-bold">Danh Sách Bác Sĩ</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Quản lý hồ sơ, lịch làm việc theo tuần và ngày nghỉ của từng bác sĩ</p>
+</div>
+</div>
+<input class="h-10 px-3 w-64 bg-surface-container-lowest text-on-surface rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Tìm bác sĩ theo tên..." @bind="DoctorKeyword" @bind:event="oninput"/>
+</div>
+@if (ShowCreateDoctorForm)
+{
+<form class="p-space-md grid grid-cols-1 md:grid-cols-3 gap-3 bg-surface-container-low/50 border-t-0" @onsubmit="CreateDoctorAsync" @onsubmit:preventDefault="true">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Họ tên <span class="text-error">*</span></label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required @bind="NewDoctor.FullName"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Học hàm/Học vị</label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" @bind="NewDoctor.Title"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Chuyên khoa <span class="text-error">*</span></label>
+<select class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none" required @bind="NewDoctor.SpecialtyId">
+<option value="0">-- Chọn chuyên khoa --</option>
+@foreach (var specialty in Specialties)
+{
+<option value="@specialty.Id">@specialty.Name</option>
+}
+</select>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Số CCHN</label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" @bind="NewDoctor.LicenseNumber"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Phòng khám</label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" @bind="NewDoctor.Room"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Phí khám (VND) <span class="text-error">*</span></label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required type="number" @bind="NewDoctor.ConsultationFee"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Tối đa BN/ngày</label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" type="number" @bind="NewDoctor.MaxPatientsPerDay"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Tên đăng nhập <span class="text-error">*</span></label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required @bind="NewDoctor.Username"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Mật khẩu <span class="text-error">*</span></label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required type="password" @bind="NewDoctor.Password"/>
+</div>
+<div class="md:col-span-3 flex items-center justify-end gap-3">
+<button class="px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-md text-title-md transition-colors" type="button" @onclick="() => ShowCreateDoctorForm = false">Huỷ</button>
+<button class="px-5 py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-title-md text-title-md font-semibold transition-colors shadow-sm disabled:opacity-60" disabled="@IsSaving" type="submit">@(IsSaving ? "Đang lưu..." : "Tạo bác sĩ")</button>
+</div>
+</form>
+}
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container text-on-surface font-label-sm text-label-sm">
+<th class="p-3">Bác Sĩ</th>
+<th class="p-3">Chuyên Khoa</th>
+<th class="p-3">Phòng</th>
+<th class="p-3 text-right">Phí Khám</th>
+<th class="p-3 text-center">Trạng Thái</th>
+<th class="p-3 text-right">Thao Tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-sm text-body-sm">
+@if (IsLoadingDoctors)
+{
+<tr><td class="p-3 text-on-surface-variant" colspan="6">Đang tải...</td></tr>
+}
+else if (FilteredDoctors.Count == 0)
+{
+<tr><td class="p-3 text-on-surface-variant" colspan="6">Không tìm thấy bác sĩ nào.</td></tr>
+}
+else
+{
+@foreach (var doctor in FilteredDoctors)
+{
+<tr class="hover:bg-surface-container-low transition-colors @(SelectedDoctor?.Id == doctor.Id ? "bg-primary-fixed/10" : "")">
+<td class="p-3">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-semibold">@(doctor.Title is null ? "" : doctor.Title + " ")@doctor.FullName</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">@doctor.Username @(doctor.LicenseNumber is null ? "" : $"• CCHN {doctor.LicenseNumber}")</span>
+</div>
+</td>
+<td class="p-3 text-on-surface-variant">@doctor.SpecialtyName</td>
+<td class="p-3 text-on-surface-variant">@(doctor.Room ?? "-")</td>
+<td class="p-3 text-right font-mono">@(doctor.ConsultationFee?.ToString("N0") ?? "-")</td>
+<td class="p-3 text-center">
+@if (doctor.IsActive)
+{
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">Đang làm việc</span>
+}
+else
+{
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-xs text-label-xs font-semibold">Ngừng</span>
+}
+</td>
+<td class="p-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-xs text-label-xs font-semibold" type="button" @onclick="() => SelectDoctorAsync(doctor)">Lịch &amp; Nghỉ phép</button>
+@if (doctor.IsActive)
+{
+<button class="p-1.5 rounded-lg text-outline hover:text-error hover:bg-surface-container transition-colors" title="Ngừng công tác" type="button" @onclick="() => DeactivateDoctorAsync(doctor.Id)">
+<span class="material-symbols-outlined text-[18px]">block</span>
+</button>
+}
+</div>
+</td>
+</tr>
+}
+}
+</tbody>
+</table>
+</div>
+@if (SelectedDoctor is not null)
+{
+<div class="p-space-md border-t-0 bg-surface-container-low/40 grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+<!-- Weekly schedule -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-3">
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Lịch Làm Việc Theo Tuần · @SelectedDoctor.FullName</h3>
+<form class="grid grid-cols-2 md:grid-cols-3 gap-2 items-end" @onsubmit="CreateScheduleAsync" @onsubmit:preventDefault="true">
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Thứ (0=CN)</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" max="6" min="0" required type="number" @bind="NewSchedule.DayOfWeek"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Bắt đầu</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="time" @bind="NewSchedule.StartTime"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Kết thúc</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="time" @bind="NewSchedule.EndTime"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Phút/slot</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="number" @bind="NewSchedule.SlotMinutes"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Hiệu lực từ</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="date" @bind="NewSchedule.EffectiveFrom"/>
+</div>
+<button class="h-9 px-3 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold disabled:opacity-60" disabled="@IsSavingSchedule" type="submit">@(IsSavingSchedule ? "..." : "Thêm slot")</button>
+</form>
+<div class="flex flex-col gap-1.5 mt-1">
+@if (Schedules.Count == 0)
+{
+<span class="font-label-xs text-label-xs text-on-surface-variant">Chưa có lịch làm việc nào.</span>
+}
+@foreach (var schedule in Schedules)
+{
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low font-label-sm text-label-sm">
+<span>@DayName(schedule.DayOfWeek): @schedule.StartTime - @schedule.EndTime (mỗi @schedule.SlotMinutes phút)</span>
+<span class="font-label-xs text-label-xs @(schedule.IsActive ? "text-primary" : "text-on-surface-variant")">@(schedule.IsActive ? "Đang áp dụng" : "Ngừng")</span>
+</div>
+}
+</div>
+</div>
+<!-- Time off -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-3">
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Ngày Nghỉ · @SelectedDoctor.FullName</h3>
+<form class="grid grid-cols-2 gap-2 items-end" @onsubmit="CreateTimeOffAsync" @onsubmit:preventDefault="true">
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Từ</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="datetime-local" @bind="NewTimeOff.StartAt"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Đến</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="datetime-local" @bind="NewTimeOff.EndAt"/>
+</div>
+<div class="flex flex-col gap-1 col-span-2">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Lý do</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" @bind="NewTimeOff.Reason"/>
+</div>
+<button class="h-9 px-3 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold disabled:opacity-60 col-span-2" disabled="@IsSavingTimeOff" type="submit">@(IsSavingTimeOff ? "..." : "Đăng ký nghỉ")</button>
+</form>
+@if (LastConflicts is { Count: > 0 })
+{
+<div class="p-2.5 rounded-lg bg-error-container text-on-error-container font-label-xs text-label-xs">
+                  @LastConflicts.Count lịch hẹn cần được lễ tân sắp xếp lại trong khoảng thời gian nghỉ này.
+                </div>
+}
+<div class="flex flex-col gap-1.5 mt-1">
+@if (TimeOffs.Count == 0)
+{
+<span class="font-label-xs text-label-xs text-on-surface-variant">Chưa có ngày nghỉ nào.</span>
+}
+@foreach (var timeOff in TimeOffs)
+{
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low font-label-sm text-label-sm">
+<span>@timeOff.StartAt.ToString("dd/MM/yyyy HH:mm") - @timeOff.EndAt.ToString("dd/MM/yyyy HH:mm") (@timeOff.Type)</span>
+</div>
+}
+</div>
+</div>
+</div>
+}
+</section>
+<!-- 5. Bottom Panels: CCHN Supervision & Workload Analytics -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- Left Column: CCHN, CME & Regulatory Compliance (6 cols) -->
+<div class="lg:col-span-6 flex flex-col p-space-md rounded-xl bg-surface-container-lowest shadow-sm gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="p-2 rounded-xl bg-primary-fixed text-primary">
+<span class="material-symbols-outlined text-[20px]">verified</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Giám Sát CCHN &amp; Đào Tạo Y Khoa (CME)</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Quy định tối thiểu ≥ 24 tiết CME/năm (Thông tư BYT)</span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-xs text-label-xs font-bold">
+          Quý 4/2026
+        </span>
+</div>
+<!-- Training Progress Bars -->
+<div class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-surface-container-low">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Bác Sĩ</span>
+<span class="font-bold text-primary">92% đạt chuẩn</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 92%"></div>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">23/25 BS đủ 24 tín chỉ</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Điều Dưỡng</span>
+<span class="font-bold text-secondary">88% đạt chuẩn</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 88%"></div>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">28/32 ĐD đủ 24 tín chỉ</span>
+</div>
+</div>
+<!-- Pending Verification Table -->
+<div class="flex flex-col gap-2">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold uppercase tracking-wider">Hồ sơ thẩm định Sở Y Tế cần xử lý</span>
+<div class="flex flex-col divide-y divide-surface-container bg-surface-container-low rounded-xl p-2">
+<div class="py-2 px-2 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-[18px]">radiology</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface font-medium">BS.CKI Đặng Minh Tuấn</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Chứng chỉ An Toàn Bức Xạ Hạt Nhân</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-xs text-label-xs font-bold">Còn 24 ngày</span>
+</div>
+<div class="py-2 px-2 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">science</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface font-medium">DS.CKI Lê Hoàng Nam</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Thực hành tốt thử thuốc trên lâm sàng (GCP)</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-xs text-label-xs font-bold">Còn 41 ngày</span>
+</div>
+<div class="py-2 px-2 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[18px]">emergency</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface font-medium">ĐD. Trương Mỹ Lan</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Chứng chỉ Hồi sức Cấp cứu Nâng cao (ACLS)</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-xs text-label-xs font-bold">Đã nộp Sở Y Tế</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Workload & Executive Sign-off (6 cols) -->
+<div class="lg:col-span-6 flex flex-col justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm gap-space-md">
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="p-2 rounded-xl bg-secondary-fixed text-secondary">
+<span class="material-symbols-outlined text-[20px]">monitoring</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Phân Tích Tải Công Việc &amp; Hiệu Suất</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Cân bằng khối lượng lâm sàng, chống quá tải điều trị</span>
+</div>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Giới hạn BYT: ≤ 48h/tuần</span>
+</div>
+<!-- Inline Visual Comparison Bar Chart -->
+<div class="flex flex-col gap-2.5 mt-2 bg-surface-container-low p-3.5 rounded-xl">
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Lâm Sàng (BS Điều trị)</span>
+<span class="font-bold text-on-surface">44.5h / tuần</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 88%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Điều Dưỡng &amp; Chăm Sóc</span>
+<span class="font-bold text-on-surface">43.8h / tuần</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 86%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Cận Lâm Sàng (CĐHA, LIS)</span>
+<span class="font-bold text-on-surface">41.2h / tuần</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full rounded-full" style="width: 79%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Khối Dược Bệnh Viện</span>
+<span class="font-bold text-on-surface">40.0h / tuần</span>
+</div>
+<div class="w-full bg-surface-dim h-2 rounded-full overflow-hidden">
+<div class="bg-surface-tint h-full rounded-full" style="width: 75%"></div>
+</div>
+</div>
+</div>
+<!-- Metrics Row -->
+<div class="grid grid-cols-2 gap-3 mt-1">
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Chỉ số Hài lòng NV (eNPS)</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold mt-0.5">+68 điểm</span>
+</div>
+<span class="material-symbols-outlined text-primary text-[28px]">sentiment_very_satisfied</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Tỷ lệ biến động nhân sự</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold mt-0.5">1.8% / năm</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[28px]">trending_down</span>
+</div>
+</div>
+</div>
+<!-- Executive CA Digital Signature Area -->
+<div class="p-3.5 rounded-xl bg-primary-fixed/30 flex flex-col sm:flex-row items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-xl bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[22px]">draw</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface font-bold">Ký Duyệt Bảng Trực Toàn Viện Tuần 43</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Người ký: BS.CKII Trần Nam Phong (Tổng Giám Đốc) • Viettel-CA</div>
+</div>
+</div>
+<button class="w-full sm:w-auto px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary/90 font-label-md text-label-md font-semibold transition-all flex items-center justify-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+          Ký Số Điện Tử
+        </button>
+</div>
+</div>
+</section>
+</div>
+
+@code {
+    private List<DoctorDto> AllDoctors { get; set; } = [];
+    private List<SpecialtyDto> Specialties { get; set; } = [];
+    private bool IsLoadingDoctors { get; set; }
+    private bool IsSaving { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string DoctorKeyword { get; set; } = "";
+
+    private bool ShowCreateDoctorForm { get; set; }
+    private DoctorFormModel NewDoctor { get; set; } = new();
+
+    private DoctorDto? SelectedDoctor { get; set; }
+    private List<DoctorScheduleDto> Schedules { get; set; } = [];
+    private List<DoctorTimeOffDto> TimeOffs { get; set; } = [];
+    private IReadOnlyList<ConflictingAppointmentDto>? LastConflicts { get; set; }
+    private bool IsSavingSchedule { get; set; }
+    private bool IsSavingTimeOff { get; set; }
+    private ScheduleFormModel NewSchedule { get; set; } = new();
+    private TimeOffFormModel NewTimeOff { get; set; } = new();
+
+    private List<DoctorDto> FilteredDoctors => string.IsNullOrWhiteSpace(DoctorKeyword)
+        ? AllDoctors
+        : AllDoctors.Where(d => d.FullName.Contains(DoctorKeyword, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoadingDoctors = true;
+        try
+        {
+            var page = await Api.GetAsync<PagedResult<DoctorDto>>("api/doctors?page=1&pageSize=200");
+            AllDoctors = page.Items.ToList();
+            Specialties = (await Api.GetAsync<IReadOnlyList<SpecialtyDto>>("api/specialties")).ToList();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoadingDoctors = false;
+        }
+    }
+
+    private void OpenCreateDoctorForm()
+    {
+        NewDoctor = new DoctorFormModel();
+        ErrorMessage = null;
+        ShowCreateDoctorForm = true;
+    }
+
+    private async Task CreateDoctorAsync()
+    {
+        IsSaving = true;
+        try
+        {
+            var request = new DoctorRequest(
+                NewDoctor.FullName,
+                string.IsNullOrWhiteSpace(NewDoctor.Title) ? null : NewDoctor.Title,
+                NewDoctor.SpecialtyId,
+                string.IsNullOrWhiteSpace(NewDoctor.LicenseNumber) ? null : NewDoctor.LicenseNumber,
+                string.IsNullOrWhiteSpace(NewDoctor.Room) ? null : NewDoctor.Room,
+                NewDoctor.ConsultationFee,
+                NewDoctor.MaxPatientsPerDay,
+                NewDoctor.Username,
+                NewDoctor.Password);
+            var created = await Api.PostAsync<DoctorRequest, DoctorDto>("api/admin/doctors", request);
+            AllDoctors.Add(created);
+            ShowCreateDoctorForm = false;
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private async Task DeactivateDoctorAsync(int id)
+    {
+        try
+        {
+            await Api.PatchNoContentAsync<object?>($"api/admin/doctors/{id}/deactivate", null);
+            var index = AllDoctors.FindIndex(d => d.Id == id);
+            if (index >= 0)
+                AllDoctors[index] = AllDoctors[index] with { IsActive = false };
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task SelectDoctorAsync(DoctorDto doctor)
+    {
+        SelectedDoctor = doctor;
+        LastConflicts = null;
+        NewSchedule = new ScheduleFormModel();
+        NewTimeOff = new TimeOffFormModel();
+        ErrorMessage = null;
+        try
+        {
+            Schedules = (await Api.GetAsync<IReadOnlyList<DoctorScheduleDto>>($"api/admin/doctor-schedules?doctorId={doctor.Id}")).ToList();
+            TimeOffs = (await Api.GetAsync<IReadOnlyList<DoctorTimeOffDto>>($"api/admin/time-off?doctorId={doctor.Id}")).ToList();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task CreateScheduleAsync()
+    {
+        if (SelectedDoctor is null)
+            return;
+        IsSavingSchedule = true;
+        try
+        {
+            var request = new ScheduleRequest(
+                SelectedDoctor.Id,
+                NewSchedule.DayOfWeek,
+                NewSchedule.StartTime,
+                NewSchedule.EndTime,
+                null,
+                null,
+                NewSchedule.SlotMinutes,
+                NewSchedule.EffectiveFrom,
+                null);
+            var created = await Api.PostAsync<ScheduleRequest, DoctorScheduleDto>("api/admin/doctor-schedules", request);
+            Schedules.Add(created);
+            NewSchedule = new ScheduleFormModel();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSavingSchedule = false;
+        }
+    }
+
+    private async Task CreateTimeOffAsync()
+    {
+        if (SelectedDoctor is null)
+            return;
+        IsSavingTimeOff = true;
+        try
+        {
+            var request = new CreateTimeOffRequest(
+                SelectedDoctor.Id,
+                NewTimeOff.StartAt,
+                NewTimeOff.EndAt,
+                Vitalis.Domain.Enums.TimeOffType.Leave,
+                string.IsNullOrWhiteSpace(NewTimeOff.Reason) ? null : NewTimeOff.Reason);
+            var result = await Api.PostAsync<CreateTimeOffRequest, CreateTimeOffResult>("api/admin/time-off", request);
+            TimeOffs.Add(result.TimeOff);
+            LastConflicts = result.ConflictingAppointments;
+            NewTimeOff = new TimeOffFormModel();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSavingTimeOff = false;
+        }
+    }
+
+    private static string DayName(byte dayOfWeek) => dayOfWeek switch
+    {
+        0 => "Chủ nhật",
+        1 => "Thứ 2",
+        2 => "Thứ 3",
+        3 => "Thứ 4",
+        4 => "Thứ 5",
+        5 => "Thứ 6",
+        6 => "Thứ 7",
+        _ => dayOfWeek.ToString(),
+    };
+
+    private class DoctorFormModel
+    {
+        public string FullName { get; set; } = "";
+        public string Title { get; set; } = "";
+        public int SpecialtyId { get; set; }
+        public string LicenseNumber { get; set; } = "";
+        public string Room { get; set; } = "";
+        public decimal ConsultationFee { get; set; }
+        public int? MaxPatientsPerDay { get; set; }
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+
+    private class ScheduleFormModel
+    {
+        public byte DayOfWeek { get; set; }
+        public TimeOnly StartTime { get; set; } = new(8, 0);
+        public TimeOnly EndTime { get; set; } = new(17, 0);
+        public int SlotMinutes { get; set; } = 30;
+        public DateOnly EffectiveFrom { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+    }
+
+    private class TimeOffFormModel
+    {
+        public DateTime StartAt { get; set; } = DateTime.UtcNow;
+        public DateTime EndAt { get; set; } = DateTime.UtcNow.AddHours(1);
+        public string Reason { get; set; } = "";
+    }
+}

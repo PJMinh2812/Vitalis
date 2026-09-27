@@ -1,0 +1,355 @@
+@page "/my-invoices"
+@layout PatientLayout
+@attribute [Authorize(Roles = "Patient")]
+@using Vitalis.Application.DTOs.Billing
+@using Vitalis.Domain.Enums
+@inject VitalisApiClient Api
+@inject AuthTokenStore TokenStore
+
+<PageTitle>Hoá đơn của tôi · Vitalis</PageTitle>
+
+<div class="max-w-[1280px] mx-auto px-gutter py-space-xl"><div class="flex flex-col w-full">
+<!-- Top Header / Meta Area -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md mb-space-lg">
+<div class="flex flex-col gap-space-xs max-w-3xl">
+<!-- Breadcrumb -->
+<nav class="flex items-center gap-space-xs font-label-xs text-label-xs text-outline mb-1">
+<a class="hover:text-primary transition-colors flex items-center gap-0.5" href="#">
+<span class="material-symbols-outlined text-[14px]">home</span>
+          Trang chủ
+        </a>
+<span class="text-outline-variant">/</span>
+<span class="text-on-surface-variant font-label-sm">Hoá đơn &amp; Viện phí</span>
+</nav>
+<div class="flex items-center gap-space-sm">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Hoá đơn của tôi</h1>
+</div>
+<p class="font-body-md text-body-md text-outline">
+        Tra cứu, theo dõi viện phí, mức hưởng BHYT của bệnh nhân <strong class="text-on-surface font-label-md">@(TokenStore.CurrentUser?.FullName ?? "")</strong>.
+      </p>
+</div>
+</div>
+@if (ErrorMessage is not null)
+{
+<div class="mb-space-lg flex items-start gap-3 p-3.5 rounded-lg bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@ErrorMessage</p>
+</div>
+}
+@if (IsLoading)
+{
+<p class="font-body-sm text-body-sm text-outline">Đang tải hoá đơn...</p>
+}
+else
+{
+<!-- KPI Summary Cards -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-space-lg mb-space-xl">
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 w-28 h-28 bg-primary/5 rounded-full blur-xl pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Tổng viện phí phát sinh</span>
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+</div>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display text-on-surface font-bold tracking-tight">@TotalAmount.ToString("N0")</span>
+<span class="font-title-md text-title-md text-outline">đ</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center gap-space-xs text-outline font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">receipt_long</span>
+<span>@Invoices.Count hoá đơn đã phát sinh</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 w-28 h-28 bg-secondary/5 rounded-full blur-xl pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Đã quyết toán</span>
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[20px]">task_alt</span>
+</div>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display text-on-surface font-bold tracking-tight">@TotalPaid.ToString("N0")</span>
+<span class="font-title-md text-title-md text-outline">đ</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-6 -bottom-6 w-32 h-32 bg-error/5 rounded-full blur-xl pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-error uppercase tracking-wider font-semibold">Cần thanh toán</span>
+<div class="w-9 h-9 rounded-lg bg-error-container/40 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[20px]">pending_actions</span>
+</div>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display text-error font-bold tracking-tight">@TotalRemaining.ToString("N0")</span>
+<span class="font-title-md text-title-md text-error font-medium">đ</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center gap-space-sm">
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+              @Invoices.Count(i => i.Remaining > 0) hoá đơn còn nợ
+            </span>
+</div>
+</div>
+</section>
+@if (Invoices.Count == 0)
+{
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col items-center justify-center text-center max-w-md mx-auto">
+<div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-outline mb-space-sm">
+<span class="material-symbols-outlined text-[28px]">receipt_long</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface font-semibold">Chưa có hoá đơn nào</h4>
+<p class="font-body-sm text-body-sm text-outline mt-1">Hoá đơn phát sinh sau mỗi lượt khám sẽ hiển thị tại đây.</p>
+</div>
+}
+else
+{
+<!-- Main Content Layout -->
+<div class="relative flex flex-col xl:flex-row items-start gap-space-lg">
+<!-- Invoice Table Container -->
+<div class="w-full flex-1 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low font-label-sm text-label-sm text-outline uppercase tracking-wider">
+<th class="py-3 px-4 font-semibold" scope="col">Số HĐ</th>
+<th class="py-3 px-4 font-semibold" scope="col">Ngày lập</th>
+<th class="py-3 px-4 font-semibold text-right" scope="col">Tổng tiền</th>
+<th class="py-3 px-4 font-semibold text-right" scope="col">BHYT chi trả</th>
+<th class="py-3 px-4 font-semibold text-right" scope="col">Đã trả</th>
+<th class="py-3 px-4 font-semibold text-right" scope="col">Còn lại</th>
+<th class="py-3 px-4 font-semibold text-center" scope="col">Trạng thái</th>
+<th class="py-3 px-4 font-semibold text-right" scope="col">Thao tác</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md divide-y divide-surface-container-low">
+@foreach (var invoice in Invoices)
+{
+var selected = invoice.Id == SelectedInvoiceId;
+<tr class="transition cursor-pointer @(selected ? "bg-surface-container-high/40 hover:bg-surface-container" : "hover:bg-surface-container-low")" @onclick="() => SelectedInvoiceId = invoice.Id">
+<td class="py-3.5 px-4 font-label-md text-label-md @(selected ? "text-primary" : "text-on-surface") font-semibold">
+                @(invoice.InvoiceNo ?? $"#{invoice.Id}")
+              </td>
+<td class="py-3.5 px-4 text-on-surface-variant font-body-sm text-body-sm">
+<div>@invoice.CreatedAt.ToString("dd/MM/yyyy")</div>
+<div class="text-outline text-label-xs font-label-xs">@invoice.CreatedAt.ToString("HH:mm")</div>
+</td>
+<td class="py-3.5 px-4 text-right font-label-md text-label-md text-on-surface">@invoice.TotalAmount.ToString("N0")đ</td>
+<td class="py-3.5 px-4 text-right text-tertiary font-label-md text-label-md">@invoice.InsuranceAmount.ToString("N0")đ</td>
+<td class="py-3.5 px-4 text-right text-on-surface-variant font-label-md text-label-md">@invoice.PaidAmount.ToString("N0")đ</td>
+<td class="py-3.5 px-4 text-right font-label-md text-label-md @(invoice.Remaining > 0 ? "text-error font-bold" : "text-outline")">@invoice.Remaining.ToString("N0")đ</td>
+<td class="py-3.5 px-4 text-center">
+@RenderInvoiceStatusPill(invoice)
+</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<button class="px-2.5 py-1 bg-primary text-on-primary rounded font-label-xs text-label-xs hover:bg-primary-container transition shadow-sm" type="button" @onclick:stopPropagation="true" @onclick="() => SelectedInvoiceId = invoice.Id">
+                    Chi tiết
+                  </button>
+</td>
+</tr>
+}
+</tbody>
+</table>
+</div>
+</div>
+<!-- Side Detail Drawer -->
+@if (SelectedInvoice is not null)
+{
+var invoice = SelectedInvoice;
+<aside class="w-full xl:w-[460px] shrink-0 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Drawer Header -->
+<div class="p-space-lg bg-surface-container-low/60 flex items-start justify-between gap-space-sm">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-md text-title-md text-on-surface font-bold tracking-tight">Chi tiết: @(invoice.InvoiceNo ?? $"#{invoice.Id}")</span>
+</div>
+<div class="flex items-center gap-2 mt-1">
+@RenderInvoiceStatusPill(invoice)
+</div>
+<div class="font-body-sm text-body-sm text-outline mt-0.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span>Ngày tạo: @invoice.CreatedAt.ToString("dd/MM/yyyy 'lúc' HH:mm")</span>
+</div>
+</div>
+<button aria-label="Đóng bảng chi tiết" class="p-1.5 rounded-full text-outline hover:text-on-surface hover:bg-surface-container transition" type="button" @onclick="() => SelectedInvoiceId = null">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Drawer Scrollable Body -->
+<div class="p-space-lg flex flex-col gap-space-lg overflow-y-auto max-h-[calc(100vh-320px)]">
+<!-- Section 1: Dịch vụ & Thuốc đã sử dụng -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between mb-1">
+<h2 class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Dịch vụ &amp; Thuốc chỉ định</h2>
+<span class="font-label-xs text-label-xs text-primary font-semibold">@invoice.Items.Count mục</span>
+</div>
+<div class="rounded-lg overflow-hidden bg-surface-container-low">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-container font-label-xs text-label-xs text-outline">
+<th class="py-2 px-3" scope="col">Tên mục</th>
+<th class="py-2 px-1 text-center" scope="col">SL</th>
+<th class="py-2 px-2 text-right" scope="col">Đơn giá</th>
+<th class="py-2 px-3 text-right" scope="col">Thành tiền</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-high/40">
+@foreach (var item in invoice.Items)
+{
+<tr>
+<td class="py-2 px-3">
+<div class="font-label-sm text-label-sm text-on-surface">@(item.Description ?? "—")</div>
+<span class="inline-block px-1.5 py-0.2 rounded font-label-xs text-label-xs bg-surface-container @(item.MedicineId is not null ? "text-secondary" : "text-primary")">@(item.MedicineId is not null ? "Thuốc" : "Dịch vụ")</span>
+</td>
+<td class="py-2 px-1 text-center font-label-sm text-label-sm text-on-surface">@item.Quantity</td>
+<td class="py-2 px-2 text-right text-outline font-label-sm text-label-sm">@item.UnitPrice.ToString("N0")đ</td>
+<td class="py-2 px-3 text-right font-label-md text-label-md text-on-surface font-semibold">@item.Amount.ToString("N0")đ</td>
+</tr>
+}
+</tbody>
+</table>
+</div>
+</div>
+<!-- Section 2: Tổng kết tài chính -->
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-center justify-between text-body-sm font-body-sm text-outline">
+<span>Tổng tiền dịch vụ &amp; thuốc:</span>
+<span class="font-label-md text-label-md text-on-surface">@invoice.TotalAmount.ToString("N0")đ</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-tertiary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+              Giảm trừ BHYT:
+            </span>
+<span class="font-label-md text-label-md font-semibold">-@invoice.InsuranceAmount.ToString("N0")đ</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-outline">
+<span>Chiết khấu:</span>
+<span class="font-label-md text-label-md text-outline">-@invoice.DiscountAmount.ToString("N0")đ</span>
+</div>
+<div class="pt-2 mt-1 flex items-center justify-between font-label-md text-label-md text-on-surface">
+<span>Tổng người bệnh chi trả:</span>
+<span class="font-title-md text-title-md font-bold text-on-surface">@((invoice.TotalAmount - invoice.InsuranceAmount - invoice.DiscountAmount).ToString("N0"))đ</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-tertiary">
+<span>Đã thanh toán:</span>
+<span class="font-label-md text-label-md font-semibold">@invoice.PaidAmount.ToString("N0")đ</span>
+</div>
+<div class="pt-2 mt-1 flex items-center justify-between bg-surface-container-lowest p-2.5 rounded">
+<span class="font-label-md text-label-md text-on-surface font-bold uppercase">CÒN LẠI:</span>
+<span class="font-headline-sm text-headline-sm @(invoice.Remaining > 0 ? "text-error" : "text-tertiary") font-bold">@invoice.Remaining.ToString("N0")đ</span>
+</div>
+</div>
+<!-- Section 3: Lịch sử giao dịch -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Nhật ký giao dịch viện phí</span>
+@if (invoice.Payments.Count == 0)
+{
+<p class="font-body-sm text-body-sm text-outline">Chưa ghi nhận giao dịch thanh toán nào.</p>
+}
+else
+{
+@foreach (var payment in invoice.Payments)
+{
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface font-semibold">
+<span class="material-symbols-outlined text-primary text-[18px]">@PaymentMethodIcon(payment.Method)</span>
+<span>@PaymentMethodLabel(payment.Method)</span>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded font-label-xs text-label-xs bg-surface-container @(payment.IsRefund ? "text-error" : "text-tertiary") font-semibold">
+                    @(payment.IsRefund ? "Hoàn tiền" : "Thành công")
+                  </span>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm text-outline">
+<span>Mã GD: <strong class="text-on-surface font-label-sm">@(payment.ReferenceCode ?? "—")</strong></span>
+<span>Số tiền: <strong class="text-on-surface font-label-sm">@payment.Amount.ToString("N0")đ</strong></span>
+</div>
+<div class="text-outline text-label-xs font-label-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">done</span>
+                  Ghi nhận lúc @payment.PaidAt.ToString("HH:mm · dd/MM/yyyy")
+                </div>
+</div>
+}
+}
+</div>
+</div>
+</aside>
+}
+</div>
+}
+}
+</div></div>
+
+@code {
+    private List<InvoiceDto> Invoices = new();
+    private bool IsLoading;
+    private string? ErrorMessage;
+    private int? SelectedInvoiceId;
+
+    private InvoiceDto? SelectedInvoice => Invoices.FirstOrDefault(i => i.Id == SelectedInvoiceId);
+    private decimal TotalAmount => Invoices.Sum(i => i.TotalAmount);
+    private decimal TotalPaid => Invoices.Sum(i => i.PaidAmount);
+    private decimal TotalRemaining => Invoices.Sum(i => i.Remaining);
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+        try
+        {
+            Invoices = (await Api.GetAsync<List<InvoiceDto>>("api/patients/me/invoices"))
+                .OrderByDescending(i => i.CreatedAt).ToList();
+            SelectedInvoiceId = Invoices.FirstOrDefault()?.Id;
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private static string PaymentMethodLabel(PaymentMethod method) => method switch
+    {
+        PaymentMethod.Cash => "Tiền mặt",
+        PaymentMethod.Card => "Thẻ ngân hàng",
+        PaymentMethod.BankTransfer => "Chuyển khoản",
+        PaymentMethod.EWallet => "Ví điện tử",
+        _ => method.ToString(),
+    };
+
+    private static string PaymentMethodIcon(PaymentMethod method) => method switch
+    {
+        PaymentMethod.Cash => "payments",
+        PaymentMethod.Card => "credit_card",
+        PaymentMethod.BankTransfer => "qr_code_2",
+        PaymentMethod.EWallet => "account_balance_wallet",
+        _ => "receipt_long",
+    };
+
+    private static RenderFragment RenderInvoiceStatusPill(InvoiceDto invoice) => builder =>
+    {
+        var (classes, label) = invoice.IsCancelled
+            ? ("bg-rose-50 text-rose-800 ring-1 ring-rose-200", "Đã huỷ")
+            : invoice.Status switch
+            {
+                InvoiceStatus.Paid => ("bg-surface-container-high text-tertiary", "Đã thanh toán"),
+                InvoiceStatus.PartiallyPaid => ("bg-amber-50 text-amber-800 ring-1 ring-amber-200", "Thu một phần"),
+                _ => ("bg-error-container/40 text-error font-semibold", "Chưa thanh toán"),
+            };
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", $"inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs {classes}");
+        builder.AddContent(2, label);
+        builder.CloseElement();
+    };
+}

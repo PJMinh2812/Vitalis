@@ -1,0 +1,373 @@
+@page "/my-records"
+@layout PatientLayout
+@attribute [Authorize(Roles = "Patient")]
+@using Vitalis.Application.Common
+@using Vitalis.Application.DTOs.MedicalRecords
+@using Vitalis.Domain.Enums
+@inject VitalisApiClient Api
+@inject AuthTokenStore TokenStore
+
+<PageTitle>Lịch sử khám &amp; đơn thuốc · Vitalis</PageTitle>
+
+<div class="max-w-[1280px] mx-auto px-gutter py-space-xl"><div class="flex flex-col w-full gap-space-lg">
+<!-- Top Navigation Sub-Indicator Sync (Visual Cue) -->
+<div class="flex flex-col gap-space-xs">
+<nav aria-label="Breadcrumb" class="flex items-center gap-space-xs text-outline font-label-xs text-label-xs">
+<a class="hover:text-primary transition-colors" href="#">Trang chủ</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface font-semibold">Lịch sử khám &amp; đơn thuốc</span>
+</nav>
+<!-- Page Header & Action Bar -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pt-space-xs">
+<div class="flex flex-col max-w-2xl">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Lịch sử khám &amp; đơn thuốc</h1>
+<p class="font-body-md text-body-md text-outline mt-0.5">
+          Theo dõi hồ sơ bệnh án điện tử (EMR), phác đồ điều trị, đơn thuốc và kết quả cận lâm sàng của bệnh nhân <strong class="text-on-surface font-medium">@(TokenStore.CurrentUser?.FullName ?? "")</strong>
+</p>
+</div>
+</div>
+</div>
+@if (ErrorMessage is not null)
+{
+<div class="flex items-start gap-3 p-3.5 rounded-lg bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@ErrorMessage</p>
+</div>
+}
+@if (IsLoading)
+{
+<p class="font-body-sm text-body-sm text-outline">Đang tải hồ sơ bệnh án...</p>
+}
+else if (Records.Count == 0)
+{
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col items-center justify-center text-center max-w-md mx-auto my-space-xs">
+<div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-outline mb-space-sm">
+<span class="material-symbols-outlined text-[28px]">folder_off</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface font-semibold">Chưa có lượt khám nào được ghi nhận</h4>
+<p class="font-body-sm text-body-sm text-outline mt-1 mb-space-md">
+        Quý khách chưa có hồ sơ bệnh án hoặc các lượt khám trước đây chưa hoàn tất thủ tục khám tại quầy lễ tân Vitalis.
+      </p>
+<a class="px-4 py-2 bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md rounded-lg shadow-sm transition-all flex items-center gap-2" href="/booking">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>Đặt lịch khám ngay</span>
+</a>
+</div>
+}
+else
+{
+<!-- Main Split-Column Workspace -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- Left Column: Visit Timeline Sidebar -->
+<aside class="lg:col-span-4 flex flex-col gap-space-md bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">history_edu</span>
+<h2 class="font-title-md text-title-md text-on-surface">Các lượt khám</h2>
+<span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-label-xs text-label-xs">@Records.Count lượt</span>
+</div>
+</div>
+<!-- Timeline Items -->
+<div class="relative flex flex-col gap-space-md">
+<div class="absolute left-4 top-4 bottom-6 w-0.5 bg-surface-container-high -z-0"></div>
+@foreach (var record in Records)
+{
+var selected = record.Id == SelectedRecordId;
+<article class="relative z-10 flex gap-space-sm p-3.5 rounded-xl transition-all cursor-pointer @(selected ? "bg-primary-fixed/20 shadow-sm" : "bg-surface-container-low/60 hover:bg-surface-container-low")" @onclick="() => SelectedRecordId = record.Id">
+<div class="flex flex-col items-center">
+<div class="w-8 h-8 rounded-full flex items-center justify-center shadow-sm @(selected ? "bg-primary text-on-primary" : "bg-surface-container-high text-on-surface-variant")">
+<span class="material-symbols-outlined text-[18px]">medical_services</span>
+</div>
+</div>
+<div class="flex-1 min-w-0 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm @(selected ? "text-primary font-semibold" : "text-outline")">@record.CreatedAt.ToString("dd/MM/yyyy · HH:mm")</span>
+<span class="px-2 py-0.5 rounded-full font-label-xs text-label-xs @(record.Status == MedicalRecordStatus.Finalized ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800")">@(record.Status == MedicalRecordStatus.Finalized ? "Đã chốt hồ sơ" : "Bản nháp")</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface font-semibold truncate">@(record.Diagnosis ?? "Chưa có chẩn đoán")</h3>
+<p class="font-body-sm text-body-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">person</span>
+<span>@record.DoctorName</span>
+</p>
+<div class="flex items-center gap-space-md pt-1 text-outline font-label-xs text-label-xs">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">medication</span> @(record.Prescription?.Items.Count ?? 0) loại thuốc</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">biotech</span> @record.Services.Count dịch vụ CLS</span>
+</div>
+</div>
+</article>
+}
+</div>
+</aside>
+<!-- Right Column: Detail Content -->
+<section class="lg:col-span-8 flex flex-col gap-space-lg">
+@if (SelectedRecord is not null)
+{
+var selectedRecord = SelectedRecord;
+<!-- Selected Visit Hero Summary Banner -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md p-space-md rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Chi tiết lượt khám: @selectedRecord.CreatedAt.ToString("dd/MM/yyyy")</h2>
+</div>
+<p class="font-body-sm text-body-sm text-outline flex flex-wrap items-center gap-x-2 gap-y-1">
+<span>Bác sĩ phụ trách: <strong class="text-on-surface">@selectedRecord.DoctorName</strong></span>
+<span>•</span>
+<span>Mã bệnh án: <code class="font-mono text-primary font-medium">#@selectedRecord.Id</code></span>
+</p>
+</div>
+</div>
+<!-- CARD 1: Clinical Info & Diagnoses -->
+<article class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-2">
+<div class="flex items-center gap-2">
+<span class="p-2 rounded-lg bg-surface-container-high text-primary">
+<span class="material-symbols-outlined text-[20px]">clinical_notes</span>
+</span>
+<h3 class="font-title-md text-title-md text-on-surface">1. Thông tin lâm sàng &amp; Chẩn đoán</h3>
+</div>
+</div>
+<!-- Vital Signs Ribbon -->
+@if (selectedRecord.Vitals is not null)
+{
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 p-3 bg-surface-container-low rounded-xl">
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-outline">Huyết áp</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold">@(selectedRecord.Vitals.BloodPressure ?? "—")</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-outline">Nhịp tim</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold">@(selectedRecord.Vitals.Pulse?.ToString() ?? "—") <small class="text-[10px] text-outline font-normal">l/p</small></span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-outline">Nhiệt độ</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold">@(selectedRecord.Vitals.Temperature?.ToString("0.0") ?? "—") <small class="text-[10px] text-outline font-normal">°C</small></span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-outline">Cân nặng</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold">@(selectedRecord.Vitals.Weight?.ToString("0.#") ?? "—") <small class="text-[10px] text-outline font-normal">kg</small></span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-outline">Chiều cao</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold">@(selectedRecord.Vitals.Height?.ToString("0.#") ?? "—") <small class="text-[10px] text-outline font-normal">cm</small></span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-outline">Chỉ số BMI</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold">@Bmi(selectedRecord.Vitals)</span>
+</div>
+</div>
+}
+else
+{
+<p class="font-body-sm text-body-sm text-outline">Chưa ghi nhận dấu hiệu sinh tồn cho lượt khám này.</p>
+}
+<!-- 2 Column Details -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md pt-1">
+<div class="flex flex-col gap-1 p-3.5 bg-surface-container rounded-lg">
+<span class="font-label-xs text-label-xs text-outline uppercase tracking-wider">Lý do khám &amp; Triệu chứng ban đầu</span>
+<p class="font-body-md text-body-md text-on-surface mt-1 leading-relaxed">
+              @(selectedRecord.Symptoms ?? "Chưa ghi nhận")
+            </p>
+</div>
+<div class="flex flex-col gap-1 p-3.5 bg-surface-container rounded-lg">
+<span class="font-label-xs text-label-xs text-outline uppercase tracking-wider">Chẩn đoán xác định</span>
+<div class="mt-1 flex flex-col gap-1">
+<div class="flex items-center gap-1.5">
+@if (!string.IsNullOrWhiteSpace(selectedRecord.Icd10Code))
+{
+<span class="px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-label-xs text-label-xs font-semibold">@selectedRecord.Icd10Code</span>
+}
+<span class="font-title-md text-title-md text-on-surface font-semibold">@(selectedRecord.Diagnosis ?? "Chưa có chẩn đoán")</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-1 p-3.5 bg-surface-container-low rounded-lg">
+<span class="font-label-xs text-label-xs text-outline uppercase tracking-wider">Phác đồ &amp; Hướng điều trị</span>
+<p class="font-body-md text-body-md text-on-surface mt-1 leading-relaxed">
+            @(selectedRecord.TreatmentPlan ?? "Chưa có phác đồ điều trị")
+          </p>
+</div>
+@if (selectedRecord.FollowUpDate is not null)
+{
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm p-3.5 bg-primary/10 rounded-lg">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">event_repeat</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-primary font-semibold uppercase">Lịch hẹn tái khám định kỳ</span>
+<span class="font-title-md text-title-md text-on-surface font-bold">@selectedRecord.FollowUpDate.Value.ToString("dd/MM/yyyy")</span>
+</div>
+</div>
+</div>
+}
+</article>
+<!-- CARD 2: Outpatient Prescription -->
+<article class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
+<div class="flex items-center gap-2">
+<span class="p-2 rounded-lg bg-surface-container-high text-primary">
+<span class="material-symbols-outlined text-[20px]">prescriptions</span>
+</span>
+<h3 class="font-title-md text-title-md text-on-surface">2. Đơn thuốc ngoại trú</h3>
+</div>
+@if (selectedRecord.Prescription is not null)
+{
+<span class="px-2.5 py-1 rounded-full font-label-xs text-label-xs font-semibold flex items-center gap-1 @(selectedRecord.Prescription.Status == PrescriptionStatus.Dispensed ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800")">
+<span class="material-symbols-outlined text-[14px]">@(selectedRecord.Prescription.Status == PrescriptionStatus.Dispensed ? "check_circle" : "hourglass_empty")</span>
+              @(selectedRecord.Prescription.Status == PrescriptionStatus.Dispensed ? "Đã cấp thuốc" : "Chờ cấp thuốc")
+            </span>
+}
+</div>
+@if (selectedRecord.Prescription is null || selectedRecord.Prescription.Items.Count == 0)
+{
+<p class="font-body-sm text-body-sm text-outline">Lượt khám này chưa có đơn thuốc.</p>
+}
+else
+{
+<div class="overflow-x-auto rounded-lg">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container font-label-sm text-label-sm text-outline">
+<tr>
+<th class="py-2.5 px-3 w-12 text-center">STT</th>
+<th class="py-2.5 px-3">Tên thuốc</th>
+<th class="py-2.5 px-3 w-24 text-center">Số lượng</th>
+<th class="py-2.5 px-3">Liều dùng &amp; Cách dùng</th>
+<th class="py-2.5 px-3">Ghi chú</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-high/60">
+@{ var itemIndex = 0; }
+@foreach (var item in selectedRecord.Prescription.Items)
+{
+itemIndex++;
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 text-center text-outline font-mono">@itemIndex.ToString("00")</td>
+<td class="py-3 px-3">
+<div class="font-semibold text-on-surface">@(item.MedicineName ?? "—")</div>
+</td>
+<td class="py-3 px-3 text-center font-semibold text-on-surface">@item.Quantity</td>
+<td class="py-3 px-3 text-on-surface">
+<span class="font-medium">@(item.Dosage ?? "—")</span>
+@if (item.DurationDays is not null)
+{
+<div class="font-label-xs text-label-xs text-primary mt-0.5 font-medium">Dùng trong @item.DurationDays ngày</div>
+}
+</td>
+<td class="py-3 px-3 text-outline">@(item.Instruction ?? "—")</td>
+</tr>
+}
+</tbody>
+</table>
+</div>
+}
+</article>
+<!-- CARD 3: Paraclinical Results & Diagnostic Imaging -->
+<article class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-2">
+<div class="flex items-center gap-2">
+<span class="p-2 rounded-lg bg-surface-container-high text-primary">
+<span class="material-symbols-outlined text-[20px]">biotech</span>
+</span>
+<h3 class="font-title-md text-title-md text-on-surface">3. Kết quả cận lâm sàng (CLS) &amp; Chẩn đoán hình ảnh</h3>
+</div>
+<span class="font-label-xs text-label-xs text-primary font-semibold">@selectedRecord.Services.Count chỉ định</span>
+</div>
+@if (selectedRecord.Services.Count == 0)
+{
+<p class="font-body-sm text-body-sm text-outline">Lượt khám này chưa có chỉ định dịch vụ cận lâm sàng.</p>
+}
+else
+{
+<div class="overflow-x-auto rounded-lg">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container font-label-sm text-label-sm text-outline">
+<tr>
+<th class="py-2.5 px-3">Tên dịch vụ CLS</th>
+<th class="py-2.5 px-3">Kết quả</th>
+<th class="py-2.5 px-3">Khoảng tham chiếu</th>
+<th class="py-2.5 px-3">Kết luận</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-high/60">
+@foreach (var service in selectedRecord.Services)
+{
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 font-medium text-on-surface">
+<div>@service.ServiceName</div>
+<span class="font-label-xs text-label-xs text-outline">Số lượng: @service.Quantity</span>
+</td>
+<td class="py-3 px-3 text-on-surface">@(service.Result?.ResultValue ?? "Chưa có kết quả")</td>
+<td class="py-3 px-3 text-outline">@(service.Result?.ReferenceRange ?? "—")</td>
+<td class="py-3 px-3">
+@if (service.Result?.Conclusion is not null)
+{
+<span class="px-2 py-0.5 rounded-full bg-green-100 text-green-900 font-label-xs text-label-xs font-semibold">@service.Result.Conclusion</span>
+}
+else
+{
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-outline font-label-xs text-label-xs font-semibold">@service.Status</span>
+}
+</td>
+</tr>
+}
+</tbody>
+</table>
+</div>
+}
+</article>
+}
+</section>
+</div>
+}
+<!-- Legal & ISO Security Reassurance Notice -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">shield_lock</span>
+</div>
+<div class="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+<strong class="font-semibold text-on-surface">Bảo mật dữ liệu Y tế:</strong> Dữ liệu y tế của bạn được mã hóa hai chiều theo tiêu chuẩn y khoa quốc gia và chứng nhận ISO 27001. Mọi lượt truy xuất hồ sơ bệnh án điện tử (EMR) đều được tự động lưu vết tại nhật ký hệ thống (Audit Log).
+      </p>
+</div>
+</div>
+</div></div>
+
+@code {
+    private List<MedicalRecordDto> Records = new();
+    private bool IsLoading;
+    private string? ErrorMessage;
+    private int? SelectedRecordId;
+
+    private MedicalRecordDto? SelectedRecord => Records.FirstOrDefault(r => r.Id == SelectedRecordId);
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+        try
+        {
+            var result = await Api.GetAsync<PagedResult<MedicalRecordDto>>("api/patients/me/records?pageSize=50");
+            Records = result.Items.OrderByDescending(r => r.CreatedAt).ToList();
+            SelectedRecordId = Records.FirstOrDefault()?.Id;
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private static string Bmi(VitalsDto vitals)
+    {
+        if (vitals.Weight is null || vitals.Height is null || vitals.Height == 0)
+            return "—";
+
+        var heightMeters = vitals.Height.Value / 100m;
+        var bmi = vitals.Weight.Value / (heightMeters * heightMeters);
+        return bmi.ToString("0.0");
+    }
+}

@@ -1,0 +1,743 @@
+@page "/pharmacy/inventory"
+@layout PharmacyLayout
+@attribute [Authorize(Roles = "Pharmacist")]
+@using Vitalis.Application.DTOs.Pharmacy
+@using Vitalis.Domain.Enums
+@inject VitalisApiClient Api
+@inject NavigationManager Navigation
+
+<PageTitle>Kho thuốc · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full">
+
+@if (LoadError is not null)
+{
+<div class="mx-margin mt-space-md flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@LoadError</p>
+<button class="text-on-error-container hover:opacity-75" @onclick="() => LoadError = null" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+}
+@if (AdjustError is not null)
+{
+<div class="mx-margin mt-space-md flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@AdjustError</p>
+<button class="text-on-error-container hover:opacity-75" @onclick="() => AdjustError = null" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+}
+<!-- Workspace Sub-Header & Breadcrumb Bar -->
+<div class="px-margin pt-space-lg pb-space-md flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-1 min-w-0">
+<div class="flex items-center gap-space-xs font-label-xs text-label-xs text-on-surface-variant">
+<span class="inline-flex items-center gap-1 font-semibold text-primary">
+<span class="material-symbols-outlined text-[15px]">inventory_2</span>
+          VC-18
+        </span>
+<span class="text-outline-variant">/</span>
+<span>Phân hệ Dược</span>
+<span class="text-outline-variant">/</span>
+<span class="text-on-surface font-medium">Quản lý kho &amp; Tồn kho biệt dược</span>
+</div>
+<div class="flex items-center gap-space-sm flex-wrap">
+<h1 class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">
+          Quản trị Kho Dược &amp; Cảnh báo Tồn
+        </h1>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-primary-fixed text-on-primary-fixed font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+          Đồng bộ thời gian thực GSP
+        </span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">
+          Cập nhật: <span class="font-medium text-on-surface">09:45:18 - 24/10/2026</span>
+</span>
+</div>
+</div>
+<!-- Quick Operations Command Buttons -->
+<div class="flex items-center gap-space-sm flex-wrap shrink-0">
+<button class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">swap_horiz</span>
+<span>Xuất chuyển kho</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">checklist</span>
+<span>Kiểm kê định kỳ</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">file_download</span>
+<span>Xuất file BHYT</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md shadow-sm hover:bg-primary transition-colors" @onclick='() => Navigation.NavigateTo("/pharmacy/receipt")' type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>+ Nhập kho mới (F2)</span>
+</button>
+</div>
+</div>
+<!-- Main Workstation Viewport -->
+<div class="px-margin space-y-space-lg pb-space-xl">
+<!-- 1. Top KPI Summary Metric Cards -->
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-gutter">
+<!-- KPI 1: Tổng giá trị tồn -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-primary/5 group-hover:scale-110 transition-transform"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-xs text-label-xs uppercase tracking-wider text-on-surface-variant font-bold">Tổng giá trị tồn kho</span>
+<div class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
+              1.485.600.000 <span class="font-label-sm text-label-sm text-on-surface-variant font-normal">đ</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-primary-fixed/50 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between font-label-xs text-label-xs text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="inline-block w-2 h-2 rounded-full bg-primary"></span>
+<b>418</b> hoạt chất
+          </span>
+<span class="text-outline-variant">•</span>
+<span><b>682</b> biệt dược lưu kho</span>
+<span class="text-primary font-semibold flex items-center">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>+2.4%
+          </span>
+</div>
+</div>
+<!-- KPI 2: Dưới định mức (Low Stock) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-error/5 group-hover:scale-110 transition-transform"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-xs text-label-xs uppercase tracking-wider text-error font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+              Dưới định mức tồn (Min)
+            </span>
+<div class="font-headline-lg text-headline-lg text-error font-bold tracking-tight flex items-baseline gap-2">
+              @LowStockCount.ToString("00") <span class="font-title-md text-title-md text-on-surface font-semibold">mặt hàng</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-error-container/60 flex items-center justify-center text-error shrink-0">
+<span class="material-symbols-outlined text-[22px]">production_quantity_limits</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between font-label-xs text-label-xs">
+<a class="text-primary hover:underline font-semibold flex items-center gap-0.5 ml-auto" href="#inventory-table">
+            Xem ngay <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- KPI 3: Cận hạn dùng (Expiring Soon) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-secondary/5 group-hover:scale-110 transition-transform"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-xs text-label-xs uppercase tracking-wider text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+              Cận hạn sử dụng (&lt; 90 ngày)
+            </span>
+<div class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight flex items-baseline gap-2">
+              @NearExpiryCount.ToString("00") <span class="font-title-md text-title-md text-on-surface font-semibold">mặt hàng</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed/50 flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[22px]">notification_important</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between font-label-xs text-label-xs text-on-surface-variant">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-secondary font-semibold ml-auto">
+            FEFO Active
+          </span>
+</div>
+</div>
+<!-- KPI 4: Tỷ lệ luân chuyển kho -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-tertiary/5 group-hover:scale-110 transition-transform"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-xs text-label-xs uppercase tracking-wider text-on-surface-variant font-bold">Tỷ lệ luân chuyển (Turnover)</span>
+<div class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight flex items-baseline gap-2">
+              4.6 <span class="font-title-md text-title-md text-on-surface font-medium">vòng / năm</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed/50 flex items-center justify-center text-tertiary shrink-0">
+<span class="material-symbols-outlined text-[22px]">autorenew</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between font-label-xs text-label-xs text-on-surface-variant">
+<span class="text-tertiary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">verified</span>
+            Đạt tiêu chuẩn GSP Dược
+          </span>
+<span>Dự phòng: <b>45 ngày</b></span>
+</div>
+</div>
+</section>
+<!-- 2. Integrated Filter & Clinical Query Bar -->
+<section class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-md">
+<div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
+<!-- Live Search Field -->
+<div class="relative flex-1 min-w-[280px]">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full h-10 pl-10 pr-10 bg-surface rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant outline-none focus:bg-surface-container-low transition-all" id="table-search" placeholder="Tìm theo tên biệt dược, hoạt chất, mã thuốc..." type="text" @bind="SearchText" @bind:event="oninput"/>
+</div>
+<!-- Filter Selects -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+<!-- Kho lưu trữ -->
+<div class="relative">
+<select class="w-full h-10 px-3 py-2 bg-surface rounded-lg font-label-sm text-label-sm text-on-surface outline-none cursor-pointer appearance-none pr-8 hover:bg-surface-container-low transition-colors">
+<option value="">Tất cả kho dược (03 kho)</option>
+<option selected="" value="kho-tong">Kho chính tổng hợp</option>
+<option value="kho-ngoai-tru">Kho chẵn ngoại trú</option>
+<option value="tu-cap-cuu">Tủ cấp cứu P.Cấp cứu</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+<!-- Nhóm dược lý -->
+<div class="relative">
+<select class="w-full h-10 px-3 py-2 bg-surface rounded-lg font-label-sm text-label-sm text-on-surface outline-none cursor-pointer appearance-none pr-8 hover:bg-surface-container-low transition-colors">
+<option value="">Tất cả nhóm dược lý</option>
+<option value="tim-mach">Tim mạch &amp; Huyết áp</option>
+<option value="khang-sinh">Kháng sinh &amp; Kháng khuẩn</option>
+<option value="tieu-hoa">Tiêu hóa &amp; Gan mật</option>
+<option value="dai-thao-duong">Đái tháo đường &amp; Nội tiết</option>
+<option value="than-kinh">Thần kinh - Tâm thần</option>
+<option value="ha-sot">Hạ sốt - Giảm đau - NSAID</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+<!-- Phân loại quản lý -->
+<div class="relative">
+<select class="w-full h-10 px-3 py-2 bg-surface rounded-lg font-label-sm text-label-sm text-on-surface outline-none cursor-pointer appearance-none pr-8 hover:bg-surface-container-low transition-colors">
+<option value="">Tất cả phân loại</option>
+<option value="bhyt">Thuốc BHYT thanh toán</option>
+<option value="tu-tra">Thuốc tự chi trả / Dịch vụ</option>
+<option value="ks-dac-biet">Thuốc kiểm soát đặc biệt</option>
+<option value="vat-tu">Vật tư y tế tiêu hao</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+<!-- Trạng thái tồn -->
+<div class="relative">
+<select class="w-full h-10 px-3 py-2 bg-surface rounded-lg font-label-sm text-label-sm text-on-surface outline-none cursor-pointer appearance-none pr-8 hover:bg-surface-container-low transition-colors font-medium" @bind="StatusFilter">
+<option value="@InventoryStatusFilter.All">Mọi mức độ tồn kho</option>
+<option value="@InventoryStatusFilter.LowStock">Dưới định mức min (Low)</option>
+<option value="@InventoryStatusFilter.NearExpiry">Cận date (&lt; 90 ngày)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-2.5 text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Quick Filter Chips & Table Controls -->
+<div class="flex items-center justify-between flex-wrap gap-space-sm pt-space-xs">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-label-xs text-label-xs text-on-surface-variant mr-1">Bộ lọc nhanh:</span>
+<button class="px-3 py-1 rounded-full font-label-xs text-label-xs font-semibold transition-colors @(StatusFilter == InventoryStatusFilter.All ? "bg-primary-container text-on-primary shadow-xs" : "bg-surface-container text-on-surface-variant hover:bg-surface-container-highest")" @onclick='() => StatusFilter = InventoryStatusFilter.All' type="button">
+            Tất cả (@AllItems.Count)
+          </button>
+<button class="px-3 py-1 rounded-full font-label-xs text-label-xs font-semibold transition-colors @(StatusFilter == InventoryStatusFilter.LowStock ? "bg-error-container text-error shadow-xs" : "bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-error")" @onclick='() => StatusFilter = InventoryStatusFilter.LowStock' type="button">
+            Cần đặt gấp (@LowStockCount)
+          </button>
+<button class="px-3 py-1 rounded-full font-label-xs text-label-xs font-semibold transition-colors @(StatusFilter == InventoryStatusFilter.NearExpiry ? "bg-secondary-container text-on-secondary-container shadow-xs" : "bg-surface-container text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container")" @onclick='() => StatusFilter = InventoryStatusFilter.NearExpiry' type="button">
+            Hạn dùng &lt; 90 ngày (@NearExpiryCount)
+          </button>
+</div>
+<div class="flex items-center gap-space-sm font-label-xs text-label-xs text-on-surface-variant">
+<span>Quy tắc xuất kho: <b class="text-primary">FEFO (Hạn ngắn xuất trước)</b></span>
+<span class="text-outline-variant">|</span>
+<button class="hover:text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">tune</span> Cấu hình cột hiển thị
+          </button>
+</div>
+</div>
+</section>
+<!-- 3. Medicine Inventory Data Table (High Density Clinical View) -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col" id="inventory-table">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[1240px]">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-3 px-4 min-w-[240px]">Biệt dược / Hoạt chất / Mã</th>
+<th class="py-3 px-3 min-w-[170px]">Tồn khả dụng / Định mức</th>
+<th class="py-3 px-3 min-w-[150px]">Hạn dùng gần nhất</th>
+<th class="py-3 px-3 text-center">Trạng thái tồn</th>
+<th class="py-3 px-4 text-center w-40">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body-sm text-body-sm">
+@if (IsLoading)
+{
+<tr><td colspan="5" class="py-6 px-4 text-center text-on-surface-variant">Đang tải danh sách thuốc...</td></tr>
+}
+else if (FilteredItems.Count == 0)
+{
+<tr><td colspan="5" class="py-6 px-4 text-center text-on-surface-variant">Không tìm thấy thuốc phù hợp.</td></tr>
+}
+else
+{
+@foreach (var med in FilteredItems)
+{
+var rowClass = med.LowStock ? "hover:bg-error-container/20 transition-colors group bg-error-container/5"
+    : med.NearExpiry ? "hover:bg-surface-container-high/60 transition-colors group bg-secondary-fixed/10"
+    : "hover:bg-surface-container-low/70 transition-colors group";
+<tr class="@rowClass">
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md @(med.LowStock ? "text-error" : "text-primary") font-bold tracking-tight">
+                    @med.Name
+                  </span>
+@if (med.ActiveIngredient is not null)
+{
+<span class="font-label-xs text-label-xs text-on-surface-variant">@med.ActiveIngredient</span>
+}
+@if (med.Code is not null)
+{
+<span class="font-label-xs text-[10px] text-outline font-mono mt-0.5">Mã: @med.Code</span>
+}
+</div>
+</td>
+<td class="py-3 px-3">
+<div class="flex flex-col gap-1">
+<div class="flex justify-between items-baseline font-label-xs text-label-xs">
+<span class="font-bold @(med.LowStock ? "text-error" : "text-on-surface") text-[14px]">@med.TotalStock</span>
+<span class="@(med.LowStock ? "text-error font-medium" : "text-on-surface-variant")">Min: @(med.MinStock?.ToString() ?? "—")</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+@if (med.NearestExpiry is not null)
+{
+<div class="flex items-center gap-1 text-label-xs font-medium @(med.NearExpiry ? "text-error" : "text-tertiary")">
+<span class="material-symbols-outlined text-[13px]">event_available</span>
+<span>@med.NearestExpiry.Value.ToString("dd/MM/yyyy")</span>
+</div>
+}
+else
+{
+<span class="text-on-surface-variant font-label-xs text-label-xs">—</span>
+}
+</td>
+<td class="py-3 px-3 text-center">
+@if (med.LowStock)
+{
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#FEE2E2] text-[#991B1B]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#991B1B] animate-pulse"></span>
+                  DƯỚI ĐỊNH MỨC
+                </span>
+}
+else if (med.NearExpiry)
+{
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#FEF3C7] text-[#92400E]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#92400E]"></span>
+                  CẬN HẠN DÙNG
+                </span>
+}
+else
+{
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#DCFCE7] text-[#166534]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
+                  Tồn an toàn
+                </span>
+}
+</td>
+<td class="py-3 px-4 text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Xem thẻ kho" @onclick="() => ViewTransactionsAsync(med.Id)" type="button">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-error transition-colors" title="Điều chỉnh kho (xuất huỷ)" @onclick="() => OpenAdjustForm(med)" type="button">
+<span class="material-symbols-outlined text-[18px]">remove_circle</span>
+</button>
+</div>
+</td>
+</tr>
+}
+}
+</tbody>
+</table>
+</div>
+<!-- Professional Clinical Table Pagination Bar -->
+<div class="px-space-md py-3 bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-space-sm font-label-sm text-label-sm text-on-surface-variant">
+<div class="flex items-center gap-space-md">
+<span>Hiển thị <b class="text-on-surface">@FilteredItems.Count</b> trong tổng số <b class="text-on-surface">@AllItems.Count</b> biệt dược</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span> Trước
+          </button>
+<button class="w-8 h-8 rounded bg-primary-container text-on-primary font-bold flex items-center justify-center">1</button>
+<button class="w-8 h-8 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container flex items-center justify-center transition-colors">2</button>
+<button class="w-8 h-8 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container flex items-center justify-center transition-colors">3</button>
+<span class="px-1 text-outline">...</span>
+<button class="w-8 h-8 rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container flex items-center justify-center transition-colors">69</button>
+<button class="px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-0.5">
+            Sau <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+<!-- 4. Bottom Operational Split Panels: Smart Restock, GSP Environmental Telemetry, Log Stream -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Panel 1: Dự trù mua sắm tự động (AI Consumption-Based Suggestion) -->
+<div class="lg:col-span-5 bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse"></span>
+<h2 class="font-title-md text-title-md text-on-surface font-bold">
+                Kế hoạch dự trù mua sắm tuần này
+              </h2>
+</div>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded-full bg-error-container text-error font-semibold">
+              05 thuốc cấp thiết
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+            Đề xuất mua sắm tính toán dựa trên mức tiêu hao 30 ngày qua và tồn kho thực tế.
+          </p>
+<div class="mt-space-md space-y-2.5">
+<!-- Item 1 -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-error-container/60 text-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">medication</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold truncate">Ventolin Inhaler 100mcg</span>
+<span class="font-label-xs text-[11px] text-on-surface-variant">Tồn: 8 bình (Định mức min: 25)</span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="font-label-xs text-label-xs px-2 py-1 rounded bg-surface-container-lowest font-bold text-error">
+                  +100 bình
+                </span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-error-container/60 text-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">medication</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold truncate">Concor 2.5mg (Bisoprolol)</span>
+<span class="font-label-xs text-[11px] text-on-surface-variant">Tồn: 25 hộp (Định mức min: 40)</span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="font-label-xs text-label-xs px-2 py-1 rounded bg-surface-container-lowest font-bold text-error">
+                  +150 hộp
+                </span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-secondary-container/20 text-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">medication</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold truncate">Nitromint 2.6mg Lọ 30v</span>
+<span class="font-label-xs text-[11px] text-on-surface-variant">Tồn: 12 lọ (Định mức min: 20)</span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="font-label-xs text-label-xs px-2 py-1 rounded bg-surface-container-lowest font-bold text-secondary">
+                  +50 lọ
+                </span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center gap-space-sm">
+<button class="flex-1 py-2 px-space-md rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-semibold hover:bg-primary transition-colors flex items-center justify-center gap-1.5 shadow-xs" type="button">
+<span class="material-symbols-outlined text-[18px]">magic_button</span>
+<span>Tự động tạo phiếu dự trù mua hàng</span>
+</button>
+<button class="py-2 px-space-sm rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container transition-colors font-label-sm text-label-sm" type="button">
+            Tùy biến
+          </button>
+</div>
+</div>
+<!-- Panel 2: Giám sát môi trường kho chuẩn GSP (IoT Sensors) -->
+<div class="lg:col-span-4 bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">sensors</span>
+<h2 class="font-title-md text-title-md text-on-surface font-bold">
+                Giám sát môi trường GSP
+              </h2>
+</div>
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-xs text-[11px] font-semibold bg-[#DCFCE7] text-[#166534]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
+              ĐẠT TIÊU CHUẨN
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+            Cảm biến IoT không dây kết nối liên tục tại Kho Chẵn &amp; Kho Lẻ tầng 1.
+          </p>
+<div class="grid grid-cols-2 gap-space-sm mt-space-md">
+<!-- Nhiệt độ -->
+<div class="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-xs text-label-xs font-semibold">Nhiệt độ kho</span>
+<span class="material-symbols-outlined text-[18px] text-primary">thermostat</span>
+</div>
+<div class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
+                22.4<span class="font-title-md text-title-md text-on-surface-variant">°C</span>
+</div>
+<div class="font-label-xs text-[11px] text-tertiary font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">check</span>
+                Chuẩn: 15.0°C - 25.0°C
+              </div>
+</div>
+<!-- Độ ẩm -->
+<div class="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-xs text-label-xs font-semibold">Độ ẩm tương đối</span>
+<span class="material-symbols-outlined text-[18px] text-secondary">humidity_mid</span>
+</div>
+<div class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">
+                62<span class="font-title-md text-title-md text-on-surface-variant">%</span>
+</div>
+<div class="font-label-xs text-[11px] text-tertiary font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">check</span>
+                Chuẩn: ≤ 70% RH
+              </div>
+</div>
+</div>
+<!-- Tủ lạnh bảo quản vắc xin / sinh phẩm -->
+<div class="mt-space-sm p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-secondary">ac_unit</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Tủ bảo quản lạnh 2-8°C (Vacxin/Insulin)</span>
+<span class="font-label-xs text-[10px] text-on-surface-variant">Sensor Tủ Lạnh 01 - Hoạt động bình thường</span>
+</div>
+</div>
+<span class="font-title-md text-title-md font-bold text-primary">4.8°C</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between font-label-xs text-label-xs text-on-surface-variant">
+<span>Chu kỳ ghi nhận: <b>5 phút/lần</b></span>
+<a class="text-primary hover:underline font-semibold flex items-center gap-0.5" href="#">
+            Xuất biểu đồ nhiệt ẩm GSP <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</a>
+</div>
+</div>
+<!-- Panel 3: Thẻ kho (real stock transactions for the selected medicine) -->
+<div class="lg:col-span-3 bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-xs">
+<h2 class="font-title-md text-title-md text-on-surface font-bold">
+              Thẻ kho @(TransactionsMedicineName is null ? "" : $"• {TransactionsMedicineName}")
+            </h2>
+</div>
+@if (TransactionsMedicineName is null)
+{
+<p class="mt-space-md font-body-sm text-body-sm text-on-surface-variant">Bấm biểu tượng "Xem thẻ kho" trên một dòng thuốc để xem lịch sử xuất/nhập/điều chỉnh thực tế.</p>
+}
+else if (Transactions.Count == 0)
+{
+<p class="mt-space-md font-body-sm text-body-sm text-on-surface-variant">Chưa có giao dịch kho nào cho thuốc này.</p>
+}
+else
+{
+<div class="mt-space-md space-y-3 relative before:absolute before:top-2 before:bottom-2 before:left-[11px] before:w-[2px] before:bg-surface-container">
+@foreach (var t in Transactions.Take(10))
+{
+var (icon, colorClass, label) = t.Type switch
+{
+    StockTransactionType.In => ("arrow_downward", "bg-primary text-on-primary", "Nhập kho"),
+    StockTransactionType.Out => ("arrow_upward", "bg-secondary text-on-secondary", "Xuất phát thuốc"),
+    _ => ("swap_horiz", "bg-tertiary-container text-on-tertiary-container", "Điều chỉnh kho"),
+};
+<div class="flex items-start gap-3 relative">
+<div class="w-6 h-6 rounded-full @colorClass flex items-center justify-center shrink-0 z-10 shadow-xs">
+<span class="material-symbols-outlined text-[14px]">@icon</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-baseline justify-between gap-1">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold truncate">@label</span>
+<span class="font-label-xs text-[10px] text-on-surface-variant shrink-0">@t.CreatedAt.ToLocalTime().ToString("HH:mm dd/MM")</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">
+                  Lô #@t.BatchId • Số lượng: @t.Quantity
+                </span>
+</div>
+</div>
+}
+</div>
+}
+</div>
+</div>
+</section>
+</div>
+</div>
+@if (AdjustingMedicine is not null)
+{
+<div class="fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm flex items-center justify-center p-4">
+<div class="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-xl p-6 flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Điều chỉnh kho (xuất huỷ): @AdjustingMedicine.Name</h3>
+<button class="text-outline hover:text-on-surface" @onclick="CloseAdjustForm" type="button">
+<span class="material-symbols-outlined text-xl">close</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Chỉ dùng để ghi giảm tồn (hao hụt, hết hạn, hỏng vỡ...). Nhập đúng mã lô (Batch ID) cần trừ.</p>
+<form class="flex flex-col gap-3" @onsubmit="SubmitAdjustAsync" @onsubmit:preventDefault="true">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Mã lô (Batch ID) <span class="text-error">*</span></label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface outline-none" type="number" @bind="AdjustBatchId"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Số lượng trừ <span class="text-error">*</span></label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface outline-none" type="number" @bind="AdjustQuantity"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Lý do <span class="text-error">*</span></label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface outline-none" type="text" @bind="AdjustReason" placeholder="Vd: hết hạn, hỏng vỡ..."/>
+</div>
+<div class="flex items-center justify-end gap-3 mt-2">
+<button class="px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-md text-title-md transition-colors" @onclick="CloseAdjustForm" type="button">
+            Huỷ bỏ
+          </button>
+<button class="px-5 py-2.5 rounded-lg bg-error text-on-error font-title-md text-title-md font-semibold transition-colors shadow-sm disabled:opacity-60" disabled="@IsAdjusting" type="submit">
+            @(IsAdjusting ? "Đang xử lý..." : "Xác nhận điều chỉnh")
+          </button>
+</div>
+</form>
+</div>
+</div>
+}
+
+<script src="js/pages/PharmacyInventory.js"></script>
+
+@code {
+    private List<MedicineInventoryDto> AllItems { get; set; } = [];
+    private bool IsLoading { get; set; } = true;
+    private string? LoadError { get; set; }
+    private string SearchText { get; set; } = "";
+    private InventoryStatusFilter StatusFilter { get; set; } = InventoryStatusFilter.All;
+
+    private int LowStockCount => AllItems.Count(m => m.LowStock);
+    private int NearExpiryCount => AllItems.Count(m => m.NearExpiry);
+
+    private List<MedicineInventoryDto> FilteredItems => AllItems
+        .Where(m => StatusFilter switch
+        {
+            InventoryStatusFilter.LowStock => m.LowStock,
+            InventoryStatusFilter.NearExpiry => m.NearExpiry,
+            _ => true,
+        })
+        .Where(m => string.IsNullOrWhiteSpace(SearchText)
+            || m.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+            || (m.ActiveIngredient?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (m.Code?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false))
+        .ToList();
+
+    private int? TransactionsMedicineId { get; set; }
+    private string? TransactionsMedicineName { get; set; }
+    private List<StockTransactionDto> Transactions { get; set; } = [];
+
+    private MedicineInventoryDto? AdjustingMedicine { get; set; }
+    private string AdjustBatchId { get; set; } = "";
+    private string AdjustQuantity { get; set; } = "";
+    private string AdjustReason { get; set; } = "";
+    private bool IsAdjusting { get; set; }
+    private string? AdjustError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInventoryAsync();
+    }
+
+    private async Task LoadInventoryAsync()
+    {
+        IsLoading = true;
+        LoadError = null;
+        try
+        {
+            AllItems = (await Api.GetAsync<List<MedicineInventoryDto>>("api/medicines/inventory")).ToList();
+        }
+        catch (ApiException ex)
+        {
+            LoadError = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ViewTransactionsAsync(int medicineId)
+    {
+        TransactionsMedicineId = medicineId;
+        TransactionsMedicineName = AllItems.FirstOrDefault(m => m.Id == medicineId)?.Name;
+        try
+        {
+            Transactions = (await Api.GetAsync<List<StockTransactionDto>>($"api/medicines/{medicineId}/transactions"))
+                .OrderByDescending(t => t.CreatedAt)
+                .ToList();
+        }
+        catch (ApiException ex)
+        {
+            LoadError = ex.Message;
+            Transactions = [];
+        }
+    }
+
+    private void OpenAdjustForm(MedicineInventoryDto medicine)
+    {
+        AdjustingMedicine = medicine;
+        AdjustBatchId = "";
+        AdjustQuantity = "";
+        AdjustReason = "";
+        AdjustError = null;
+    }
+
+    private void CloseAdjustForm()
+    {
+        AdjustingMedicine = null;
+    }
+
+    private async Task SubmitAdjustAsync()
+    {
+        if (AdjustingMedicine is null)
+            return;
+
+        if (!int.TryParse(AdjustBatchId, out var batchId) || !int.TryParse(AdjustQuantity, out var quantity) || string.IsNullOrWhiteSpace(AdjustReason))
+        {
+            AdjustError = "Vui lòng nhập đầy đủ mã lô, số lượng và lý do hợp lệ.";
+            return;
+        }
+
+        IsAdjusting = true;
+        AdjustError = null;
+        try
+        {
+            await Api.PostNoContentAsync($"api/medicines/{AdjustingMedicine.Id}/adjust",
+                new AdjustStockRequest(batchId, quantity, AdjustReason));
+            AdjustingMedicine = null;
+            await LoadInventoryAsync();
+        }
+        catch (ApiException ex)
+        {
+            AdjustError = ex.Message;
+        }
+        finally
+        {
+            IsAdjusting = false;
+        }
+    }
+
+    private enum InventoryStatusFilter
+    {
+        All,
+        LowStock,
+        NearExpiry,
+    }
+}

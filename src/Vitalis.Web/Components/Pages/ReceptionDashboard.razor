@@ -1,0 +1,400 @@
+@page "/reception"
+@layout ReceptionLayout
+@attribute [Authorize(Roles = "Receptionist")]
+@inject VitalisApiClient Api
+@using Vitalis.Application.DTOs.Appointments
+@using Vitalis.Application.Common
+@using Vitalis.Domain.Enums
+
+<PageTitle>Bàn tiếp đón · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full">
+@if (ToastMessage is not null)
+{
+<div class="fixed top-20 right-8 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-container-lowest text-on-surface shadow-xl transition-all duration-300 transform translate-y-0 opacity-100">
+<div class="w-8 h-8 rounded-full bg-primary-container/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex flex-col pr-3">
+<span class="font-label-sm text-label-sm text-primary font-bold">Check-in thành công</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">@ToastMessage</span>
+</div>
+<button class="p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition-colors" @onclick="() => ToastMessage = null">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+}
+<!-- Main Content Workbench Area -->
+<div class="p-space-xl flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
+<!-- 1. Header Khu vực làm việc -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Bàn tiếp đón & Check-in</span>
+<span class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-xs text-label-xs font-bold uppercase tracking-wider flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Trực tiếp
+          </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Điều phối luồng bệnh nhân, tiếp nhận và phân luồng phòng khám theo thời gian thực
+        </p>
+</div>
+<!-- Quick Action Buttons -->
+<div class="flex items-center gap-3 self-start lg:self-center">
+<a href="/reception/booking" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-container-lowest text-primary shadow-sm hover:bg-primary/5 transition-all">
+<span class="material-symbols-outlined text-[18px]">calendar_add_on</span>
+<span class="font-label-md text-label-md font-semibold">Đặt lịch hộ</span>
+</a>
+</div>
+</div>
+<!-- Filter Bar & Control Toolbar -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+<div class="flex flex-wrap items-center gap-3">
+<div class="flex items-center gap-2 px-3 py-2 bg-surface-container-low rounded-lg text-on-surface">
+<span class="material-symbols-outlined text-[18px] text-primary">calendar_month</span>
+<span class="font-label-sm text-label-sm font-semibold select-none">Hôm nay: @Today.ToString("dddd, dd/MM/yyyy")</span>
+</div>
+</div>
+<!-- Filter Chips Status -->
+<div class="flex items-center gap-1.5 overflow-x-auto pb-1 xl:pb-0 scrollbar-none">
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-semibold whitespace-nowrap shadow-sm transition-colors @(ChipClass(null))" @onclick="() => ChipFilter = null">
+          Tất cả <span class="ml-1 opacity-80">@Appointments.Count</span>
+</button>
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors @(ChipClass("waiting"))" @onclick='() => ChipFilter = "waiting"'>
+          Chờ đến <span class="ml-1 px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface-variant font-bold text-[10px]">@WaitingCount</span>
+</button>
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors @(ChipClass("checkedin"))" @onclick='() => ChipFilter = "checkedin"'>
+          Đã check-in <span class="ml-1 px-1.5 py-0.2 rounded-full bg-secondary/15 text-secondary font-bold text-[10px]">@CheckedInCount</span>
+</button>
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors @(ChipClass("inprogress"))" @onclick='() => ChipFilter = "inprogress"'>
+          Đang khám <span class="ml-1 px-1.5 py-0.2 rounded-full bg-primary/15 text-primary font-bold text-[10px]">@InProgressCount</span>
+</button>
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors @(ChipClass("completed"))" @onclick='() => ChipFilter = "completed"'>
+          Hoàn thành <span class="ml-1 px-1.5 py-0.2 rounded-full bg-tertiary/15 text-tertiary font-bold text-[10px]">@CompletedCount</span>
+</button>
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors @(ChipClass("noshow"))" @onclick='() => ChipFilter = "noshow"'>
+          Không đến <span class="ml-1 px-1.5 py-0.2 rounded-full bg-error-container text-error font-bold text-[10px]">@NoShowCount</span>
+</button>
+</div>
+</div>
+<!-- 2. Hàng Thẻ Thống Kê KPI (Stat Cards) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Tổng lịch hẹn</span>
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+</div>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-display text-display text-on-surface leading-none font-bold">@Appointments.Count</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Chờ đến</span>
+<div class="w-9 h-9 rounded-lg bg-surface-container-high/60 flex items-center justify-center text-amber-700">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+</div>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-display text-display text-on-surface leading-none font-bold text-amber-700">@WaitingCount</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Đã check-in</span>
+<div class="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-display text-display text-secondary leading-none font-bold">@CheckedInCount</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Đã khám xong</span>
+<div class="w-9 h-9 rounded-lg bg-tertiary-fixed/40 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[20px]">how_to_reg</span>
+</div>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-display text-display text-tertiary leading-none font-bold">@CompletedCount</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Không đến</span>
+<div class="w-9 h-9 rounded-lg bg-error-container/60 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[20px]">person_off</span>
+</div>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-display text-display text-error leading-none font-bold">@NoShowCount</span>
+</div>
+</div>
+</div>
+<!-- 3. Bảng Dữ Liệu Chính 'Lịch Hẹn Hôm Nay' -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface-container-lowest">
+<div class="relative w-full sm:w-96">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">search</span>
+<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary shadow-inner" placeholder="Tìm theo tên bệnh nhân, bác sĩ..." type="text" @bind="SearchKeyword" @bind:event="oninput"/>
+</div>
+<div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-primary font-label-sm text-label-sm font-semibold transition-colors" @onclick="LoadAsync" title="Đồng bộ lại danh sách">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+            Làm mới
+          </button>
+</div>
+</div>
+@if (ErrorMessage is not null)
+{
+<div class="mx-4 mb-3 p-3 rounded-lg bg-error-container text-on-error-container font-body-sm text-body-sm">@ErrorMessage</div>
+}
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
+<th class="py-3 px-4 font-semibold">Giờ hẹn</th>
+<th class="py-3 px-3 font-semibold text-center">STT</th>
+<th class="py-3 px-4 font-semibold">Bệnh nhân</th>
+<th class="py-3 px-4 font-semibold">Bác sĩ</th>
+<th class="py-3 px-4 font-semibold text-center">Trạng thái</th>
+<th class="py-3 px-4 font-semibold text-right">Thao tác tiếp đón</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low font-body-md text-body-md text-on-surface">
+@if (IsLoading)
+{
+<tr><td colspan="6" class="py-6 text-center text-on-surface-variant">Đang tải...</td></tr>
+}
+else if (FilteredAppointments.Count == 0)
+{
+<tr><td colspan="6" class="py-6 text-center text-on-surface-variant">Không có lịch hẹn phù hợp</td></tr>
+}
+else
+{
+@foreach (var appt in FilteredAppointments)
+{
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3.5 px-4 font-label-md text-label-md font-semibold text-on-surface">@ToLocal(appt.StartTime).ToString("HH:mm")</td>
+<td class="py-3.5 px-3 text-center">
+@if (appt.QueueNumber is not null)
+{
+<span class="px-2.5 py-1 rounded-md bg-secondary/15 text-secondary font-headline-sm text-headline-sm font-bold tracking-tight">#@appt.QueueNumber.Value.ToString("00")</span>
+}
+else
+{
+<span class="text-outline font-label-md text-label-md">—</span>
+}
+</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface">@appt.PatientName</span>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">@appt.DoctorName</span>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs font-semibold @StatusBadgeClass(appt.Status)">@StatusLabel(appt.Status)</span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="flex items-center justify-end gap-1.5">
+@if (appt.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed)
+{
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-on-primary hover:bg-primary-container font-label-sm text-label-sm font-semibold shadow-sm transition-colors" @onclick="() => CheckInAsync(appt.Id)">
+<span class="material-symbols-outlined text-[16px]">qr_code_scanner</span>
+<span>Check-in & Cấp số</span>
+</button>
+<button class="px-2.5 py-1.5 rounded-md bg-error-container text-error hover:bg-error hover:text-on-error font-label-sm text-label-sm font-semibold transition-colors" @onclick="() => OpenNoShowModal(appt)">
+                    Vắng
+                  </button>
+}
+</div>
+</td>
+</tr>
+}
+}
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-surface-container-lowest flex flex-col sm:flex-row items-center justify-between gap-3 text-on-surface-variant font-label-sm text-label-sm">
+<div>
+          Hiển thị <span class="font-semibold text-on-surface">@FilteredAppointments.Count</span> trong số <span class="font-semibold text-on-surface">@Appointments.Count</span> lượt hẹn
+        </div>
+</div>
+</div>
+</div>
+</div>
+
+@if (ShowNoShowModal && NoShowTarget is not null)
+{
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/40 backdrop-blur-[2px] p-4">
+<div class="bg-surface-container-lowest rounded-xl shadow-2xl max-w-md w-full p-6 flex flex-col gap-4">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-error-container/60 text-error flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">person_off</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md font-bold text-on-surface">Đánh dấu không đến</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">BN: <strong>@NoShowTarget.PatientName</strong></span>
+</div>
+</div>
+<button class="p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition-colors" @onclick="CloseNoShowModal">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface font-medium">Ghi chú (tùy chọn)</label>
+<textarea class="w-full p-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary shadow-inner resize-none" placeholder="Ghi chú thêm từ lễ tân (tùy chọn)..." rows="2" @bind="NoShowNote"></textarea>
+</div>
+<div class="flex items-center justify-end gap-2 pt-2">
+<button class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-md text-label-md font-semibold transition-colors" @onclick="CloseNoShowModal">
+          Hủy bỏ
+        </button>
+<button class="px-4 py-2 rounded-lg bg-error text-on-error hover:bg-error-container hover:text-on-error-container font-label-md text-label-md font-semibold transition-colors shadow-sm" @onclick="ConfirmNoShowAsync">
+          Xác nhận vắng
+        </button>
+</div>
+</div>
+</div>
+}
+
+@code {
+    private DateOnly Today { get; } = DateOnly.FromDateTime(DateTime.Today);
+    private List<AppointmentDto> Appointments { get; set; } = new();
+    private bool IsLoading { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ToastMessage { get; set; }
+    private string SearchKeyword { get; set; } = "";
+    private string? ChipFilter { get; set; }
+
+    private bool ShowNoShowModal { get; set; }
+    private AppointmentDto? NoShowTarget { get; set; }
+    private string NoShowNote { get; set; } = "";
+
+    private int WaitingCount => Appointments.Count(a => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed);
+    private int CheckedInCount => Appointments.Count(a => a.Status == AppointmentStatus.CheckedIn);
+    private int InProgressCount => Appointments.Count(a => a.Status == AppointmentStatus.InProgress);
+    private int CompletedCount => Appointments.Count(a => a.Status == AppointmentStatus.Completed);
+    private int NoShowCount => Appointments.Count(a => a.Status == AppointmentStatus.NoShow);
+
+    private List<AppointmentDto> FilteredAppointments => Appointments
+        .Where(a => ChipFilter switch
+        {
+            "waiting" => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed,
+            "checkedin" => a.Status == AppointmentStatus.CheckedIn,
+            "inprogress" => a.Status == AppointmentStatus.InProgress,
+            "completed" => a.Status == AppointmentStatus.Completed,
+            "noshow" => a.Status == AppointmentStatus.NoShow,
+            _ => true,
+        })
+        .Where(a => string.IsNullOrWhiteSpace(SearchKeyword)
+            || a.PatientName.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase)
+            || a.DoctorName.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            var result = await Api.GetAsync<PagedResult<AppointmentDto>>($"api/appointments?date={Today:yyyy-MM-dd}&pageSize=200");
+            Appointments = result.Items.OrderBy(a => a.StartTime).ToList();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task CheckInAsync(int id)
+    {
+        ErrorMessage = null;
+        try
+        {
+            var updated = await Api.PatchAsync<object?, AppointmentDto>($"api/appointments/{id}/check-in", null);
+            var index = Appointments.FindIndex(a => a.Id == id);
+            if (index >= 0)
+                Appointments[index] = updated;
+            ToastMessage = $"Cấp số #{updated.QueueNumber:00}: {updated.PatientName}";
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private void OpenNoShowModal(AppointmentDto appt)
+    {
+        NoShowTarget = appt;
+        NoShowNote = "";
+        ShowNoShowModal = true;
+    }
+
+    private void CloseNoShowModal()
+    {
+        ShowNoShowModal = false;
+        NoShowTarget = null;
+    }
+
+    private async Task ConfirmNoShowAsync()
+    {
+        if (NoShowTarget is null)
+            return;
+
+        ErrorMessage = null;
+        try
+        {
+            var updated = await Api.PatchAsync<NoShowAppointmentRequest, AppointmentDto>(
+                $"api/appointments/{NoShowTarget.Id}/no-show", new NoShowAppointmentRequest(string.IsNullOrWhiteSpace(NoShowNote) ? null : NoShowNote));
+            var index = Appointments.FindIndex(a => a.Id == updated.Id);
+            if (index >= 0)
+                Appointments[index] = updated;
+            CloseNoShowModal();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private string ChipClass(string? chip) => ChipFilter == chip
+        ? "bg-primary text-on-primary"
+        : "bg-surface-container-low text-on-surface-variant hover:text-on-surface";
+
+    private static DateTime ToLocal(DateTime utc) => utc.AddHours(7);
+
+    private static string StatusLabel(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "Chờ xác nhận",
+        AppointmentStatus.Confirmed => "Chờ check-in",
+        AppointmentStatus.CheckedIn => "Đã check-in",
+        AppointmentStatus.InProgress => "Đang khám",
+        AppointmentStatus.Completed => "Đã hoàn thành",
+        AppointmentStatus.Cancelled => "Đã hủy",
+        AppointmentStatus.NoShow => "Không đến",
+        _ => status.ToString(),
+    };
+
+    private static string StatusBadgeClass(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending or AppointmentStatus.Confirmed => "bg-amber-50 text-amber-800",
+        AppointmentStatus.CheckedIn => "bg-secondary/10 text-secondary",
+        AppointmentStatus.InProgress => "bg-primary-fixed text-on-primary-fixed-variant",
+        AppointmentStatus.Completed => "bg-tertiary/10 text-tertiary",
+        AppointmentStatus.Cancelled or AppointmentStatus.NoShow => "bg-error-container text-error",
+        _ => "bg-surface-container text-on-surface-variant",
+    };
+}

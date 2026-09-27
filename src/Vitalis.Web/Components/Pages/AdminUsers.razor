@@ -1,0 +1,561 @@
+﻿@page "/admin/users"
+@layout AdminLayout
+@attribute [Authorize(Roles = "Admin")]
+@inject VitalisApiClient Api
+@using Vitalis.Application.Common
+@using Vitalis.Application.DTOs.Users
+
+<PageTitle>Người dùng &amp; phân quyền · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full">
+<!-- BREADCRUMB & HEADER -->
+<div class="flex flex-col gap-4 mb-6">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-container/10 text-primary font-label-xs text-label-xs uppercase tracking-wider font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+        VC-31 • Phân quyền RBAC &amp; Quản lý Định danh IAM
+      </span>
+<span class="text-outline-variant font-label-xs text-label-xs">•</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Hệ thống Quản trị Cốt lõi Vitalis</span>
+</div>
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+<div class="flex flex-col max-w-3xl">
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">Quản Lý Người Dùng &amp; Phân Quyền Hệ Thống</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+          Quản trị danh sách tài khoản nhân viên y tế, bác sĩ, điều dưỡng, dược sĩ, lễ tân và cổng bệnh nhân. Thiết lập 5 nhóm vai trò (RBAC), kiểm soát phân quyền buồng khám/kho dược và bảo mật đăng nhập 2FA.
+        </p>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center gap-3 shrink-0">
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px] text-outline">download</span>
+<span>Xuất Danh Sách (Excel)</span>
+</button>
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-lowest text-primary font-label-md text-label-md hover:bg-surface-container transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">security</span>
+<span>Ma Trận Phân Quyền</span>
+</button>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md hover:opacity-95 shadow-sm transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+<span>+ Thêm Người Dùng Mới</span>
+</button>
+</div>
+</div>
+</div>
+@if (ErrorMessage is not null)
+{
+<div class="flex items-start gap-3 p-3.5 rounded-lg bg-error-container text-on-error-container shadow-sm mb-6">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@ErrorMessage</p>
+</div>
+}
+@if (TempPassword is not null)
+{
+<div class="flex items-start gap-3 p-3.5 rounded-lg bg-surface-container text-on-surface shadow-sm mb-6">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">key</span>
+<div class="flex-1 font-body-sm text-body-sm">Mật khẩu tạm thời mới: <code class="font-mono font-bold">@TempPassword</code> — chỉ hiển thị một lần, hãy gửi cho người dùng ngay.</div>
+<button class="text-on-surface-variant hover:text-on-surface" @onclick="() => TempPassword = null" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+}
+<!-- TOP STATS / KPIS -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+<!-- Card 1: Total Users -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Tổng tài khoản IAM</span>
+<div class="font-headline-lg text-headline-lg text-on-surface font-bold mt-1">@(Users?.TotalCount ?? 0) <span class="font-body-md text-body-md text-on-surface-variant font-normal">tài khoản</span></div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">badge</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Active Accounts -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Trạng thái Khả dụng</span>
+<div class="font-headline-lg text-headline-lg text-on-surface font-bold mt-1">122 <span class="font-label-md text-label-md text-primary font-semibold">(95.3%)</span></div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed/40 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[22px]">verified_user</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between font-label-xs text-label-xs">
+<span class="text-on-surface-variant">Khóa/Chờ kích hoạt: <strong class="text-error font-semibold">06 tài khoản</strong></span>
+<span class="text-primary font-semibold">Bình thường</span>
+</div>
+</div>
+<!-- Card 3: Online Sessions -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Phiên trực tuyến</span>
+<div class="font-headline-lg text-headline-lg text-secondary font-bold mt-1">42 <span class="font-body-md text-body-md text-on-surface-variant font-normal">đang làm việc</span></div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed/40 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[22px]">devices</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex items-center gap-2 font-label-xs text-label-xs text-on-surface-variant overflow-hidden text-ellipsis whitespace-nowrap">
+<span>Lâm sàng: <strong class="text-on-surface">18</strong></span>
+<span>•</span>
+<span>Lễ tân: <strong class="text-on-surface">8</strong></span>
+<span>•</span>
+<span>Dược/LIS: <strong class="text-on-surface">16</strong></span>
+</div>
+</div>
+<!-- Card 4: Security Alerts -->
+<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Cảnh báo An toàn IAM</span>
+<div class="font-headline-lg text-headline-lg text-error font-bold mt-1">01 <span class="font-body-md text-body-md text-on-surface-variant font-normal">sự kiện</span></div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-error-container/60 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[22px]">gpp_maybe</span>
+</div>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between font-label-xs text-label-xs text-error">
+<span class="truncate">Sai pass &gt;5 lần • Tự động khóa 30p</span>
+<button class="underline hover:opacity-80 shrink-0">Xử lý</button>
+</div>
+</div>
+</div>
+<!-- MAIN SECTION: TOOLBAR + DATA TABLE -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden mb-6">
+<!-- Quick Category Tabs -->
+<div class="px-5 pt-4 pb-3 flex flex-wrap items-center justify-between gap-3 bg-surface-container-low/50">
+<div class="flex flex-wrap items-center gap-1.5">
+<button class="px-3 py-1.5 rounded-full font-label-xs text-label-xs font-medium transition-colors @(RoleFilter == "" ? "bg-primary-container text-on-primary-container shadow-sm" : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface")" type="button" @onclick='() => SetRoleFilter("")'>
+          Tất cả
+        </button>
+@foreach (var role in RoleOptions)
+{
+<button class="px-3 py-1.5 rounded-full font-label-xs text-label-xs font-medium transition-colors @(RoleFilter == role ? "bg-primary-container text-on-primary-container shadow-sm" : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface")" type="button" @onclick="() => SetRoleFilter(role)">
+            @role
+          </button>
+}
+</div>
+</div>
+<!-- Search & Multi-filter Controls -->
+<div class="p-4 grid grid-cols-1 md:grid-cols-12 gap-3 bg-surface-container-lowest">
+<!-- Search Input -->
+<div class="md:col-span-8 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="w-full h-10 pl-9 pr-3 text-body-sm font-body-sm bg-surface-container-low text-on-surface placeholder:text-outline rounded-lg focus:outline-none focus:bg-surface-container-lowest transition-colors" placeholder="Tìm theo tên đăng nhập, họ tên, email..." type="text" @bind="Keyword" @bind:event="oninput" @onkeyup="OnSearchKeyUp"/>
+</div>
+<div class="md:col-span-4 flex justify-end">
+<button class="h-10 px-4 bg-primary-container text-on-primary rounded-lg font-label-md text-label-md" type="button" @onclick="SearchAsync">Tìm kiếm</button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left min-w-[1080px]">
+<thead>
+<tr class="bg-surface-container-low/70 font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">
+<th class="py-3 px-4">Người Dùng</th>
+<th class="py-3 px-4">Vai Trò Hệ Thống</th>
+<th class="py-3 px-4">Đăng Nhập Cuối</th>
+<th class="py-3 px-4 text-center">Trạng Thái</th>
+<th class="py-3 px-4 text-right">Thao Tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container text-body-sm font-body-sm">
+@if (IsLoading)
+{
+<tr><td class="py-3 px-4 text-on-surface-variant" colspan="5">Đang tải...</td></tr>
+}
+else if (Users is null || Users.Items.Count == 0)
+{
+<tr><td class="py-3 px-4 text-on-surface-variant" colspan="5">Không tìm thấy tài khoản nào.</td></tr>
+}
+else
+{
+@foreach (var user in Users.Items)
+{
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-4">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-title-md text-title-md font-bold">
+                  @Initials(user.FullName ?? user.Username)
+                </div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-semibold">@(user.FullName ?? user.Username)</span>
+<div class="flex items-center gap-2 font-label-xs text-label-xs text-on-surface-variant">
+<span>@@@user.Username</span>
+@if (!string.IsNullOrWhiteSpace(user.Email))
+{
+<span>• @user.Email</span>
+}
+</div>
+</div>
+</div>
+</td>
+<td class="py-3 px-4">
+@foreach (var role in user.Roles)
+{
+<span class="inline-flex items-center gap-1 px-2.5 py-1 mr-1 mb-1 rounded-full bg-tertiary-fixed/60 text-tertiary font-label-xs text-label-xs font-semibold">@role</span>
+}
+</td>
+<td class="py-3 px-4">
+<span class="text-on-surface font-medium">@(user.LastLoginAt is { } last ? last.ToString("dd/MM/yyyy HH:mm") : "Chưa đăng nhập")</span>
+</td>
+<td class="py-3 px-4 text-center">
+@if (user.IsActive)
+{
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">Đang hoạt động</span>
+}
+else
+{
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-xs text-label-xs font-semibold">Đã khóa</span>
+}
+</td>
+<td class="py-3 px-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-surface-container transition-colors" title="Chỉnh sửa vai trò" type="button" @onclick="() => OpenRolesForm(user)">
+<span class="material-symbols-outlined text-[18px]">edit_square</span>
+</button>
+<button class="p-1.5 rounded-lg text-outline hover:text-secondary hover:bg-surface-container transition-colors" title="Đặt lại mật khẩu" type="button" @onclick="() => ResetPasswordAsync(user.Id)">
+<span class="material-symbols-outlined text-[18px]">lock_reset</span>
+</button>
+<button class="p-1.5 rounded-lg text-outline hover:text-error hover:bg-surface-container transition-colors" title="@(user.IsActive ? "Khóa tài khoản" : "Mở khóa tài khoản")" type="button" @onclick="() => ToggleLockAsync(user)">
+<span class="material-symbols-outlined text-[18px]">@(user.IsActive ? "block" : "lock_open")</span>
+</button>
+</div>
+</td>
+</tr>
+}
+}
+</tbody>
+</table>
+</div>
+<!-- Table Pagination -->
+<div class="px-5 py-3.5 bg-surface-container-low/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+<div class="font-label-sm text-label-sm text-on-surface-variant">
+        Trang <span class="font-semibold text-on-surface">@Page</span> / @(Users?.TotalPages ?? 1) — trong số <span class="font-semibold text-on-surface">@(Users?.TotalCount ?? 0)</span> tài khoản người dùng
+      </div>
+<div class="flex items-center gap-1.5">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors disabled:opacity-50" disabled="@(Users is null || !Users.HasPrevious)" type="button" @onclick="PreviousPageAsync">
+          Trước
+        </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors disabled:opacity-50" disabled="@(Users is null || !Users.HasNext)" type="button" @onclick="NextPageAsync">
+          Sau
+        </button>
+</div>
+</div>
+</div>
+<!-- SECONDARY SECTION: RBAC MATRIX PREVIEW & PASSWORD POLICIES -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- RBAC Permissions Matrix Preview (8 cols) -->
+<div class="lg:col-span-8 bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Ma Trận Phân Quyền 5 Nhóm Vai Trò (RBAC Matrix)</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Quy định thẩm quyền xem, tạo, sửa và duyệt trên 6 phân hệ cốt lõi.</p>
+</div>
+<button class="font-label-sm text-label-sm text-primary font-semibold hover:underline flex items-center gap-1" type="button">
+          Chỉnh sửa ma trận
+          <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<!-- Matrix Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left text-body-sm font-body-sm">
+<thead>
+<tr class="bg-surface-container-low font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">
+<th class="py-2.5 px-3">Phân hệ chức năng</th>
+<th class="py-2.5 px-3 text-center">Admin</th>
+<th class="py-2.5 px-3 text-center">Bác sĩ</th>
+<th class="py-2.5 px-3 text-center">Điều dưỡng</th>
+<th class="py-2.5 px-3 text-center">Dược sĩ</th>
+<th class="py-2.5 px-3 text-center">Lễ tân/Thu ngân</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<tr>
+<td class="py-2.5 px-3 font-medium text-on-surface">Truy cập Hồ sơ EMR</td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline" style="font-variation-settings: 'FILL' 0;">visibility</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+</tr>
+<tr>
+<td class="py-2.5 px-3 font-medium text-on-surface">Kê đơn &amp; Chỉ định CLS</td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+</tr>
+<tr>
+<td class="py-2.5 px-3 font-medium text-on-surface">Cấp phát thuốc &amp; Xuất kho GSP</td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+</tr>
+<tr>
+<td class="py-2.5 px-3 font-medium text-on-surface">Thu tiền &amp; Xuất Hóa đơn VAT</td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+</tr>
+<tr>
+<td class="py-2.5 px-3 font-medium text-on-surface">Cấu hình Hệ thống &amp; Phân quyền</td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+<td class="py-2.5 px-3 text-center"><span class="material-symbols-outlined text-[18px] text-outline-variant">remove</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between font-label-xs text-label-xs text-on-surface-variant">
+<span>Ghi chú: Toàn bộ thao tác ghi/xóa đều được lưu vết trong Nhật ký Audit Trail (VC-32).</span>
+<span class="text-primary font-semibold">Chế độ RBAC cấp bách (Emergency Override) Khả dụng</span>
+</div>
+</div>
+<!-- Password & Session Security Policies (4 cols) -->
+<div class="lg:col-span-4 bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-[20px]">admin_panel_settings</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Chính Sách Bảo Mật</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4">
+          Quy chuẩn mật khẩu y tế chuẩn ISO 27799 &amp; HIPAA cho toàn hệ thống bệnh viện.
+        </p>
+<div class="space-y-3 font-label-sm text-label-sm">
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="text-on-surface font-semibold">Thời hạn phiên đăng nhập</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Tự động ngắt khi không thao tác</div>
+</div>
+<span class="px-2 py-1 rounded bg-surface-container font-mono font-bold text-primary">60 phút</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="text-on-surface font-semibold">Độ dài mật khẩu tối thiểu</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Chữ hoa, số, ký tự đặc biệt</div>
+</div>
+<span class="px-2 py-1 rounded bg-surface-container font-mono font-bold text-primary">10 ký tự</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="text-on-surface font-semibold">Chu kỳ bắt buộc đổi pass</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Không trùng 5 mật khẩu cũ</div>
+</div>
+<span class="px-2 py-1 rounded bg-surface-container font-mono font-bold text-primary">90 ngày</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div>
+<div class="text-on-surface font-semibold">Khóa tài khoản sai pass</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Quá 5 lần thử liên tiếp</div>
+</div>
+<span class="px-2 py-1 rounded bg-surface-container font-mono font-bold text-error">30 phút</span>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between">
+<span class="font-label-xs text-label-xs text-outline">Cập nhật: 01/10/2024 bởi SuperAdmin</span>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface font-label-xs text-label-xs font-semibold hover:bg-surface-container-high transition-colors" type="button">
+          Cập Nhật Chính Sách
+        </button>
+</div>
+</div>
+</div>
+@if (RolesFormUser is not null)
+{
+<div class="fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm flex items-center justify-center p-4">
+<div class="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-xl p-6 flex flex-col gap-4">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Chỉnh sửa vai trò · @(RolesFormUser.FullName ?? RolesFormUser.Username)</h3>
+<div class="flex flex-col gap-2">
+@foreach (var role in RoleOptions)
+{
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="@SelectedRoleIds.Contains(RoleIdOf(role))" class="w-4 h-4 accent-primary" type="checkbox" @onchange="e => ToggleRole(role, e.Value is bool b && b)"/>
+<span class="font-body-md text-body-md text-on-surface">@role</span>
+</label>
+}
+</div>
+<div class="flex items-center justify-end gap-3 pt-2">
+<button class="px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-md text-title-md transition-colors" type="button" @onclick="() => RolesFormUser = null">Huỷ</button>
+<button class="px-5 py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-title-md text-title-md font-semibold transition-colors shadow-sm disabled:opacity-60" disabled="@IsSaving" type="button" @onclick="SaveRolesAsync">@(IsSaving ? "Đang lưu..." : "Lưu vai trò")</button>
+</div>
+</div>
+</div>
+}
+</div>
+
+@code {
+    private static readonly string[] RoleOptions = ["Admin", "Doctor", "Receptionist", "Pharmacist", "Patient"];
+
+    // No GET /api/roles endpoint exists to resolve role name -> id, so this
+    // mirrors DbSeeder's fixed seed order (Admin, Doctor, Receptionist,
+    // Patient, Pharmacist added in that order on a fresh database).
+    private static int RoleIdOf(string roleName) => roleName switch
+    {
+        "Admin" => 1,
+        "Doctor" => 2,
+        "Receptionist" => 3,
+        "Patient" => 4,
+        "Pharmacist" => 5,
+        _ => 0,
+    };
+
+    private PagedResult<UserDto>? Users { get; set; }
+    private bool IsLoading { get; set; }
+    private bool IsSaving { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? TempPassword { get; set; }
+
+    private string Keyword { get; set; } = "";
+    private string RoleFilter { get; set; } = "";
+    private int Page { get; set; } = 1;
+    private const int PageSize = 10;
+
+    private UserDto? RolesFormUser { get; set; }
+    private HashSet<int> SelectedRoleIds { get; set; } = [];
+
+    protected override Task OnInitializedAsync() => SearchAsync();
+
+    private async Task SearchAsync()
+    {
+        Page = 1;
+        await LoadAsync();
+    }
+
+    private async Task SetRoleFilter(string role)
+    {
+        RoleFilter = role;
+        await SearchAsync();
+    }
+
+    private async Task OnSearchKeyUp(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await SearchAsync();
+    }
+
+    private async Task PreviousPageAsync()
+    {
+        if (Users?.HasPrevious == true)
+        {
+            Page--;
+            await LoadAsync();
+        }
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (Users?.HasNext == true)
+        {
+            Page++;
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            var url = $"api/admin/users?page={Page}&pageSize={PageSize}";
+            if (!string.IsNullOrWhiteSpace(Keyword))
+                url += $"&keyword={Uri.EscapeDataString(Keyword)}";
+            if (!string.IsNullOrEmpty(RoleFilter))
+                url += $"&role={Uri.EscapeDataString(RoleFilter)}";
+            Users = await Api.GetAsync<PagedResult<UserDto>>(url);
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private static string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 0 ? "?" : string.Concat(parts[^1][..1]).ToUpperInvariant();
+    }
+
+    private void OpenRolesForm(UserDto user)
+    {
+        RolesFormUser = user;
+        SelectedRoleIds = user.Roles.Select(RoleIdOf).Where(id => id != 0).ToHashSet();
+        ErrorMessage = null;
+    }
+
+    private void ToggleRole(string role, bool isChecked)
+    {
+        var id = RoleIdOf(role);
+        if (isChecked)
+            SelectedRoleIds.Add(id);
+        else
+            SelectedRoleIds.Remove(id);
+    }
+
+    private async Task SaveRolesAsync()
+    {
+        if (RolesFormUser is null)
+            return;
+        IsSaving = true;
+        try
+        {
+            var request = new AssignRolesRequest { RoleIds = SelectedRoleIds.ToList() };
+            await Api.PostAsync<AssignRolesRequest, UserDto>($"api/admin/users/{RolesFormUser.Id}/roles", request);
+            RolesFormUser = null;
+            await LoadAsync();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private async Task ResetPasswordAsync(int userId)
+    {
+        ErrorMessage = null;
+        try
+        {
+            var result = await Api.PostAsync<object?, ResetPasswordResult>($"api/admin/users/{userId}/reset-password", null);
+            TempPassword = result.TemporaryPassword;
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task ToggleLockAsync(UserDto user)
+    {
+        ErrorMessage = null;
+        try
+        {
+            await Api.PatchAsync<LockUserRequest, UserDto>($"api/admin/users/{user.Id}/lock", new LockUserRequest { IsActive = !user.IsActive });
+            await LoadAsync();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+}
