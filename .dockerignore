@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/logs/
+.git/
+.claude/
+material/
+review db/
+learning-notes/
+tests/
+*.md
+.azure-sql-password.txt

@@ -32,9 +32,15 @@ public static class DependencyInjection
 
         var redisConnectionString = configuration.GetConnectionString("Redis")
             ?? throw new InvalidOperationException("Missing 'Redis' connection string.");
+        // AbortOnConnectFail = false so a Redis outage at startup doesn't crash
+        // every request that resolves IConnectionMultiplexer (e.g. /health) —
+        // it keeps retrying in the background instead; RedisHealthCheck/
+        // RedisCacheService already handle a still-unreachable Redis gracefully.
+        var redisOptions = ConfigurationOptions.Parse(redisConnectionString);
+        redisOptions.AbortOnConnectFail = false;
         // Registered separately (not just via AddStackExchangeRedisCache) so
         // RedisHealthCheck can ping the same connection directly.
-        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
+        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisOptions));
         services.AddStackExchangeRedisCache(options => options.Configuration = redisConnectionString);
         services.AddSingleton<ICacheService, RedisCacheService>();
 
