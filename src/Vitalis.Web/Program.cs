@@ -26,6 +26,9 @@ var apiBaseUrl = builder.Configuration["ApiBaseUrl"]
     ?? throw new InvalidOperationException("Missing 'ApiBaseUrl' configuration.");
 builder.Services.AddHttpClient("VitalisApi", client => client.BaseAddress = new Uri(apiBaseUrl))
     .AddHttpMessageHandler<AuthHeaderHandler>();
+// No AuthHeaderHandler here — used by AuthHeaderHandler itself to call
+// /api/auth/refresh, which would otherwise recurse into itself on a 401.
+builder.Services.AddHttpClient("VitalisApiRaw", client => client.BaseAddress = new Uri(apiBaseUrl));
 builder.Services.AddScoped<VitalisApiClient>();
 
 var app = builder.Build();
