@@ -1,5 +1,9 @@
-@page "/admin/staff"
+﻿@page "/admin/staff"
 @layout AdminLayout
+@attribute [Authorize(Roles = "Admin")]
+@inject VitalisApiClient Api
+@using Vitalis.Application.Common
+@using Vitalis.Application.DTOs.Doctors
 
 <PageTitle>Nhân sự &amp; ca trực · Vitalis</PageTitle>
 
@@ -41,12 +45,22 @@
 <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
         Xếp Ca Tự Động (AI)
       </button>
-<button class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary/90 font-label-md text-label-md font-semibold transition-all shadow-sm" type="button">
+<button class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-primary/90 font-label-md text-label-md font-semibold transition-all shadow-sm" type="button" @onclick="OpenCreateDoctorForm">
 <span class="material-symbols-outlined text-[18px]">person_add</span>
-        + Bổ Sung Nhân Sự / Đổi Ca
+        + Thêm Bác Sĩ
       </button>
 </div>
 </section>
+@if (ErrorMessage is not null)
+{
+<div class="flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@ErrorMessage</p>
+<button class="text-on-error-container hover:opacity-75" @onclick="() => ErrorMessage = null" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+}
 <!-- Filter & Time Segment Selection Ribbon -->
 <section class="grid grid-cols-1 md:grid-cols-12 gap-space-sm bg-surface-container-low p-space-sm rounded-xl">
 <div class="md:col-span-4 flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-xl shadow-sm">
@@ -209,383 +223,215 @@
 <span class="w-3 h-3 rounded-full bg-primary-fixed animate-ping shrink-0 mr-1"></span>
 </div>
 </section>
-<!-- 4. Interactive Weekly Roster Matrix (Tuần 43) -->
+<!-- 4. Doctor management (real data: GET/POST/PUT/PATCH /api/doctors, /api/admin/doctors) -->
 <section class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
-<!-- Matrix Header Bar -->
 <div class="p-space-md flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm bg-surface-container-low">
 <div class="flex items-center gap-3">
 <div class="p-2 rounded-xl bg-primary text-on-primary">
-<span class="material-symbols-outlined text-[20px]">view_timeline</span>
+<span class="material-symbols-outlined text-[20px]">stethoscope</span>
 </div>
 <div>
-<h2 class="font-title-md text-title-md text-on-surface font-bold">Ma Trận Lịch Trực &amp; Phân Ca Lâm Sàng Tuần 43</h2>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Lưới phân ca chuẩn ISO/BYT - Nhấn vào ô để sửa ca, gán phòng khám hoặc ủy quyền kíp trực</p>
+<h2 class="font-title-md text-title-md text-on-surface font-bold">Danh Sách Bác Sĩ</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Quản lý hồ sơ, lịch làm việc theo tuần và ngày nghỉ của từng bác sĩ</p>
 </div>
 </div>
-<!-- Shift Legend Pills -->
-<div class="flex flex-wrap items-center gap-2">
-<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-<span class="w-2 h-2 rounded-full bg-secondary"></span> Ca Sáng (07:00 - 15:00)
-        </span>
-<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
-<span class="w-2 h-2 rounded-full bg-tertiary"></span> Ca Chiều (14:30 - 21:30)
-        </span>
-<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-inverse-surface text-inverse-on-surface font-label-xs text-label-xs font-semibold">
-<span class="material-symbols-outlined text-[12px]">bedtime</span> Trực Đêm (21:00 - 07:00)
-        </span>
-<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface-variant font-label-xs text-label-xs font-semibold">
-<span class="w-2 h-2 rounded-full bg-outline"></span> On-Call
-        </span>
-<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
-          Nghỉ / Bù
-        </span>
+<input class="h-10 px-3 w-64 bg-surface-container-lowest text-on-surface rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Tìm bác sĩ theo tên..." @bind="DoctorKeyword" @bind:event="oninput"/>
 </div>
+@if (ShowCreateDoctorForm)
+{
+<form class="p-space-md grid grid-cols-1 md:grid-cols-3 gap-3 bg-surface-container-low/50 border-t-0" @onsubmit="CreateDoctorAsync" @onsubmit:preventDefault="true">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Họ tên <span class="text-error">*</span></label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required @bind="NewDoctor.FullName"/>
 </div>
-<!-- Matrix Grid Table -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Học hàm/Học vị</label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" @bind="NewDoctor.Title"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Chuyên khoa <span class="text-error">*</span></label>
+<select class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none" required @bind="NewDoctor.SpecialtyId">
+<option value="0">-- Chọn chuyên khoa --</option>
+@foreach (var specialty in Specialties)
+{
+<option value="@specialty.Id">@specialty.Name</option>
+}
+</select>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Số CCHN</label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" @bind="NewDoctor.LicenseNumber"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Phòng khám</label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" @bind="NewDoctor.Room"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Phí khám (VND) <span class="text-error">*</span></label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required type="number" @bind="NewDoctor.ConsultationFee"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Tối đa BN/ngày</label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" type="number" @bind="NewDoctor.MaxPatientsPerDay"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Tên đăng nhập <span class="text-error">*</span></label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required @bind="NewDoctor.Username"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Mật khẩu <span class="text-error">*</span></label>
+<input class="h-10 px-3 bg-surface-container-lowest rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required type="password" @bind="NewDoctor.Password"/>
+</div>
+<div class="md:col-span-3 flex items-center justify-end gap-3">
+<button class="px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-md text-title-md transition-colors" type="button" @onclick="() => ShowCreateDoctorForm = false">Huỷ</button>
+<button class="px-5 py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-title-md text-title-md font-semibold transition-colors shadow-sm disabled:opacity-60" disabled="@IsSaving" type="submit">@(IsSaving ? "Đang lưu..." : "Tạo bác sĩ")</button>
+</div>
+</form>
+}
 <div class="overflow-x-auto w-full">
-<table class="w-full text-left border-collapse min-w-[1100px]">
+<table class="w-full text-left border-collapse">
 <thead>
 <tr class="bg-surface-container text-on-surface font-label-sm text-label-sm">
-<th class="p-3 w-72 sticky left-0 bg-surface-container z-20">Nhân Sự &amp; Phạm Vi Hoạt Động</th>
-<th class="p-3 text-center w-36">Thứ 2 <span class="block font-normal text-on-surface-variant font-label-xs">20/10</span></th>
-<th class="p-3 text-center w-36">Thứ 3 <span class="block font-normal text-on-surface-variant font-label-xs">21/10</span></th>
-<th class="p-3 text-center w-36">Thứ 4 <span class="block font-normal text-on-surface-variant font-label-xs">22/10</span></th>
-<th class="p-3 text-center w-36">Thứ 5 <span class="block font-normal text-on-surface-variant font-label-xs">23/10</span></th>
-<th class="p-3 text-center w-40 bg-primary-fixed/40 text-on-primary-fixed font-bold">
-<span class="inline-flex items-center gap-1">
-<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
-                Hôm nay: Thứ 6
-              </span>
-<span class="block font-semibold text-primary font-label-xs">24/10/2026</span>
-</th>
-<th class="p-3 text-center w-36">Thứ 7 <span class="block font-normal text-on-surface-variant font-label-xs">25/10</span></th>
-<th class="p-3 text-center w-36">Chủ Nhật <span class="block font-normal text-on-surface-variant font-label-xs">26/10</span></th>
+<th class="p-3">Bác Sĩ</th>
+<th class="p-3">Chuyên Khoa</th>
+<th class="p-3">Phòng</th>
+<th class="p-3 text-right">Phí Khám</th>
+<th class="p-3 text-center">Trạng Thái</th>
+<th class="p-3 text-right">Thao Tác</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-surface-container font-body-sm text-body-sm">
-<!-- Row 1: BS.CKII Nguyễn Văn Linh -->
-<tr class="hover:bg-surface-container-low transition-colors">
-<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-label-sm shrink-0">
-                  NL
-                </div>
-<div class="flex flex-col min-w-0">
-<span class="font-title-md text-title-md text-on-surface font-semibold truncate">BS.CKII Nguyễn Văn Linh</span>
-<span class="font-label-xs text-label-xs text-primary font-medium">Khoa Tim Mạch • BS-014</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 004819/BYT-CCHN</span>
+@if (IsLoadingDoctors)
+{
+<tr><td class="p-3 text-on-surface-variant" colspan="6">Đang tải...</td></tr>
+}
+else if (FilteredDoctors.Count == 0)
+{
+<tr><td class="p-3 text-on-surface-variant" colspan="6">Không tìm thấy bác sĩ nào.</td></tr>
+}
+else
+{
+@foreach (var doctor in FilteredDoctors)
+{
+<tr class="hover:bg-surface-container-low transition-colors @(SelectedDoctor?.Id == doctor.Id ? "bg-primary-fixed/10" : "")">
+<td class="p-3">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-semibold">@(doctor.Title is null ? "" : doctor.Title + " ")@doctor.FullName</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">@doctor.Username @(doctor.LicenseNumber is null ? "" : $"• CCHN {doctor.LicenseNumber}")</span>
 </div>
+</td>
+<td class="p-3 text-on-surface-variant">@doctor.SpecialtyName</td>
+<td class="p-3 text-on-surface-variant">@(doctor.Room ?? "-")</td>
+<td class="p-3 text-right font-mono">@(doctor.ConsultationFee?.ToString("N0") ?? "-")</td>
+<td class="p-3 text-center">
+@if (doctor.IsActive)
+{
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">Đang làm việc</span>
+}
+else
+{
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-xs text-label-xs font-semibold">Ngừng</span>
+}
+</td>
+<td class="p-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-xs text-label-xs font-semibold" type="button" @onclick="() => SelectDoctorAsync(doctor)">Lịch &amp; Nghỉ phép</button>
+@if (doctor.IsActive)
+{
+<button class="p-1.5 rounded-lg text-outline hover:text-error hover:bg-surface-container transition-colors" title="Ngừng công tác" type="button" @onclick="() => DeactivateDoctorAsync(doctor.Id)">
+<span class="material-symbols-outlined text-[18px]">block</span>
+</button>
+}
 </div>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Sáng • P.203
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Sáng • P.203
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Chiều • Can thiệp
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Sáng • P.203
-              </span>
-</td>
-<!-- Today Highlight -->
-<td class="p-2 text-center bg-primary-fixed/20">
-<span class="block p-1.5 rounded-lg bg-inverse-surface text-inverse-on-surface font-label-xs text-label-xs font-semibold shadow-sm">
-                Trực Đêm (Kíp trưởng)
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
-                Nghỉ bù trực
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Sáng • P.203
-              </span>
 </td>
 </tr>
-<!-- Row 2: BS.CKI Đặng Minh Tuấn -->
-<tr class="hover:bg-surface-container-low transition-colors">
-<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-label-sm shrink-0">
-                  MT
-                </div>
-<div class="flex flex-col min-w-0">
-<span class="font-title-md text-title-md text-on-surface font-semibold truncate">BS.CKI Đặng Minh Tuấn</span>
-<span class="font-label-xs text-label-xs text-secondary font-medium">Trưởng khoa CĐHA • BS-022</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 019234/BYT-CCHN</span>
-</div>
-</div>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Đọc MRI/CT
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Đọc PACS
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Hội chẩn Liên viện
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Đọc PACS
-              </span>
-</td>
-<!-- Today -->
-<td class="p-2 text-center bg-primary-fixed/20">
-<span class="block p-1.5 rounded-lg bg-surface-container-highest text-on-surface-variant font-label-xs text-label-xs font-semibold">
-                Trực On-call CĐHA
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
-                Nghỉ cuối tuần
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Khám Chuyên gia
-              </span>
-</td>
-</tr>
-<!-- Row 3: ThS.BS Vũ Kiều Oanh -->
-<tr class="hover:bg-surface-container-low transition-colors">
-<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-bold text-label-sm shrink-0">
-                  KO
-                </div>
-<div class="flex flex-col min-w-0">
-<span class="font-title-md text-title-md text-on-surface font-semibold truncate">ThS.BS Vũ Kiều Oanh</span>
-<span class="font-label-xs text-label-xs text-tertiary font-medium">Khoa Tiêu Hóa • BS-031</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 028445/BYT-CCHN</span>
-</div>
-</div>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Nội soi Sáng
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Nội soi Sáng
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Khám Ngoại trú
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Khám Ngoại trú
-              </span>
-</td>
-<!-- Today -->
-<td class="p-2 text-center bg-primary-fixed/20">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Nội soi Can thiệp
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
-                Nghỉ
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
-                Nghỉ
-              </span>
-</td>
-</tr>
-<!-- Row 4: DS.CKI Lê Hoàng Nam -->
-<tr class="hover:bg-surface-container-low transition-colors">
-<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-label-sm shrink-0">
-                  HN
-                </div>
-<div class="flex flex-col min-w-0">
-<span class="font-title-md text-title-md text-on-surface font-semibold truncate">DS.CKI Lê Hoàng Nam</span>
-<span class="font-label-xs text-label-xs text-primary font-medium">Khoa Dược Bệnh Viện • DS-005</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 009214/BYT-CCDS</span>
-</div>
-</div>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Kho GSP • Nhập hàng
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Cấp phát BHYT
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Kho GSP • Vaccine
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Kiểm kê Thuốc GN
-              </span>
-</td>
-<!-- Today -->
-<td class="p-2 text-center bg-primary-fixed/20">
-<span class="block p-1.5 rounded-lg bg-inverse-surface text-inverse-on-surface font-label-xs text-label-xs font-semibold">
-                Trực Dược 24/7
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
-                Nghỉ bù
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Kho GSP
-              </span>
-</td>
-</tr>
-<!-- Row 5: KTV. Trần Quốc Hùng -->
-<tr class="hover:bg-surface-container-low transition-colors">
-<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-label-sm shrink-0">
-                  QH
-                </div>
-<div class="flex flex-col min-w-0">
-<span class="font-title-md text-title-md text-on-surface font-semibold truncate">KTV. Trần Quốc Hùng</span>
-<span class="font-label-xs text-label-xs text-secondary font-medium">Trung tâm LIS &amp; QC • KT-018</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 031128/BYT-CCKTV</span>
-</div>
-</div>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                QC Máy Cobas
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Sinh hóa - Miễn dịch
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-inverse-surface text-inverse-on-surface font-label-xs text-label-xs font-semibold">
-                Trực Đêm LIS
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                QC Huyết học
-              </span>
-</td>
-<!-- Today -->
-<td class="p-2 text-center bg-primary-fixed/20">
-<span class="block p-1.5 rounded-lg bg-inverse-surface text-inverse-on-surface font-label-xs text-label-xs font-semibold">
-                Trực Cấp Cứu LIS
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
-                Nghỉ bù trực
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Chạy mẫu LIS
-              </span>
-</td>
-</tr>
-<!-- Row 6: ĐD. Phạm Thanh Vân -->
-<tr class="hover:bg-surface-container-low transition-colors">
-<td class="p-3 sticky left-0 bg-surface-container-lowest z-10 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-bold text-label-sm shrink-0">
-                  TV
-                </div>
-<div class="flex flex-col min-w-0">
-<span class="font-title-md text-title-md text-on-surface font-semibold truncate">ĐD. Phạm Thanh Vân</span>
-<span class="font-label-xs text-label-xs text-tertiary font-medium">Thăm dò CN &amp; ECG • DD-042</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant truncate">CCHN: 042918/BYT-CCDD</span>
-</div>
-</div>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Điện tim ECG
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Điện não EEG
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Hỗ trợ CĐHA
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Điện tim ECG
-              </span>
-</td>
-<!-- Today -->
-<td class="p-2 text-center bg-primary-fixed/20">
-<span class="block p-1.5 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-                Trực Đo Chức năng
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
-                Nghỉ
-              </span>
-</td>
-<td class="p-2 text-center">
-<span class="block p-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
-                Nghỉ
-              </span>
-</td>
-</tr>
+}
+}
 </tbody>
 </table>
 </div>
-<!-- Matrix Footnote & Quick Summary -->
-<div class="p-space-sm bg-surface-container-low flex flex-wrap items-center justify-between text-on-surface-variant font-label-xs text-label-xs">
-<div class="flex items-center gap-4">
-<span>Hiển thị 6 / 74 nhân sự ưu tiên điều phối trực ban</span>
-<span>•</span>
-<span class="text-primary font-medium">Bảo mật chuẩn ISO 27799 y tế</span>
+@if (SelectedDoctor is not null)
+{
+<div class="p-space-md border-t-0 bg-surface-container-low/40 grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+<!-- Weekly schedule -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-3">
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Lịch Làm Việc Theo Tuần · @SelectedDoctor.FullName</h3>
+<form class="grid grid-cols-2 md:grid-cols-3 gap-2 items-end" @onsubmit="CreateScheduleAsync" @onsubmit:preventDefault="true">
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Thứ (0=CN)</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" max="6" min="0" required type="number" @bind="NewSchedule.DayOfWeek"/>
 </div>
-<div class="flex items-center gap-2">
-<button class="text-primary hover:underline font-semibold flex items-center gap-1" type="button">
-          Xem toàn bộ 74 nhân sự
-          <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-</button>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Bắt đầu</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="time" @bind="NewSchedule.StartTime"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Kết thúc</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="time" @bind="NewSchedule.EndTime"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Phút/slot</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="number" @bind="NewSchedule.SlotMinutes"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Hiệu lực từ</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="date" @bind="NewSchedule.EffectiveFrom"/>
+</div>
+<button class="h-9 px-3 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold disabled:opacity-60" disabled="@IsSavingSchedule" type="submit">@(IsSavingSchedule ? "..." : "Thêm slot")</button>
+</form>
+<div class="flex flex-col gap-1.5 mt-1">
+@if (Schedules.Count == 0)
+{
+<span class="font-label-xs text-label-xs text-on-surface-variant">Chưa có lịch làm việc nào.</span>
+}
+@foreach (var schedule in Schedules)
+{
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low font-label-sm text-label-sm">
+<span>@DayName(schedule.DayOfWeek): @schedule.StartTime - @schedule.EndTime (mỗi @schedule.SlotMinutes phút)</span>
+<span class="font-label-xs text-label-xs @(schedule.IsActive ? "text-primary" : "text-on-surface-variant")">@(schedule.IsActive ? "Đang áp dụng" : "Ngừng")</span>
+</div>
+}
 </div>
 </div>
+<!-- Time off -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-3">
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Ngày Nghỉ · @SelectedDoctor.FullName</h3>
+<form class="grid grid-cols-2 gap-2 items-end" @onsubmit="CreateTimeOffAsync" @onsubmit:preventDefault="true">
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Từ</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="datetime-local" @bind="NewTimeOff.StartAt"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Đến</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" required type="datetime-local" @bind="NewTimeOff.EndAt"/>
+</div>
+<div class="flex flex-col gap-1 col-span-2">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Lý do</label>
+<input class="h-9 px-2 bg-surface-container-low rounded-lg" @bind="NewTimeOff.Reason"/>
+</div>
+<button class="h-9 px-3 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold disabled:opacity-60 col-span-2" disabled="@IsSavingTimeOff" type="submit">@(IsSavingTimeOff ? "..." : "Đăng ký nghỉ")</button>
+</form>
+@if (LastConflicts is { Count: > 0 })
+{
+<div class="p-2.5 rounded-lg bg-error-container text-on-error-container font-label-xs text-label-xs">
+                  @LastConflicts.Count lịch hẹn cần được lễ tân sắp xếp lại trong khoảng thời gian nghỉ này.
+                </div>
+}
+<div class="flex flex-col gap-1.5 mt-1">
+@if (TimeOffs.Count == 0)
+{
+<span class="font-label-xs text-label-xs text-on-surface-variant">Chưa có ngày nghỉ nào.</span>
+}
+@foreach (var timeOff in TimeOffs)
+{
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low font-label-sm text-label-sm">
+<span>@timeOff.StartAt.ToString("dd/MM/yyyy HH:mm") - @timeOff.EndAt.ToString("dd/MM/yyyy HH:mm") (@timeOff.Type)</span>
+</div>
+}
+</div>
+</div>
+</div>
+}
 </section>
 <!-- 5. Bottom Panels: CCHN Supervision & Workload Analytics -->
 <section class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
@@ -756,3 +602,216 @@
 </div>
 </section>
 </div>
+
+@code {
+    private List<DoctorDto> AllDoctors { get; set; } = [];
+    private List<SpecialtyDto> Specialties { get; set; } = [];
+    private bool IsLoadingDoctors { get; set; }
+    private bool IsSaving { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string DoctorKeyword { get; set; } = "";
+
+    private bool ShowCreateDoctorForm { get; set; }
+    private DoctorFormModel NewDoctor { get; set; } = new();
+
+    private DoctorDto? SelectedDoctor { get; set; }
+    private List<DoctorScheduleDto> Schedules { get; set; } = [];
+    private List<DoctorTimeOffDto> TimeOffs { get; set; } = [];
+    private IReadOnlyList<ConflictingAppointmentDto>? LastConflicts { get; set; }
+    private bool IsSavingSchedule { get; set; }
+    private bool IsSavingTimeOff { get; set; }
+    private ScheduleFormModel NewSchedule { get; set; } = new();
+    private TimeOffFormModel NewTimeOff { get; set; } = new();
+
+    private List<DoctorDto> FilteredDoctors => string.IsNullOrWhiteSpace(DoctorKeyword)
+        ? AllDoctors
+        : AllDoctors.Where(d => d.FullName.Contains(DoctorKeyword, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoadingDoctors = true;
+        try
+        {
+            var page = await Api.GetAsync<PagedResult<DoctorDto>>("api/doctors?page=1&pageSize=200");
+            AllDoctors = page.Items.ToList();
+            Specialties = (await Api.GetAsync<IReadOnlyList<SpecialtyDto>>("api/specialties")).ToList();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoadingDoctors = false;
+        }
+    }
+
+    private void OpenCreateDoctorForm()
+    {
+        NewDoctor = new DoctorFormModel();
+        ErrorMessage = null;
+        ShowCreateDoctorForm = true;
+    }
+
+    private async Task CreateDoctorAsync()
+    {
+        IsSaving = true;
+        try
+        {
+            var request = new DoctorRequest(
+                NewDoctor.FullName,
+                string.IsNullOrWhiteSpace(NewDoctor.Title) ? null : NewDoctor.Title,
+                NewDoctor.SpecialtyId,
+                string.IsNullOrWhiteSpace(NewDoctor.LicenseNumber) ? null : NewDoctor.LicenseNumber,
+                string.IsNullOrWhiteSpace(NewDoctor.Room) ? null : NewDoctor.Room,
+                NewDoctor.ConsultationFee,
+                NewDoctor.MaxPatientsPerDay,
+                NewDoctor.Username,
+                NewDoctor.Password);
+            var created = await Api.PostAsync<DoctorRequest, DoctorDto>("api/admin/doctors", request);
+            AllDoctors.Add(created);
+            ShowCreateDoctorForm = false;
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private async Task DeactivateDoctorAsync(int id)
+    {
+        try
+        {
+            await Api.PatchNoContentAsync<object?>($"api/admin/doctors/{id}/deactivate", null);
+            var index = AllDoctors.FindIndex(d => d.Id == id);
+            if (index >= 0)
+                AllDoctors[index] = AllDoctors[index] with { IsActive = false };
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task SelectDoctorAsync(DoctorDto doctor)
+    {
+        SelectedDoctor = doctor;
+        LastConflicts = null;
+        NewSchedule = new ScheduleFormModel();
+        NewTimeOff = new TimeOffFormModel();
+        ErrorMessage = null;
+        try
+        {
+            Schedules = (await Api.GetAsync<IReadOnlyList<DoctorScheduleDto>>($"api/admin/doctor-schedules?doctorId={doctor.Id}")).ToList();
+            TimeOffs = (await Api.GetAsync<IReadOnlyList<DoctorTimeOffDto>>($"api/admin/time-off?doctorId={doctor.Id}")).ToList();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private async Task CreateScheduleAsync()
+    {
+        if (SelectedDoctor is null)
+            return;
+        IsSavingSchedule = true;
+        try
+        {
+            var request = new ScheduleRequest(
+                SelectedDoctor.Id,
+                NewSchedule.DayOfWeek,
+                NewSchedule.StartTime,
+                NewSchedule.EndTime,
+                null,
+                null,
+                NewSchedule.SlotMinutes,
+                NewSchedule.EffectiveFrom,
+                null);
+            var created = await Api.PostAsync<ScheduleRequest, DoctorScheduleDto>("api/admin/doctor-schedules", request);
+            Schedules.Add(created);
+            NewSchedule = new ScheduleFormModel();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSavingSchedule = false;
+        }
+    }
+
+    private async Task CreateTimeOffAsync()
+    {
+        if (SelectedDoctor is null)
+            return;
+        IsSavingTimeOff = true;
+        try
+        {
+            var request = new CreateTimeOffRequest(
+                SelectedDoctor.Id,
+                NewTimeOff.StartAt,
+                NewTimeOff.EndAt,
+                Vitalis.Domain.Enums.TimeOffType.Leave,
+                string.IsNullOrWhiteSpace(NewTimeOff.Reason) ? null : NewTimeOff.Reason);
+            var result = await Api.PostAsync<CreateTimeOffRequest, CreateTimeOffResult>("api/admin/time-off", request);
+            TimeOffs.Add(result.TimeOff);
+            LastConflicts = result.ConflictingAppointments;
+            NewTimeOff = new TimeOffFormModel();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSavingTimeOff = false;
+        }
+    }
+
+    private static string DayName(byte dayOfWeek) => dayOfWeek switch
+    {
+        0 => "Chủ nhật",
+        1 => "Thứ 2",
+        2 => "Thứ 3",
+        3 => "Thứ 4",
+        4 => "Thứ 5",
+        5 => "Thứ 6",
+        6 => "Thứ 7",
+        _ => dayOfWeek.ToString(),
+    };
+
+    private class DoctorFormModel
+    {
+        public string FullName { get; set; } = "";
+        public string Title { get; set; } = "";
+        public int SpecialtyId { get; set; }
+        public string LicenseNumber { get; set; } = "";
+        public string Room { get; set; } = "";
+        public decimal ConsultationFee { get; set; }
+        public int? MaxPatientsPerDay { get; set; }
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+
+    private class ScheduleFormModel
+    {
+        public byte DayOfWeek { get; set; }
+        public TimeOnly StartTime { get; set; } = new(8, 0);
+        public TimeOnly EndTime { get; set; } = new(17, 0);
+        public int SlotMinutes { get; set; } = 30;
+        public DateOnly EffectiveFrom { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+    }
+
+    private class TimeOffFormModel
+    {
+        public DateTime StartAt { get; set; } = DateTime.UtcNow;
+        public DateTime EndAt { get; set; } = DateTime.UtcNow.AddHours(1);
+        public string Reason { get; set; } = "";
+    }
+}

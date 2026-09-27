@@ -1,5 +1,8 @@
 @page "/admin/reports"
 @layout AdminLayout
+@attribute [Authorize(Roles = "Admin")]
+@inject VitalisApiClient Api
+@using Vitalis.Application.DTOs.Reports
 
 <PageTitle>Báo cáo · Vitalis</PageTitle>
 
@@ -29,10 +32,17 @@
 <span class="material-symbols-outlined text-[18px] text-primary">calendar_month</span>
 <div class="flex flex-col">
 <span class="font-label-xs text-label-xs text-on-surface-variant uppercase">Kỳ hạch toán</span>
-<span class="font-label-md text-label-md text-on-surface">Tháng 10/2026 (01/10 - 24/10)</span>
+<div class="flex items-center gap-1.5">
+<input class="bg-transparent font-label-md text-label-md text-on-surface outline-none" type="date" @bind="From"/>
+<span class="text-on-surface-variant">-</span>
+<input class="bg-transparent font-label-md text-label-md text-on-surface outline-none" type="date" @bind="To"/>
 </div>
-<span class="material-symbols-outlined text-[16px] text-on-surface-variant ml-1 cursor-pointer">arrow_drop_down</span>
 </div>
+</div>
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary-container text-on-primary hover:bg-primary rounded-xl font-label-md text-label-md transition-colors shadow-sm disabled:opacity-60" disabled="@IsLoading" type="button" @onclick="LoadReportAsync">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+<span>@(IsLoading ? "Đang tải..." : "Áp dụng")</span>
+</button>
 <!-- Action buttons -->
 <button class="inline-flex items-center gap-1.5 px-3 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl font-label-md text-label-md transition-colors shadow-sm" type="button">
 <span class="material-symbols-outlined text-[18px] text-secondary">table_view</span>
@@ -52,31 +62,31 @@
 </button>
 </div>
 </header>
+@if (ErrorMessage is not null)
+{
+<div class="flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@ErrorMessage</p>
+</div>
+}
 <!-- SECTION 2: TOP FINANCIAL KPIS (4 THẺ MACRO) -->
 <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md">
 <!-- Card 1: Tổng Doanh Thu Lũy Kế -->
 <div class="relative overflow-hidden bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
 <div class="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-primary/5 -z-0"></div>
 <div class="flex items-center justify-between z-10 mb-2">
-<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Doanh Thu Lũy Kế T10</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Doanh Thu Thực Thu (Payments)</span>
 <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
 <span class="material-symbols-outlined text-[20px]">payments</span>
 </span>
 </div>
 <div class="z-10">
 <div class="flex items-baseline gap-2">
-<span class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">14.850.000.000</span>
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">@FormatVnd(Report?.TotalRevenue)</span>
 <span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">đ</span>
 </div>
-<!-- Progress bar -->
-<div class="mt-2 w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 99.0%"></div>
-</div>
 <div class="mt-2 flex items-center justify-between font-label-xs text-label-xs">
-<span class="text-emerald-700 font-semibold inline-flex items-center">
-<span class="material-symbols-outlined text-[14px]">trending_up</span> +16.8% (YoY +2.14 tỷ)
-          </span>
-<span class="text-on-surface-variant font-medium">99.0% Kế hoạch 15T</span>
+<span class="text-on-surface-variant font-medium">@(Report is null ? "" : $"{Report.From:dd/MM/yyyy} - {Report.To:dd/MM/yyyy}")</span>
 </div>
 </div>
 </div>
@@ -84,24 +94,14 @@
 <div class="relative overflow-hidden bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
 <div class="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-secondary-container/5 -z-0"></div>
 <div class="flex items-center justify-between z-10 mb-2">
-<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Biên Lợi Nhuận (EBITDA)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Tỷ Lệ Không Đến (No-show)</span>
 <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-secondary/10 text-secondary">
 <span class="material-symbols-outlined text-[20px]">query_stats</span>
 </span>
 </div>
 <div class="z-10">
 <div class="flex items-baseline gap-2">
-<span class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">28.6%</span>
-<span class="font-label-sm text-label-sm text-emerald-700 font-semibold inline-flex items-center">
-<span class="material-symbols-outlined text-[14px]">arrow_upward</span> +2.1%
-          </span>
-</div>
-<div class="mt-2 text-on-surface-variant font-body-sm text-body-sm line-clamp-1">
-          Lãi gộp ước tính: <span class="font-semibold text-on-surface">4.247.000.000 đ</span>
-</div>
-<div class="mt-2 flex items-center gap-1 font-label-xs text-label-xs text-on-surface-variant">
-<span class="material-symbols-outlined text-[14px] text-primary">verified</span>
-<span>Tối ưu dược phẩm & hóa nghiệm</span>
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">@(Report is null ? "-" : $"{Report.NoShowRate:0.0}%")</span>
 </div>
 </div>
 </div>
@@ -109,24 +109,15 @@
 <div class="relative overflow-hidden bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
 <div class="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-tertiary/5 -z-0"></div>
 <div class="flex items-center justify-between z-10 mb-2">
-<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Doanh Thu TB / Lượt (ARPU)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Tổng Lượt Khám</span>
 <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-tertiary-container/20 text-tertiary">
 <span class="material-symbols-outlined text-[20px]">receipt_long</span>
 </span>
 </div>
 <div class="z-10">
 <div class="flex items-baseline gap-2">
-<span class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">1.425.000</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">đ / lượt</span>
-</div>
-<div class="mt-2 w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
-<div class="h-full bg-tertiary rounded-full" style="width: 105.5%"></div>
-</div>
-<div class="mt-2 flex items-center justify-between font-label-xs text-label-xs">
-<span class="text-emerald-700 font-semibold inline-flex items-center">
-            Đạt 105.5% Target (1.35T)
-          </span>
-<span class="text-on-surface-variant font-medium">Kỹ thuật cao: 42%</span>
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">@(Report?.TotalVisits.ToString() ?? "-")</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">lượt</span>
 </div>
 </div>
 </div>
@@ -134,23 +125,15 @@
 <div class="relative overflow-hidden bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between group hover:shadow-md transition-shadow">
 <div class="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-primary-container/10 -z-0"></div>
 <div class="flex items-center justify-between z-10 mb-2">
-<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Dòng Tiền Thực Thu (Cash-in)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Công Nợ Chưa Thu (Outstanding)</span>
 <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-container/20 text-primary">
 <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
 </span>
 </div>
 <div class="z-10">
 <div class="flex items-baseline gap-2">
-<span class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">14.120.000.000</span>
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">@FormatVnd(Report?.OutstandingAmount)</span>
 <span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">đ</span>
-</div>
-<div class="mt-2 flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
-<span>Thu hồi công nợ:</span>
-<span class="font-semibold text-primary">95.1%</span>
-</div>
-<div class="mt-1 flex items-center justify-between font-label-xs text-label-xs text-on-surface-variant">
-<span>Đối soát BHYT treo:</span>
-<span class="font-semibold text-amber-700">730.000.000 đ</span>
 </div>
 </div>
 </div>
@@ -399,13 +382,8 @@
 <!-- Table Header Controls -->
 <div class="p-space-md sm:p-space-lg flex flex-col md:flex-row md:items-center justify-between gap-space-md bg-surface-container-lowest">
 <div>
-<h2 class="font-title-md text-title-md text-on-surface font-bold">Phân Tích Doanh Thu & Chi Phí Theo Trung Tâm Lợi Nhuận (Cost & Revenue Centers)</h2>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Kiểm soát chi phí định mức dược liệu, hóa nghiệm cận lâm sàng và lãi gộp từng khối</p>
-</div>
-<div class="flex items-center gap-2">
-<span class="font-label-xs text-label-xs text-on-surface-variant">Xếp theo:</span>
-<button class="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary-container font-label-sm text-label-sm font-medium" type="button">Lợi Nhuận Gộp</button>
-<button class="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm" type="button">Tăng Trưởng YoY</button>
+<h2 class="font-title-md text-title-md text-on-surface font-bold">Phân Tích Doanh Thu Theo Bác Sĩ</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Doanh thu khám, doanh thu dịch vụ và số lần không đến theo từng bác sĩ trong kỳ đã chọn</p>
 </div>
 </div>
 <!-- Responsive Table -->
@@ -413,160 +391,52 @@
 <table class="w-full text-left border-collapse">
 <thead>
 <tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
-<th class="py-3 px-space-md font-semibold">Khoa / Trung Tâm Chuyên Môn</th>
-<th class="py-3 px-space-md font-semibold text-right">Lượt Phục Vụ</th>
-<th class="py-3 px-space-md font-semibold text-right">Doanh Thu (VND)</th>
-<th class="py-3 px-space-md font-semibold text-right">Chi Phí Trực Tiếp (VND)</th>
-<th class="py-3 px-space-md font-semibold text-right text-primary">Lãi Gộp (Gross Profit)</th>
-<th class="py-3 px-space-md font-semibold text-center">Tỷ Suất (%)</th>
-<th class="py-3 px-space-md font-semibold text-right">Tăng Trưởng (YoY)</th>
-<th class="py-3 px-space-md font-semibold text-center">Đánh Giá</th>
+<th class="py-3 px-space-md font-semibold">Bác Sĩ</th>
+<th class="py-3 px-space-md font-semibold text-right">Lượt Khám</th>
+<th class="py-3 px-space-md font-semibold text-right">Doanh Thu Khám (VND)</th>
+<th class="py-3 px-space-md font-semibold text-right">Doanh Thu Dịch Vụ (VND)</th>
+<th class="py-3 px-space-md font-semibold text-right text-primary">Tổng Doanh Thu (VND)</th>
+<th class="py-3 px-space-md font-semibold text-center">Không Đến (No-show)</th>
 </tr>
 </thead>
 <tbody class="divide-y-0 text-on-surface font-body-sm text-body-sm">
-<!-- Row 1: CĐHA & TDCN -->
+@if (Report is null)
+{
+<tr><td class="py-3.5 px-space-md text-on-surface-variant" colspan="6">@(IsLoading ? "Đang tải dữ liệu..." : "Chưa có dữ liệu.")</td></tr>
+}
+else if (Report.ByDoctor.Count == 0)
+{
+<tr><td class="py-3.5 px-space-md text-on-surface-variant" colspan="6">Không có dữ liệu trong khoảng thời gian đã chọn.</td></tr>
+}
+else
+{
+@foreach (var row in Report.ByDoctor)
+{
 <tr class="hover:bg-surface-container-low/70 transition-colors">
-<td class="py-3.5 px-space-md font-medium text-on-surface flex items-center gap-2">
-<span class="w-2 h-2 rounded-full bg-primary"></span>
-<span>Trung Tâm Chẩn Đoán Hình Ảnh & TDCN</span>
-</td>
-<td class="py-3.5 px-space-md text-right font-medium">4.820 lượt</td>
-<td class="py-3.5 px-space-md text-right font-semibold text-on-surface">4.650.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right text-on-surface-variant">1.120.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right font-bold text-primary">3.530.000.000 đ</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-label-xs text-label-xs font-semibold">
-                75.9%
-              </span>
-</td>
-<td class="py-3.5 px-space-md text-right font-semibold text-emerald-700">+22.4%</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-flex items-center gap-1 text-primary font-label-xs text-label-xs font-medium">
-<span class="material-symbols-outlined text-[14px]">star</span> Hiệu suất tối ưu
-              </span>
-</td>
+<td class="py-3.5 px-space-md font-medium text-on-surface">@row.DoctorName</td>
+<td class="py-3.5 px-space-md text-right font-medium">@row.VisitCount lượt</td>
+<td class="py-3.5 px-space-md text-right font-semibold text-on-surface">@FormatVnd(row.ExamRevenue) đ</td>
+<td class="py-3.5 px-space-md text-right text-on-surface-variant">@FormatVnd(row.ServiceRevenue) đ</td>
+<td class="py-3.5 px-space-md text-right font-bold text-primary">@FormatVnd(row.ExamRevenue + row.ServiceRevenue) đ</td>
+<td class="py-3.5 px-space-md text-center">@row.NoShowCount</td>
 </tr>
-<!-- Row 2: Khoa Dược -->
-<tr class="hover:bg-surface-container-low/70 transition-colors">
-<td class="py-3.5 px-space-md font-medium text-on-surface flex items-center gap-2">
-<span class="w-2 h-2 rounded-full bg-secondary"></span>
-<span>Khoa Dược Ngoại Trú & Nhà Thuốc GSP</span>
-</td>
-<td class="py-3.5 px-space-md text-right font-medium">8.450 đơn</td>
-<td class="py-3.5 px-space-md text-right font-semibold text-on-surface">4.120.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right text-on-surface-variant">3.250.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right font-bold text-primary">870.000.000 đ</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-block px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs font-semibold">
-                21.1%
-              </span>
-</td>
-<td class="py-3.5 px-space-md text-right font-semibold text-emerald-700">+14.2%</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-flex items-center gap-1 text-on-surface-variant font-label-xs text-label-xs font-medium">
-<span class="material-symbols-outlined text-[14px]">check_circle</span> Đạt chuẩn định mức
-              </span>
-</td>
-</tr>
-<!-- Row 3: LIS Xét Nghiệm -->
-<tr class="hover:bg-surface-container-low/70 transition-colors">
-<td class="py-3.5 px-space-md font-medium text-on-surface flex items-center gap-2">
-<span class="w-2 h-2 rounded-full bg-tertiary"></span>
-<span>Phòng Xét Nghiệm Trung Tâm (LIS)</span>
-</td>
-<td class="py-3.5 px-space-md text-right font-medium">6.200 XN</td>
-<td class="py-3.5 px-space-md text-right font-semibold text-on-surface">2.850.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right text-on-surface-variant">940.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right font-bold text-primary">1.910.000.000 đ</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-label-xs text-label-xs font-semibold">
-                67.0%
-              </span>
-</td>
-<td class="py-3.5 px-space-md text-right font-semibold text-emerald-700">+18.5%</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-flex items-center gap-1 text-primary font-label-xs text-label-xs font-medium">
-<span class="material-symbols-outlined text-[14px]">verified</span> Tiết giảm hóa chất
-              </span>
-</td>
-</tr>
-<!-- Row 4: Khám Ngoại Trú & Tim Mạch -->
-<tr class="hover:bg-surface-container-low/70 transition-colors">
-<td class="py-3.5 px-space-md font-medium text-on-surface flex items-center gap-2">
-<span class="w-2 h-2 rounded-full bg-primary-container"></span>
-<span>Khoa Khám Ngoại Trú & Tim Mạch Can Thiệp</span>
-</td>
-<td class="py-3.5 px-space-md text-right font-medium">3.650 ca</td>
-<td class="py-3.5 px-space-md text-right font-semibold text-on-surface">2.150.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right text-on-surface-variant">480.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right font-bold text-primary">1.670.000.000 đ</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-label-xs text-label-xs font-semibold">
-                77.7%
-              </span>
-</td>
-<td class="py-3.5 px-space-md text-right font-semibold text-emerald-700">+11.8%</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-flex items-center gap-1 text-secondary font-label-xs text-label-xs font-medium">
-<span class="material-symbols-outlined text-[14px]">trending_up</span> Tăng chỉ định VIP
-              </span>
-</td>
-</tr>
-<!-- Row 5: Tiêu Hóa - Nội Soi -->
-<tr class="hover:bg-surface-container-low/70 transition-colors">
-<td class="py-3.5 px-space-md font-medium text-on-surface flex items-center gap-2">
-<span class="w-2 h-2 rounded-full bg-amber-600"></span>
-<span>Đơn Nguyên Tiêu Hóa - Nội Soi Can Thiệp</span>
-</td>
-<td class="py-3.5 px-space-md text-right font-medium">980 ca</td>
-<td class="py-3.5 px-space-md text-right font-semibold text-on-surface">1.080.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right text-on-surface-variant">320.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right font-bold text-primary">760.000.000 đ</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-label-xs text-label-xs font-semibold">
-                70.4%
-              </span>
-</td>
-<td class="py-3.5 px-space-md text-right font-semibold text-emerald-700">+28.1%</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-flex items-center gap-1 text-primary font-label-xs text-label-xs font-medium">
-<span class="material-symbols-outlined text-[14px]">bolt</span> Tăng trưởng cao nhất
-              </span>
-</td>
-</tr>
+}
+}
 </tbody>
-<!-- Table Summary Row -->
+@if (Report is { ByDoctor.Count: > 0 })
+{
 <tfoot>
 <tr class="bg-surface-container-high text-on-surface font-label-md text-label-md font-bold">
-<td class="py-3.5 px-space-md">Tổng Cộng Toàn Viện</td>
-<td class="py-3.5 px-space-md text-right">24.100 lượt</td>
-<td class="py-3.5 px-space-md text-right">14.850.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right">6.110.000.000 đ</td>
-<td class="py-3.5 px-space-md text-right text-primary">8.740.000.000 đ</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-block px-3 py-1 rounded-full bg-primary text-on-primary font-label-xs text-label-xs font-bold">
-                58.8% Lãi Gộp Viện
-              </span>
-</td>
-<td class="py-3.5 px-space-md text-right text-emerald-800">+16.8%</td>
-<td class="py-3.5 px-space-md text-center">
-<span class="inline-flex items-center px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 font-label-xs text-label-xs">
-                Vượt KPI 99%
-              </span>
-</td>
+<td class="py-3.5 px-space-md">Tổng Cộng</td>
+<td class="py-3.5 px-space-md text-right">@Report.ByDoctor.Sum(r => r.VisitCount) lượt</td>
+<td class="py-3.5 px-space-md text-right">@FormatVnd(Report.ByDoctor.Sum(r => r.ExamRevenue)) đ</td>
+<td class="py-3.5 px-space-md text-right">@FormatVnd(Report.ByDoctor.Sum(r => r.ServiceRevenue)) đ</td>
+<td class="py-3.5 px-space-md text-right text-primary">@FormatVnd(Report.ByDoctor.Sum(r => r.ExamRevenue + r.ServiceRevenue)) đ</td>
+<td class="py-3.5 px-space-md text-center">@Report.ByDoctor.Sum(r => r.NoShowCount)</td>
 </tr>
 </tfoot>
+}
 </table>
-</div>
-<!-- Table Pagination / Action Footnote -->
-<div class="p-space-md bg-surface-container-lowest flex flex-col sm:flex-row items-center justify-between gap-2 text-on-surface-variant font-label-xs text-label-xs">
-<div>Đang hiển thị 5 Trung tâm doanh thu chủ đạo (Chiếm 89.4% tỷ trọng toàn cơ sở).</div>
-<div class="flex items-center gap-3">
-<a class="text-primary hover:underline font-semibold flex items-center gap-1" href="#">
-<span>Xem chi tiết 18 tiểu khoa và đơn vị hỗ trợ</span>
-<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
-</a>
-</div>
 </div>
 </section>
 <!-- SECTION 5: BOTTOM PANELS (QUẢN TRỊ RỦI RO, AI FORECAST & CHỮ KÝ SỐ) -->
@@ -692,3 +562,33 @@
 </div>
 </section>
 </div>
+
+@code {
+    private DateOnly From { get; set; } = new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+    private DateOnly To { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+    private ClinicReportDto? Report { get; set; }
+    private bool IsLoading { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadReportAsync();
+
+    private async Task LoadReportAsync()
+    {
+        ErrorMessage = null;
+        IsLoading = true;
+        try
+        {
+            Report = await Api.GetAsync<ClinicReportDto>($"api/admin/reports?from={From:yyyy-MM-dd}&to={To:yyyy-MM-dd}");
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private static string FormatVnd(decimal? amount) => (amount ?? 0).ToString("N0");
+}
