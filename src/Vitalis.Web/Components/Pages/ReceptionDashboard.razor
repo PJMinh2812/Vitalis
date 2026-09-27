@@ -1,22 +1,29 @@
 @page "/reception"
 @layout ReceptionLayout
+@attribute [Authorize(Roles = "Receptionist")]
+@inject VitalisApiClient Api
+@using Vitalis.Application.DTOs.Appointments
+@using Vitalis.Application.Common
+@using Vitalis.Domain.Enums
 
 <PageTitle>Bàn tiếp đón · Vitalis</PageTitle>
 
 <div class="flex flex-col w-full">
-<!-- Interactive Toast Notification (Check-in Success Mock) -->
-<div class="fixed top-20 right-8 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-container-lowest text-on-surface shadow-xl transition-all duration-300 transform translate-y-0 opacity-100" id="toastNotification">
+@if (ToastMessage is not null)
+{
+<div class="fixed top-20 right-8 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-container-lowest text-on-surface shadow-xl transition-all duration-300 transform translate-y-0 opacity-100">
 <div class="w-8 h-8 rounded-full bg-primary-container/20 flex items-center justify-center shrink-0">
 <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
 </div>
 <div class="flex flex-col pr-3">
 <span class="font-label-sm text-label-sm text-primary font-bold">Check-in thành công</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">Cấp số <strong class="text-on-surface font-semibold">STT #05</strong>: Nguyễn Văn An (Phòng 203 - BS. Nguyễn Văn Linh)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">@ToastMessage</span>
 </div>
-<button class="p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition-colors" onclick="document.getElementById('toastNotification').classList.add('hidden')">
+<button class="p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition-colors" @onclick="() => ToastMessage = null">
 <span class="material-symbols-outlined text-[18px]">close</span>
 </button>
 </div>
+}
 <!-- Main Content Workbench Area -->
 <div class="p-space-xl flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
 <!-- 1. Header Khu vực làm việc -->
@@ -34,60 +41,44 @@
 </div>
 <!-- Quick Action Buttons -->
 <div class="flex items-center gap-3 self-start lg:self-center">
-<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-container-lowest text-primary shadow-sm hover:bg-primary/5 transition-all">
+<a href="/reception/booking" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-container-lowest text-primary shadow-sm hover:bg-primary/5 transition-all">
 <span class="material-symbols-outlined text-[18px]">calendar_add_on</span>
 <span class="font-label-md text-label-md font-semibold">Đặt lịch hộ</span>
-</button>
-<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-on-primary shadow-sm hover:bg-primary-container transition-all">
-<span class="material-symbols-outlined text-[18px]">person_add</span>
-<span class="font-label-md text-label-md font-semibold">+ Tiếp đón & Tạo BN mới</span>
-</button>
+</a>
 </div>
 </div>
 <!-- Filter Bar & Control Toolbar -->
 <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-<!-- Date Picker & Doctor Select -->
 <div class="flex flex-wrap items-center gap-3">
 <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-low rounded-lg text-on-surface">
 <span class="material-symbols-outlined text-[18px] text-primary">calendar_month</span>
-<span class="font-label-sm text-label-sm font-semibold select-none">Hôm nay: Thứ Hai, 26/09/2026</span>
-<span class="material-symbols-outlined text-[18px] text-outline cursor-pointer hover:text-on-surface">arrow_drop_down</span>
-</div>
-<div class="relative min-w-[230px]">
-<div class="flex items-center justify-between px-3 py-2 bg-surface-container-low rounded-lg text-on-surface cursor-pointer">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-[18px] text-tertiary">stethoscope</span>
-<span class="font-label-sm text-label-sm">Bác sĩ: <strong>Tất cả bác sĩ</strong></span>
-</div>
-<span class="material-symbols-outlined text-[18px] text-outline">expand_more</span>
-</div>
+<span class="font-label-sm text-label-sm font-semibold select-none">Hôm nay: @Today.ToString("dddd, dd/MM/yyyy")</span>
 </div>
 </div>
 <!-- Filter Chips Status -->
 <div class="flex items-center gap-1.5 overflow-x-auto pb-1 xl:pb-0 scrollbar-none">
-<button class="px-3 py-1.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm font-semibold whitespace-nowrap shadow-sm">
-          Tất cả <span class="ml-1 opacity-80">28</span>
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-semibold whitespace-nowrap shadow-sm transition-colors @(ChipClass(null))" @onclick="() => ChipFilter = null">
+          Tất cả <span class="ml-1 opacity-80">@Appointments.Count</span>
 </button>
-<button class="px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors">
-          Chờ đến <span class="ml-1 px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface-variant font-bold text-[10px]">12</span>
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors @(ChipClass("waiting"))" @onclick='() => ChipFilter = "waiting"'>
+          Chờ đến <span class="ml-1 px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface-variant font-bold text-[10px]">@WaitingCount</span>
 </button>
-<button class="px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors">
-          Đã check-in <span class="ml-1 px-1.5 py-0.2 rounded-full bg-secondary/15 text-secondary font-bold text-[10px]">9</span>
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors @(ChipClass("checkedin"))" @onclick='() => ChipFilter = "checkedin"'>
+          Đã check-in <span class="ml-1 px-1.5 py-0.2 rounded-full bg-secondary/15 text-secondary font-bold text-[10px]">@CheckedInCount</span>
 </button>
-<button class="px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors">
-          Đang khám <span class="ml-1 px-1.5 py-0.2 rounded-full bg-primary/15 text-primary font-bold text-[10px]">4</span>
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors @(ChipClass("inprogress"))" @onclick='() => ChipFilter = "inprogress"'>
+          Đang khám <span class="ml-1 px-1.5 py-0.2 rounded-full bg-primary/15 text-primary font-bold text-[10px]">@InProgressCount</span>
 </button>
-<button class="px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors">
-          Hoàn thành <span class="ml-1 px-1.5 py-0.2 rounded-full bg-tertiary/15 text-tertiary font-bold text-[10px]">2</span>
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors @(ChipClass("completed"))" @onclick='() => ChipFilter = "completed"'>
+          Hoàn thành <span class="ml-1 px-1.5 py-0.2 rounded-full bg-tertiary/15 text-tertiary font-bold text-[10px]">@CompletedCount</span>
 </button>
-<button class="px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors">
-          Không đến <span class="ml-1 px-1.5 py-0.2 rounded-full bg-error-container text-error font-bold text-[10px]">1</span>
+<button class="px-3 py-1.5 rounded-full font-label-sm text-label-sm font-medium whitespace-nowrap transition-colors @(ChipClass("noshow"))" @onclick='() => ChipFilter = "noshow"'>
+          Không đến <span class="ml-1 px-1.5 py-0.2 rounded-full bg-error-container text-error font-bold text-[10px]">@NoShowCount</span>
 </button>
 </div>
 </div>
-<!-- 2. Hàng 5 Thẻ Thống Kê KPI (Stat Cards) -->
+<!-- 2. Hàng Thẻ Thống Kê KPI (Stat Cards) -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-<!-- KPI 1 -->
 <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
 <div class="flex items-center justify-between">
 <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Tổng lịch hẹn</span>
@@ -96,14 +87,9 @@
 </div>
 </div>
 <div class="mt-3 flex items-baseline gap-2">
-<span class="font-display text-display text-on-surface leading-none font-bold">28</span>
-<span class="font-label-xs text-label-xs text-tertiary-container flex items-center font-bold">
-<span class="material-symbols-outlined text-[14px]">arrow_upward</span> +12%
-          </span>
+<span class="font-display text-display text-on-surface leading-none font-bold">@Appointments.Count</span>
 </div>
-<span class="font-label-xs text-label-xs text-outline mt-1">So với hôm qua (25 lượt)</span>
 </div>
-<!-- KPI 2 -->
 <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
 <div class="flex items-center justify-between">
 <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Chờ đến</span>
@@ -112,12 +98,9 @@
 </div>
 </div>
 <div class="mt-3 flex items-baseline gap-2">
-<span class="font-display text-display text-on-surface leading-none font-bold text-amber-700">12</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">lượt hẹn</span>
+<span class="font-display text-display text-on-surface leading-none font-bold text-amber-700">@WaitingCount</span>
 </div>
-<span class="font-label-xs text-label-xs text-outline mt-1">Dự kiến tiếp nhận sáng nay</span>
 </div>
-<!-- KPI 3 -->
 <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
 <div class="flex items-center justify-between">
 <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Đã check-in</span>
@@ -126,12 +109,9 @@
 </div>
 </div>
 <div class="mt-3 flex items-baseline gap-2">
-<span class="font-display text-display text-secondary leading-none font-bold">09</span>
-<span class="font-label-xs text-label-xs text-secondary-container font-semibold">Đang chờ phòng</span>
+<span class="font-display text-display text-secondary leading-none font-bold">@CheckedInCount</span>
 </div>
-<span class="font-label-xs text-label-xs text-outline mt-1">Thời gian chờ TB: 8 phút</span>
 </div>
-<!-- KPI 4 -->
 <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
 <div class="flex items-center justify-between">
 <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Đã khám xong</span>
@@ -140,12 +120,9 @@
 </div>
 </div>
 <div class="mt-3 flex items-baseline gap-2">
-<span class="font-display text-display text-tertiary leading-none font-bold">06</span>
-<span class="font-label-xs text-label-xs text-tertiary font-medium">Đã thanh toán & nhận thuốc</span>
+<span class="font-display text-display text-tertiary leading-none font-bold">@CompletedCount</span>
 </div>
-<span class="font-label-xs text-label-xs text-outline mt-1">Hiệu suất phòng khám: 96%</span>
 </div>
-<!-- KPI 5 -->
 <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
 <div class="flex items-center justify-between">
 <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Không đến</span>
@@ -154,32 +131,28 @@
 </div>
 </div>
 <div class="mt-3 flex items-baseline gap-2">
-<span class="font-display text-display text-error leading-none font-bold">01</span>
-<span class="font-label-xs text-label-xs text-error font-semibold">Đã quá giờ</span>
+<span class="font-display text-display text-error leading-none font-bold">@NoShowCount</span>
 </div>
-<span class="font-label-xs text-label-xs text-outline mt-1">Tỷ lệ hủy/vắng: 3.5%</span>
 </div>
 </div>
 <!-- 3. Bảng Dữ Liệu Chính 'Lịch Hẹn Hôm Nay' -->
 <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
-<!-- Header Toolbar của bảng -->
 <div class="p-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface-container-lowest">
 <div class="relative w-full sm:w-96">
 <span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">search</span>
-<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary shadow-inner" placeholder="Tìm theo tên bệnh nhân, số điện thoại, mã BN..." type="text"/>
+<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary shadow-inner" placeholder="Tìm theo tên bệnh nhân, bác sĩ..." type="text" @bind="SearchKeyword" @bind:event="oninput"/>
 </div>
 <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm font-semibold transition-colors">
-<span class="material-symbols-outlined text-[18px]">tune</span>
-            Lọc nâng cao
-          </button>
-<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-primary font-label-sm text-label-sm font-semibold transition-colors" title="Đồng bộ lại danh sách">
+<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-primary font-label-sm text-label-sm font-semibold transition-colors" @onclick="LoadAsync" title="Đồng bộ lại danh sách">
 <span class="material-symbols-outlined text-[18px]">sync</span>
             Làm mới
           </button>
 </div>
 </div>
-<!-- Clinical Table -->
+@if (ErrorMessage is not null)
+{
+<div class="mx-4 mb-3 p-3 rounded-lg bg-error-container text-on-error-container font-body-sm text-body-sm">@ErrorMessage</div>
+}
 <div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
 <thead>
@@ -187,373 +160,79 @@
 <th class="py-3 px-4 font-semibold">Giờ hẹn</th>
 <th class="py-3 px-3 font-semibold text-center">STT</th>
 <th class="py-3 px-4 font-semibold">Bệnh nhân</th>
-<th class="py-3 px-4 font-semibold">Mã BN</th>
-<th class="py-3 px-4 font-semibold">Bác sĩ & Phòng</th>
-<th class="py-3 px-4 font-semibold">Chuyên khoa</th>
+<th class="py-3 px-4 font-semibold">Bác sĩ</th>
 <th class="py-3 px-4 font-semibold text-center">Trạng thái</th>
 <th class="py-3 px-4 font-semibold text-right">Thao tác tiếp đón</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-surface-container-low font-body-md text-body-md text-on-surface">
-<!-- Row 1: Vừa Check-in xong, có STT -->
+@if (IsLoading)
+{
+<tr><td colspan="6" class="py-6 text-center text-on-surface-variant">Đang tải...</td></tr>
+}
+else if (FilteredAppointments.Count == 0)
+{
+<tr><td colspan="6" class="py-6 text-center text-on-surface-variant">Không có lịch hẹn phù hợp</td></tr>
+}
+else
+{
+@foreach (var appt in FilteredAppointments)
+{
 <tr class="hover:bg-surface-container-low/40 transition-colors">
-<td class="py-3.5 px-4 font-label-md text-label-md font-semibold text-on-surface">
-                08:00
-              </td>
+<td class="py-3.5 px-4 font-label-md text-label-md font-semibold text-on-surface">@ToLocal(appt.StartTime).ToString("HH:mm")</td>
 <td class="py-3.5 px-3 text-center">
-<span class="px-2.5 py-1 rounded-md bg-secondary/15 text-secondary font-headline-sm text-headline-sm font-bold tracking-tight">#05</span>
+@if (appt.QueueNumber is not null)
+{
+<span class="px-2.5 py-1 rounded-md bg-secondary/15 text-secondary font-headline-sm text-headline-sm font-bold tracking-tight">#@appt.QueueNumber.Value.ToString("00")</span>
+}
+else
+{
+<span class="text-outline font-label-md text-label-md">—</span>
+}
 </td>
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold font-label-sm text-label-sm">
-                    NA
-                  </div>
-<div class="flex flex-col">
-<span class="font-label-md text-label-md font-semibold text-on-surface">Nguyễn Văn An</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nam, 42 tuổi · 0912 345 678</span>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4 font-mono text-body-sm text-primary font-medium">BN0012</td>
 <td class="py-3.5 px-4">
 <div class="flex flex-col">
-<span class="font-label-sm text-label-sm font-semibold text-on-surface">BS.CKII Nguyễn Văn Linh</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Phòng 203 (Tầng 2)
-                  </span>
+<span class="font-label-md text-label-md font-semibold text-on-surface">@appt.PatientName</span>
 </div>
 </td>
 <td class="py-3.5 px-4">
-<span class="font-body-sm text-body-sm text-on-surface">Nội Tim Mạch</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">@appt.DoctorName</span>
 </td>
 <td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs font-semibold bg-secondary/10 text-secondary">
-                  Đã check-in
-                </span>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs font-semibold @StatusBadgeClass(appt.Status)">@StatusLabel(appt.Status)</span>
 </td>
 <td class="py-3.5 px-4 text-right">
 <div class="flex items-center justify-end gap-1.5">
-<button class="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-surface-container text-primary hover:bg-primary hover:text-on-primary font-label-sm text-label-sm font-semibold transition-colors" title="In phiếu số khám">
-<span class="material-symbols-outlined text-[16px]">print</span>
-<span>In STT</span>
-</button>
-<button class="p-1.5 rounded-md text-on-surface-variant hover:bg-surface-container transition-colors" title="Chuyển phòng khám">
-<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- Row 2: Chờ check-in (Action Cấp số / Báo vắng) -->
-<tr class="hover:bg-surface-container-low/40 transition-colors">
-<td class="py-3.5 px-4 font-label-md text-label-md font-semibold text-on-surface">
-                08:15
-              </td>
-<td class="py-3.5 px-3 text-center text-outline font-label-md text-label-md">
-                —
-              </td>
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 font-bold font-label-sm text-label-sm">
-                    TM
-                  </div>
-<div class="flex flex-col">
-<span class="font-label-md text-label-md font-semibold text-on-surface">Trần Thị Mai</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nữ, 35 tuổi · 0988 123 456</span>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4 font-mono text-body-sm text-primary font-medium">BN0025</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm font-semibold text-on-surface">ThS.BS Trần Mai Phương</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span> Phòng 105 (Tầng 1)
-                  </span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="font-body-sm text-body-sm text-on-surface">Tai Mũi Họng</span>
-</td>
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs font-semibold bg-amber-50 text-amber-800">
-                  Chờ check-in
-                </span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="flex items-center justify-end gap-1.5">
-<button class="flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-on-primary hover:bg-primary-container font-label-sm text-label-sm font-semibold shadow-sm transition-colors">
+@if (appt.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed)
+{
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-on-primary hover:bg-primary-container font-label-sm text-label-sm font-semibold shadow-sm transition-colors" @onclick="() => CheckInAsync(appt.Id)">
 <span class="material-symbols-outlined text-[16px]">qr_code_scanner</span>
 <span>Check-in & Cấp số</span>
 </button>
-<button class="px-2.5 py-1.5 rounded-md bg-error-container text-error hover:bg-error hover:text-on-error font-label-sm text-label-sm font-semibold transition-colors" onclick="document.getElementById('noShowModal').classList.remove('hidden')" title="Đánh dấu không đến">
+<button class="px-2.5 py-1.5 rounded-md bg-error-container text-error hover:bg-error hover:text-on-error font-label-sm text-label-sm font-semibold transition-colors" @onclick="() => OpenNoShowModal(appt)">
                     Vắng
                   </button>
+}
 </div>
 </td>
 </tr>
-<!-- Row 3: Đang khám -->
-<tr class="hover:bg-surface-container-low/40 transition-colors">
-<td class="py-3.5 px-4 font-label-md text-label-md font-semibold text-on-surface">
-                08:30
-              </td>
-<td class="py-3.5 px-3 text-center">
-<span class="px-2.5 py-1 rounded-md bg-primary/10 text-primary font-headline-sm text-headline-sm font-bold tracking-tight">#04</span>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-on-surface font-bold font-label-sm text-label-sm">
-                    QB
-                  </div>
-<div class="flex flex-col">
-<span class="font-label-md text-label-md font-semibold text-on-surface">Phạm Quốc Bảo</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nam, 58 tuổi · 0903 898 765</span>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4 font-mono text-body-sm text-primary font-medium">BN0048</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm font-semibold text-on-surface">BS. Lê Hoàng Long</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span> Phòng 102 (Tầng 1)
-                  </span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="font-body-sm text-body-sm text-on-surface">Nội Tổng quát</span>
-</td>
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-xs text-label-xs font-semibold bg-primary-fixed text-on-primary-fixed-variant">
-<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Đang khám
-                </span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="flex items-center justify-end gap-1.5">
-<button class="p-1.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Xem buồng khám">
-<span class="material-symbols-outlined text-[18px]">meeting_room</span>
-</button>
-<button class="p-1.5 rounded-md text-on-surface-variant hover:bg-surface-container transition-colors" title="Thêm chỉ định cận lâm sàng">
-<span class="material-symbols-outlined text-[18px]">biotech</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- Row 4: Đã khám xong / Hoàn thành -->
-<tr class="hover:bg-surface-container-low/40 transition-colors">
-<td class="py-3.5 px-4 font-label-md text-label-md font-semibold text-on-surface">
-                07:45
-              </td>
-<td class="py-3.5 px-3 text-center">
-<span class="px-2.5 py-1 rounded-md bg-tertiary-fixed text-tertiary font-headline-sm text-headline-sm font-bold tracking-tight">#01</span>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-tertiary-fixed/30 flex items-center justify-center text-tertiary font-bold font-label-sm text-label-sm">
-                    TT
-                  </div>
-<div class="flex flex-col">
-<span class="font-label-md text-label-md font-semibold text-on-surface">Lê Thu Trang</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nữ, 29 tuổi · 0977 443 211</span>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4 font-mono text-body-sm text-primary font-medium">BN0004</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm font-semibold text-on-surface">BS.CKII Nguyễn Văn Linh</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">Phòng 203 (Tầng 2)</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="font-body-sm text-body-sm text-on-surface">Tim mạch</span>
-</td>
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs font-semibold bg-tertiary/10 text-tertiary">
-                  Đã hoàn thành
-                </span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="flex items-center justify-end gap-1.5">
-<button class="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-surface-container text-on-surface hover:text-primary font-label-sm text-label-sm font-medium transition-colors">
-<span class="material-symbols-outlined text-[16px]">description</span>
-<span>Hồ sơ</span>
-</button>
-<button class="p-1.5 rounded-md text-on-surface-variant hover:bg-surface-container transition-colors" title="Đã qua quầy thuốc">
-<span class="material-symbols-outlined text-[18px]">medication</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- Row 5: Không đến / Hủy -->
-<tr class="hover:bg-surface-container-low/40 transition-colors opacity-75">
-<td class="py-3.5 px-4 font-label-md text-label-md font-semibold text-on-surface-variant">
-                07:30
-              </td>
-<td class="py-3.5 px-3 text-center text-outline font-label-md text-label-md">
-                —
-              </td>
-<td class="py-3.5 px-4">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 rounded-full bg-error-container/40 flex items-center justify-center text-error font-bold font-label-sm text-label-sm">
-                    HQ
-                  </div>
-<div class="flex flex-col">
-<span class="font-label-md text-label-md font-semibold text-on-surface line-through decoration-error/50">Hoàng Văn Quân</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nam, 51 tuổi · 0936 991 223</span>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4 font-mono text-body-sm text-outline">BN0002</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm font-semibold text-on-surface-variant">BS. Lê Hoàng Long</span>
-<span class="font-label-xs text-label-xs text-outline">Phòng 102 (Tầng 1)</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="font-body-sm text-body-sm text-on-surface-variant">Nội Tổng quát</span>
-</td>
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs font-semibold bg-error-container text-error">
-                  Không đến
-                </span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="flex items-center justify-end gap-1.5">
-<button class="px-2.5 py-1.5 rounded-md bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm font-semibold transition-colors" title="Gọi lại hẹn lịch">
-                    Hẹn lại
-                  </button>
-</div>
-</td>
-</tr>
+}
+}
 </tbody>
 </table>
 </div>
-<!-- Pagination Footer -->
 <div class="p-4 bg-surface-container-lowest flex flex-col sm:flex-row items-center justify-between gap-3 text-on-surface-variant font-label-sm text-label-sm">
 <div>
-          Hiển thị <span class="font-semibold text-on-surface">1 - 5</span> trong số <span class="font-semibold text-on-surface">28</span> lượt hẹn
+          Hiển thị <span class="font-semibold text-on-surface">@FilteredAppointments.Count</span> trong số <span class="font-semibold text-on-surface">@Appointments.Count</span> lượt hẹn
         </div>
-<div class="flex items-center gap-1">
-<button class="px-3 py-1.5 rounded-md bg-surface-container-low text-on-surface-variant hover:bg-surface-container disabled:opacity-50" disabled="">
-            Trước
-          </button>
-<button class="w-8 h-8 rounded-md bg-primary text-on-primary font-bold flex items-center justify-center">
-            1
-          </button>
-<button class="w-8 h-8 rounded-md bg-surface-container-low hover:bg-surface-container text-on-surface font-medium flex items-center justify-center">
-            2
-          </button>
-<button class="w-8 h-8 rounded-md bg-surface-container-low hover:bg-surface-container text-on-surface font-medium flex items-center justify-center">
-            3
-          </button>
-<button class="px-3 py-1.5 rounded-md bg-surface-container-low text-on-surface hover:bg-surface-container transition-colors">
-            Sau
-          </button>
-</div>
-</div>
-</div>
-<!-- Mini Bottom Info Bento: Phòng khám đang mở & Danh sách Gọi nhỡ -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-<!-- Live Room Status -->
-<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col gap-4">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary text-[20px]">door_open</span>
-<span class="font-title-md text-title-md text-on-surface">Tải phòng khám hiện tại</span>
-</div>
-<span class="font-label-xs text-label-xs text-outline">Cập nhật 1 phút trước</span>
-</div>
-<div class="flex flex-col gap-3">
-<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low/60">
-<div class="flex flex-col">
-<span class="font-label-md text-label-md font-semibold text-on-surface">P.203 - Nội Tim mạch</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">BS.CKII Nguyễn Văn Linh</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="font-label-sm text-label-sm font-bold text-primary">3 chờ</span>
-<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
-</div>
-</div>
-<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low/60">
-<div class="flex flex-col">
-<span class="font-label-md text-label-md font-semibold text-on-surface">P.105 - Tai Mũi Họng</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">ThS.BS Trần Mai Phương</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="font-label-sm text-label-sm font-bold text-amber-700">5 chờ</span>
-<span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-</div>
-</div>
-<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low/60">
-<div class="flex flex-col">
-<span class="font-label-md text-label-md font-semibold text-on-surface">P.102 - Nội Tổng quát</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">BS. Lê Hoàng Long</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="font-label-sm text-label-sm font-bold text-tertiary">1 chờ</span>
-<span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span>
 </div>
 </div>
 </div>
 </div>
-<!-- Quick Guidance & Operational Shortcuts -->
-<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col gap-4">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary text-[20px]">assignment_turned_in</span>
-<span class="font-title-md text-title-md text-on-surface">Quy chuẩn tiếp đón quầy</span>
-</div>
-<div class="space-y-3 font-body-sm text-body-sm text-on-surface-variant">
-<div class="flex items-start gap-2.5">
-<span class="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">1</span>
-<p>Đối chiếu thông tin CCCD hoặc số điện thoại trên hệ thống VNeID/Vitalis trước khi check-in.</p>
-</div>
-<div class="flex items-start gap-2.5">
-<span class="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">2</span>
-<p>In số thứ tự, hướng dẫn người bệnh đến đúng khu vực ghế chờ theo tầng ghi trên phiếu.</p>
-</div>
-<div class="flex items-start gap-2.5">
-<span class="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">3</span>
-<p>Ưu tiên người cao tuổi (>75t), phụ nữ mang thai và trẻ nhỏ dưới 6 tuổi vào luồng khám nhanh.</p>
-</div>
-</div>
-<div class="mt-auto pt-2 flex items-center justify-between text-label-xs text-primary font-semibold cursor-pointer hover:underline">
-<span>Xem sổ tay nghiệp vụ lễ tân v2.4</span>
-<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-</div>
-</div>
-<!-- Reception Daily Overview Graphic -->
-<div class="bg-gradient-to-br from-primary-container to-primary p-5 rounded-xl text-on-primary shadow-sm flex flex-col justify-between">
-<div class="flex items-start justify-between">
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-primary-container font-semibold">Tình trạng quầy tiếp đón</span>
-<span class="font-headline-sm text-headline-sm font-bold text-on-primary mt-1">Quầy 01 · Tiếp nhận nhanh</span>
-</div>
-<div class="w-10 h-10 rounded-full bg-surface-container-lowest/15 flex items-center justify-center">
-<span class="material-symbols-outlined text-[24px]">support_agent</span>
-</div>
-</div>
-<div class="my-4 flex items-center justify-between bg-surface-container-lowest/10 p-3 rounded-lg backdrop-blur-sm">
-<div class="flex flex-col">
-<span class="font-label-xs text-label-xs text-on-primary-container">Thời gian phục vụ TB</span>
-<span class="font-title-md text-title-md font-bold text-on-primary">1 phút 45 giây</span>
-</div>
-<div class="h-8 w-px bg-on-primary/20"></div>
-<div class="flex flex-col text-right">
-<span class="font-label-xs text-label-xs text-on-primary-container">Đánh giá hài lòng</span>
-<span class="font-title-md text-title-md font-bold text-on-primary">99.2%</span>
-</div>
-</div>
-<div class="flex items-center gap-2">
-<button class="w-full py-2 px-3 rounded-lg bg-surface-container-lowest text-primary hover:bg-surface-bright font-label-sm text-label-sm font-bold transition-all shadow-sm text-center">
-            Mở máy in nhiệt & Kiosk cấp số
-          </button>
-</div>
-</div>
-</div>
-</div>
-<!-- 4. Modal Đánh dấu bệnh nhân không đến (Hidden by default, triggered by 'Vắng' button) -->
-<div class="hidden fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/40 backdrop-blur-[2px] p-4" id="noShowModal">
+
+@if (ShowNoShowModal && NoShowTarget is not null)
+{
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/40 backdrop-blur-[2px] p-4">
 <div class="bg-surface-container-lowest rounded-xl shadow-2xl max-w-md w-full p-6 flex flex-col gap-4">
 <div class="flex items-start justify-between">
 <div class="flex items-center gap-3">
@@ -562,29 +241,160 @@
 </div>
 <div class="flex flex-col">
 <span class="font-title-md text-title-md font-bold text-on-surface">Đánh dấu không đến</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">BN: <strong>Trần Thị Mai</strong> (BN0025)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">BN: <strong>@NoShowTarget.PatientName</strong></span>
 </div>
 </div>
-<button class="p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition-colors" onclick="document.getElementById('noShowModal').classList.add('hidden')">
+<button class="p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition-colors" @onclick="CloseNoShowModal">
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </div>
 <div class="flex flex-col gap-2">
-<label class="font-label-md text-label-md text-on-surface font-medium">Lý do ghi nhận vắng mặt <span class="text-error">*</span></label>
-<div class="p-3 bg-surface-container-low rounded-lg text-on-surface font-body-sm text-body-sm flex items-center gap-2 text-on-surface-variant">
-<span class="material-symbols-outlined text-[18px] text-amber-700">call_missed</span>
-<span>Đã gọi 3 lần qua điện thoại nhưng không liên lạc được</span>
-</div>
-<textarea class="w-full p-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary shadow-inner resize-none" placeholder="Ghi chú thêm từ lễ tân (tùy chọn)..." rows="2"></textarea>
+<label class="font-label-md text-label-md text-on-surface font-medium">Ghi chú (tùy chọn)</label>
+<textarea class="w-full p-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-primary shadow-inner resize-none" placeholder="Ghi chú thêm từ lễ tân (tùy chọn)..." rows="2" @bind="NoShowNote"></textarea>
 </div>
 <div class="flex items-center justify-end gap-2 pt-2">
-<button class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-md text-label-md font-semibold transition-colors" onclick="document.getElementById('noShowModal').classList.add('hidden')">
+<button class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-on-surface font-label-md text-label-md font-semibold transition-colors" @onclick="CloseNoShowModal">
           Hủy bỏ
         </button>
-<button class="px-4 py-2 rounded-lg bg-error text-on-error hover:bg-error-container hover:text-on-error-container font-label-md text-label-md font-semibold transition-colors shadow-sm" onclick="document.getElementById('noShowModal').classList.add('hidden')">
+<button class="px-4 py-2 rounded-lg bg-error text-on-error hover:bg-error-container hover:text-on-error-container font-label-md text-label-md font-semibold transition-colors shadow-sm" @onclick="ConfirmNoShowAsync">
           Xác nhận vắng
         </button>
 </div>
 </div>
 </div>
-</div>
+}
+
+@code {
+    private DateOnly Today { get; } = DateOnly.FromDateTime(DateTime.Today);
+    private List<AppointmentDto> Appointments { get; set; } = new();
+    private bool IsLoading { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? ToastMessage { get; set; }
+    private string SearchKeyword { get; set; } = "";
+    private string? ChipFilter { get; set; }
+
+    private bool ShowNoShowModal { get; set; }
+    private AppointmentDto? NoShowTarget { get; set; }
+    private string NoShowNote { get; set; } = "";
+
+    private int WaitingCount => Appointments.Count(a => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed);
+    private int CheckedInCount => Appointments.Count(a => a.Status == AppointmentStatus.CheckedIn);
+    private int InProgressCount => Appointments.Count(a => a.Status == AppointmentStatus.InProgress);
+    private int CompletedCount => Appointments.Count(a => a.Status == AppointmentStatus.Completed);
+    private int NoShowCount => Appointments.Count(a => a.Status == AppointmentStatus.NoShow);
+
+    private List<AppointmentDto> FilteredAppointments => Appointments
+        .Where(a => ChipFilter switch
+        {
+            "waiting" => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed,
+            "checkedin" => a.Status == AppointmentStatus.CheckedIn,
+            "inprogress" => a.Status == AppointmentStatus.InProgress,
+            "completed" => a.Status == AppointmentStatus.Completed,
+            "noshow" => a.Status == AppointmentStatus.NoShow,
+            _ => true,
+        })
+        .Where(a => string.IsNullOrWhiteSpace(SearchKeyword)
+            || a.PatientName.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase)
+            || a.DoctorName.Contains(SearchKeyword, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            var result = await Api.GetAsync<PagedResult<AppointmentDto>>($"api/appointments?date={Today:yyyy-MM-dd}&pageSize=200");
+            Appointments = result.Items.OrderBy(a => a.StartTime).ToList();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task CheckInAsync(int id)
+    {
+        ErrorMessage = null;
+        try
+        {
+            var updated = await Api.PatchAsync<object?, AppointmentDto>($"api/appointments/{id}/check-in", null);
+            var index = Appointments.FindIndex(a => a.Id == id);
+            if (index >= 0)
+                Appointments[index] = updated;
+            ToastMessage = $"Cấp số #{updated.QueueNumber:00}: {updated.PatientName}";
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private void OpenNoShowModal(AppointmentDto appt)
+    {
+        NoShowTarget = appt;
+        NoShowNote = "";
+        ShowNoShowModal = true;
+    }
+
+    private void CloseNoShowModal()
+    {
+        ShowNoShowModal = false;
+        NoShowTarget = null;
+    }
+
+    private async Task ConfirmNoShowAsync()
+    {
+        if (NoShowTarget is null)
+            return;
+
+        ErrorMessage = null;
+        try
+        {
+            var updated = await Api.PatchAsync<NoShowAppointmentRequest, AppointmentDto>(
+                $"api/appointments/{NoShowTarget.Id}/no-show", new NoShowAppointmentRequest(string.IsNullOrWhiteSpace(NoShowNote) ? null : NoShowNote));
+            var index = Appointments.FindIndex(a => a.Id == updated.Id);
+            if (index >= 0)
+                Appointments[index] = updated;
+            CloseNoShowModal();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private string ChipClass(string? chip) => ChipFilter == chip
+        ? "bg-primary text-on-primary"
+        : "bg-surface-container-low text-on-surface-variant hover:text-on-surface";
+
+    private static DateTime ToLocal(DateTime utc) => utc.AddHours(7);
+
+    private static string StatusLabel(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "Chờ xác nhận",
+        AppointmentStatus.Confirmed => "Chờ check-in",
+        AppointmentStatus.CheckedIn => "Đã check-in",
+        AppointmentStatus.InProgress => "Đang khám",
+        AppointmentStatus.Completed => "Đã hoàn thành",
+        AppointmentStatus.Cancelled => "Đã hủy",
+        AppointmentStatus.NoShow => "Không đến",
+        _ => status.ToString(),
+    };
+
+    private static string StatusBadgeClass(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending or AppointmentStatus.Confirmed => "bg-amber-50 text-amber-800",
+        AppointmentStatus.CheckedIn => "bg-secondary/10 text-secondary",
+        AppointmentStatus.InProgress => "bg-primary-fixed text-on-primary-fixed-variant",
+        AppointmentStatus.Completed => "bg-tertiary/10 text-tertiary",
+        AppointmentStatus.Cancelled or AppointmentStatus.NoShow => "bg-error-container text-error",
+        _ => "bg-surface-container text-on-surface-variant",
+    };
+}
