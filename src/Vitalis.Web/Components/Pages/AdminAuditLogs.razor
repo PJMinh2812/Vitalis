@@ -1,7 +1,16 @@
 @page "/admin/audit-logs"
 @layout AdminLayout
+@attribute [Authorize(Roles = "Admin")]
 
 <PageTitle>Nhật ký truy cập · Vitalis</PageTitle>
+
+<div class="flex items-start gap-3 p-4 rounded-xl bg-surface-container text-on-surface-variant shadow-sm mb-space-lg">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">info</span>
+<div class="flex-1 font-body-sm text-body-sm">
+<span class="font-title-md text-title-md block text-on-surface mb-0.5">Chưa có API đọc nhật ký truy cập</span>
+    Backend hiện chỉ ghi <code class="font-mono">audit_logs</code> (append-only, qua middleware) nhưng chưa có endpoint <code class="font-mono">GET</code> nào để đọc lại — toàn bộ nội dung bên dưới vẫn là dữ liệu minh họa tĩnh từ bản thiết kế mockup, chưa được nối API.
+</div>
+</div>
 
 <div class="flex flex-col w-full gap-space-lg">
 <!-- Top Banner / Compliance Protocol Identifier -->
