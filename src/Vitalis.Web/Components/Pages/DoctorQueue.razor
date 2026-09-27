@@ -1,740 +1,170 @@
 @page "/doctor/queue"
 @layout DoctorLayout
+@attribute [Authorize(Roles = "Doctor")]
+@using Vitalis.Application.DTOs.Appointments
+@using Vitalis.Application.Common
+@using Vitalis.Domain.Enums
+@inject VitalisApiClient Api
+@inject AuthTokenStore TokenStore
+@inject NavigationManager Navigation
 
 <PageTitle>Hàng chờ khám · Vitalis</PageTitle>
 
 <div class="flex flex-col w-full gap-space-lg">
-<!-- TOP CONTEXT & ACTION CONTROL BAR -->
 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-md rounded-xl shadow-sm">
 <div class="flex flex-col gap-1 min-w-0">
-<div class="flex flex-wrap items-center gap-2">
 <h1 class="font-headline-md text-headline-md text-on-surface font-bold tracking-tight">Hàng chờ khám bệnh</h1>
-<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary-container/15 text-primary font-label-xs text-label-xs font-semibold">
-<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-<span>Phòng khám 203 • Trực tuyến</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Danh sách bệnh nhân đã tiếp đón, chờ vào khám hôm nay.</p>
 </div>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant truncate">
-        Theo dõi luồng bệnh nhân, tiếp nhận khám, gọi loa và xem trước chỉ số sinh hiệu ban đầu
-      </p>
-<div class="flex flex-wrap items-center gap-3 pt-1">
-<span class="inline-flex items-center gap-1.5 text-on-surface-variant font-label-xs text-label-xs bg-surface-container-low px-2 py-0.5 rounded">
-<span class="material-symbols-outlined text-[15px] text-primary">person</span>
-<span>Bác sĩ phụ trách: <strong class="text-on-surface font-semibold">BS.CKII Nguyễn Văn Linh</strong></span>
-</span>
-<span class="inline-flex items-center gap-1.5 text-on-surface-variant font-label-xs text-label-xs bg-surface-container-low px-2 py-0.5 rounded">
-<span class="material-symbols-outlined text-[15px] text-tertiary">support_agent</span>
-<span>Điều dưỡng hỗ trợ: <strong class="text-on-surface font-semibold">ĐD. Lê Thị Hà (Ext: 2031)</strong></span>
-</span>
-</div>
-</div>
-<!-- Live controls -->
-<div class="flex flex-wrap items-center gap-2 shrink-0">
-<div class="flex items-center gap-1.5 bg-surface-container-low px-2.5 py-1.5 rounded-lg text-on-surface-variant font-label-xs text-label-xs">
-<span class="material-symbols-outlined text-[16px] text-primary animate-spin" style="animation-duration: 9s;">sync</span>
-<span>Tự động làm mới:</span>
-<span class="font-semibold text-primary font-mono" id="live-timer">09:18:42</span>
-</div>
-<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-sm text-label-sm transition-colors shadow-sm" type="button">
-<span class="material-symbols-outlined text-[18px]">pause_circle</span>
-<span>Tạm dừng nhận bệnh</span>
-</button>
-<button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md font-semibold transition-all shadow-md active:scale-95 group" id="btn-call-next" type="button">
-<span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">volume_up</span>
-<span>Gọi bệnh nhân tiếp (F2)</span>
+<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-sm text-label-sm transition-colors shadow-sm shrink-0" type="button" @onclick="LoadAsync">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+<span>Làm mới</span>
 </button>
 </div>
+
+@if (ErrorMessage is not null)
+{
+    <div class="p-4 rounded-xl bg-error-container text-on-error-container shadow-sm flex items-center gap-3">
+        <span class="material-symbols-outlined text-error text-[22px]">warning</span>
+        <p class="font-body-sm text-body-sm">@ErrorMessage</p>
+    </div>
+}
+
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md">
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Tổng ca hôm nay</span>
+<span class="font-display text-display text-on-surface font-bold tracking-tight mt-1">@TodayAppointments.Count</span>
 </div>
-<!-- KPI SUMMARY CARDS (4 METRICS) -->
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
-<!-- Card 1 -->
-<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
-<div class="flex items-start justify-between">
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Tổng ca tiếp nhận hôm nay</span>
-<div class="flex items-baseline gap-2 mt-1">
-<span class="font-display text-display text-on-surface font-bold tracking-tight">22</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">bệnh nhân</span>
-</div>
-</div>
-<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-[22px]">assignment_ind</span>
-</div>
-</div>
-<div class="mt-3 pt-2.5 border-t border-surface-container flex items-center justify-between font-label-xs text-label-xs">
-<span class="text-tertiary font-semibold flex items-center gap-1">
-<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> 8 đã khám xong
-        </span>
-<span class="text-on-surface-variant">14 còn lại trong ca</span>
-</div>
-<div class="w-full bg-surface-container-low h-1 rounded-full mt-2 overflow-hidden">
-<div class="bg-primary h-full rounded-full" style="width: 36.3%;"></div>
-</div>
-</div>
-<!-- Card 2 -->
-<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
-<div class="flex items-start justify-between">
-<div class="flex flex-col">
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
 <span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Đang chờ vào khám</span>
-<div class="flex items-baseline gap-2 mt-1">
-<span class="font-display text-display text-primary font-bold tracking-tight">05</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">chờ gọi</span>
+<span class="font-display text-display text-primary font-bold tracking-tight mt-1">@WaitingAppointments.Count</span>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Đã khám xong</span>
+<span class="font-display text-display text-tertiary font-bold tracking-tight mt-1">@CompletedCount</span>
 </div>
 </div>
-<div class="w-10 h-10 rounded-lg bg-primary-fixed/40 flex items-center justify-center text-primary">
-<span class="material-symbols-outlined text-[22px]">hourglass_top</span>
-</div>
-</div>
-<div class="mt-3 pt-2.5 border-t border-surface-container flex items-center justify-between font-label-xs text-label-xs">
-<span class="text-secondary font-semibold bg-secondary-fixed/40 px-1.5 py-0.5 rounded flex items-center gap-1">
-<span class="material-symbols-outlined text-[13px]">notification_important</span> 3 có CLS mới
-        </span>
-<span class="text-error font-medium">2 ca chờ &gt; 45p</span>
-</div>
-<div class="w-full bg-surface-container-low h-1 rounded-full mt-2 overflow-hidden">
-<div class="bg-secondary-container h-full rounded-full" style="width: 60%;"></div>
-</div>
-</div>
-<!-- Card 3 -->
-<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
-<div class="flex items-start justify-between">
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Đang làm Cận lâm sàng</span>
-<div class="flex items-baseline gap-2 mt-1">
-<span class="font-display text-display text-secondary font-bold tracking-tight">04</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">đang thực hiện</span>
-</div>
-</div>
-<div class="w-10 h-10 rounded-lg bg-secondary-fixed/50 flex items-center justify-center text-secondary">
-<span class="material-symbols-outlined text-[22px]">biotech</span>
-</div>
-</div>
-<div class="mt-3 pt-2.5 border-t border-surface-container flex items-center justify-between font-label-xs text-label-xs">
-<span class="text-on-surface-variant truncate">Xét nghiệm / Siêu âm tim / X-quang</span>
-<span class="text-primary font-semibold">Tự động báo</span>
-</div>
-<div class="w-full bg-surface-container-low h-1 rounded-full mt-2 overflow-hidden">
-<div class="bg-tertiary-container h-full rounded-full" style="width: 45%;"></div>
-</div>
-</div>
-<!-- Card 4 -->
-<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
-<div class="flex items-start justify-between">
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Thời gian khám trung bình</span>
-<div class="flex items-baseline gap-2 mt-1">
-<span class="font-display text-display text-on-surface font-bold tracking-tight">16.5</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">phút / ca</span>
-</div>
-</div>
-<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant">
-<span class="material-symbols-outlined text-[22px]">pace</span>
-</div>
-</div>
-<div class="mt-3 pt-2.5 border-t border-surface-container flex items-center justify-between font-label-xs text-label-xs">
-<span class="text-tertiary font-semibold flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">check_circle</span> Đạt chuẩn (15-20p)
-        </span>
-<span class="text-outline">Mục tiêu: ≤18p</span>
-</div>
-<div class="w-full bg-surface-container-low h-1 rounded-full mt-2 overflow-hidden">
-<div class="bg-primary h-full rounded-full" style="width: 82%;"></div>
-</div>
-</div>
-</div>
-<!-- PATIENT IN-CONSULTATION SPOTLIGHT (BỆNH NHÂN HIỆN TẠI) -->
-<div class="relative bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
-<div class="absolute left-0 top-0 bottom-0 w-2 bg-primary"></div>
-<div class="p-space-md sm:p-space-lg flex flex-col xl:flex-row gap-space-md xl:items-center justify-between">
-<!-- Patient Identity & Status -->
-<div class="flex flex-col sm:flex-row sm:items-center gap-space-md min-w-0">
-<div class="relative shrink-0 flex items-center justify-center">
-<div class="w-16 h-16 rounded-xl bg-primary-container text-on-primary flex flex-col items-center justify-center shadow-md">
-<span class="font-label-xs text-label-xs uppercase tracking-wider opacity-85 leading-none">STT</span>
-<span class="font-display text-display font-extrabold leading-none mt-0.5">04</span>
-</div>
-<span class="absolute -bottom-1 -right-1 flex h-4 w-4">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-container opacity-75"></span>
-<span class="relative inline-flex rounded-full h-4 w-4 bg-secondary"></span>
-</span>
-</div>
-<div class="flex flex-col gap-1 min-w-0">
-<div class="flex flex-wrap items-center gap-2">
-<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
-<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Đang khám tại P.203
-            </span>
-<span class="font-title-md text-title-md font-bold text-on-surface">Phạm Quốc Bảo</span>
-<span class="text-on-surface-variant font-body-sm text-body-sm">Nam • 58 tuổi</span>
-<span class="font-mono font-semibold text-primary bg-primary-fixed/30 px-2 py-0.5 rounded font-label-xs text-label-xs">BN0048</span>
-<span class="bg-surface-container-high text-on-surface px-2 py-0.5 rounded font-label-xs text-label-xs">BHYT 80%</span>
-</div>
-<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-on-surface-variant font-body-sm text-body-sm">
-<span>CCCD: <strong class="text-on-surface font-mono">001066004912</strong></span>
-<span>•</span>
-<span>SĐT: <strong class="text-on-surface font-mono">0903 898 765</strong></span>
-<span>•</span>
-<span class="flex items-center gap-1 text-primary">
-<span class="material-symbols-outlined text-[16px]">schedule</span>
-              Vào khám: <strong>09:02</strong> (Đã khám <strong>16 phút</strong>)
-            </span>
-</div>
-<div class="mt-1 flex items-start gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
-<span class="material-symbols-outlined text-[16px] text-error shrink-0 mt-0.5">stethoscope</span>
-<span>Lý do khám: <strong class="text-on-surface">Đau tức ngực trái âm ỉ kèm khó thở nhẹ khi gắng sức 3 ngày nay</strong></span>
-</div>
-</div>
-</div>
-<!-- Vitals Mini Bar (Nurse Triage) -->
-<div class="flex items-center gap-2 bg-surface-container-low p-space-sm rounded-xl shrink-0 self-start xl:self-center overflow-x-auto max-w-full">
-<div class="flex flex-col items-center px-3 py-1 bg-error-container/30 rounded-lg">
-<span class="font-label-xs text-label-xs text-on-error-container font-semibold">Huyết áp</span>
-<span class="font-title-md text-title-md font-bold text-error font-mono">150/95</span>
-<span class="font-label-xs text-label-xs text-error font-medium">mmHg (Cao)</span>
-</div>
-<div class="flex flex-col items-center px-3 py-1 bg-surface-container-lowest rounded-lg">
-<span class="font-label-xs text-label-xs text-outline font-semibold">Nhịp tim</span>
-<span class="font-title-md text-title-md font-bold text-on-surface font-mono">88</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">lần/phút</span>
-</div>
-<div class="flex flex-col items-center px-3 py-1 bg-surface-container-lowest rounded-lg">
-<span class="font-label-xs text-label-xs text-outline font-semibold">Thân nhiệt</span>
-<span class="font-title-md text-title-md font-bold text-on-surface font-mono">36.8</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">°C</span>
-</div>
-<div class="flex flex-col items-center px-3 py-1 bg-surface-container-lowest rounded-lg">
-<span class="font-label-xs text-label-xs text-outline font-semibold">SpO2</span>
-<span class="font-title-md text-title-md font-bold text-primary font-mono">97%</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">Bình thường</span>
-</div>
-</div>
-<!-- Action Buttons -->
-<div class="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0">
-<button class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-primary font-label-md text-label-md font-semibold transition-colors" type="button">
-<span class="material-symbols-outlined text-[18px]">biotech</span>
-<span>Chỉ định CLS</span>
-</button>
-<button class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md font-semibold transition-all shadow-md group" type="button">
-<span>Vào phòng khám &amp; Kê đơn (VC-13)</span>
-<span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
-</button>
-<button class="p-2.5 rounded-lg bg-surface-container-high hover:bg-tertiary-fixed text-tertiary transition-colors" title="Hoàn tất ca khám" type="button">
-<span class="material-symbols-outlined text-[20px]">check_circle</span>
-</button>
-</div>
-</div>
-</div>
-<!-- MAIN QUEUE WORKBENCH: TABS, FILTERS & QUEUE TABLE -->
+
 <div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
-<!-- Queue Navigation Tabs -->
-<div class="flex items-center justify-between border-b border-surface-container px-space-md pt-space-sm bg-surface-container-low/50 overflow-x-auto">
-<div class="flex items-center gap-2 shrink-0">
-<button class="px-4 py-3 rounded-t-lg font-label-md text-label-md font-semibold text-primary bg-surface-container-lowest shadow-sm flex items-center gap-2 relative" type="button">
-<span class="material-symbols-outlined text-[18px]">playlist_play</span>
-<span>Chờ khám</span>
-<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-xs text-label-xs">05</span>
-<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"></div>
-</button>
-<button class="px-4 py-3 rounded-t-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2" type="button">
-<span class="material-symbols-outlined text-[18px]">biotech</span>
-<span>Chờ kết quả CLS</span>
-<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-xs text-label-xs">04</span>
-</button>
-<button class="px-4 py-3 rounded-t-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2" type="button">
-<span class="material-symbols-outlined text-[18px] text-error">emergency</span>
-<span>Ưu tiên cấp cứu / Luồng sớm</span>
-<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-xs text-label-xs">01</span>
-</button>
-<button class="px-4 py-3 rounded-t-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2" type="button">
-<span class="material-symbols-outlined text-[18px]">task_alt</span>
-<span>Đã hoàn thành hôm nay</span>
-<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs">08</span>
-</button>
-<button class="px-4 py-3 rounded-t-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2" type="button">
-<span>Tất cả</span>
-<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs">18</span>
-</button>
-</div>
-<div class="hidden sm:flex items-center gap-2 py-2">
-<span class="font-label-xs text-label-xs text-outline">Âm thanh loa phát:</span>
-<button class="p-1 rounded text-primary hover:bg-primary-fixed/30" title="Kiểm tra loa phòng khám" type="button">
-<span class="material-symbols-outlined text-[18px]">volume_up</span>
-</button>
-</div>
-</div>
-<!-- Filter & Search Bar -->
-<div class="p-space-md flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm bg-surface-container-lowest">
-<div class="relative flex-1 max-w-lg">
+<div class="p-space-md">
+<div class="relative max-w-lg">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-outline">search</span>
-<input class="w-full h-10 pl-10 pr-4 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary transition-all" placeholder="Tìm theo STT (#05), Tên bệnh nhân, Mã BN, Triệu chứng..." type="text"/>
-</div>
-<div class="flex flex-wrap items-center gap-2">
-<!-- Filter 1: Object Type -->
-<div class="relative">
-<select class="h-10 pl-3 pr-8 rounded-lg bg-surface-container-low text-on-surface font-label-sm text-label-sm appearance-none focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
-<option>Loại đối tượng: Tất cả</option>
-<option>BHYT đúng tuyến</option>
-<option>Thu phí dịch vụ</option>
-<option>Bệnh nhân VIP</option>
-</select>
-<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[16px] text-outline pointer-events-none">expand_more</span>
-</div>
-<!-- Filter 2: Vitals condition -->
-<div class="relative">
-<select class="h-10 pl-3 pr-8 rounded-lg bg-surface-container-low text-on-surface font-label-sm text-label-sm appearance-none focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
-<option>Sinh hiệu: Tất cả</option>
-<option>Huyết áp bất thường (&gt;140/90)</option>
-<option>Nhịp tim nhanh (&gt;100 l/p)</option>
-<option>Có sốt (&gt;37.5°C)</option>
-</select>
-<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[16px] text-outline pointer-events-none">expand_more</span>
-</div>
-<button class="h-10 px-3 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-sm text-label-sm flex items-center gap-1.5 transition-colors" type="button">
-<span class="material-symbols-outlined text-[18px]">filter_list</span>
-<span>Bộ lọc</span>
-</button>
+<input class="w-full h-10 pl-10 pr-4 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary transition-all" placeholder="Tìm theo tên bệnh nhân..." type="text" @bind="SearchTerm" @bind:event="oninput" />
 </div>
 </div>
-<!-- PATIENT QUEUE TABLE -->
 <div class="overflow-x-auto w-full">
 <table class="w-full text-left border-collapse">
 <thead>
-<tr class="bg-surface-container-low/70 text-on-surface-variant font-label-xs text-label-xs uppercase tracking-wider sticky top-0 z-10 border-b border-surface-container">
+<tr class="bg-surface-container-low/70 text-on-surface-variant font-label-xs text-label-xs uppercase tracking-wider border-b border-surface-container">
 <th class="py-3 px-4 w-16 text-center">STT</th>
-<th class="py-3 px-4 min-w-[200px]">Bệnh nhân &amp; Mã hồ sơ</th>
-<th class="py-3 px-4 min-w-[130px]">Giờ Check-in / Chờ</th>
-<th class="py-3 px-4 min-w-[220px]">Lý do khám ban đầu</th>
-<th class="py-3 px-4 min-w-[200px]">Sinh hiệu sơ bộ (Điều dưỡng)</th>
-<th class="py-3 px-4 min-w-[170px]">Cảnh báo y khoa</th>
-<th class="py-3 px-4 text-right min-w-[160px]">Thao tác tiếp nhận</th>
+<th class="py-3 px-4 min-w-[200px]">Bệnh nhân</th>
+<th class="py-3 px-4 min-w-[130px]">Giờ check-in</th>
+<th class="py-3 px-4 min-w-[220px]">Lý do khám</th>
+<th class="py-3 px-4 min-w-[140px]">Trạng thái</th>
+<th class="py-3 px-4 text-right min-w-[160px]">Thao tác</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-surface-container font-body-sm text-body-sm text-on-surface">
-<!-- ROW 1: STT #05 (Next In Line - High Priority / Allergic) -->
-<tr class="hover:bg-primary-fixed/10 transition-colors group">
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-primary-container text-on-primary font-bold font-mono text-[14px] shadow-sm">
-                #05
-              </span>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<div class="flex items-center gap-1.5">
-<span class="font-title-md text-title-md font-bold text-on-surface">Nguyễn Văn An</span>
-<span class="font-label-xs text-label-xs px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant">Nam • 42t</span>
-</div>
-<div class="flex items-center gap-2 mt-0.5">
-<span class="font-mono text-primary font-semibold font-label-xs text-label-xs">BN0012</span>
-<span class="text-outline text-xs">•</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs">BHYT Đúng tuyến</span>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">08:24</span>
-<span class="inline-flex items-center gap-1 text-error font-semibold font-label-xs text-label-xs mt-0.5">
-<span class="material-symbols-outlined text-[13px]">alarm</span>
-<span>Chờ 54 phút</span>
-</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">Tái khám kiểm tra HA &amp; Đau đầu</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs line-clamp-1">Đau âm ỉ vùng thái dương, đã uống thuốc toa cũ</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-wrap items-center gap-1.5">
-<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container/40 text-error font-mono font-semibold font-label-xs text-label-xs" title="Huyết áp cảnh báo">
-                  HA: 145/90
-                </span>
-<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-surface-container text-on-surface font-mono font-label-xs text-label-xs">
-                  82 l/p
-                </span>
-<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono font-label-xs text-label-xs">
-                  36.8°C
-                </span>
-<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-primary-fixed/40 text-primary font-mono font-semibold font-label-xs text-label-xs">
-                  SpO2 98%
-                </span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-xs text-label-xs font-semibold">
-<span class="material-symbols-outlined text-[13px]">warning</span>
-<span>Dị ứng Penicillin (Nặng)</span>
-</span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center gap-1.5 justify-end">
-<button class="p-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-primary transition-colors" title="Gọi loa vào phòng" type="button">
-<span class="material-symbols-outlined text-[18px]">volume_up</span>
-</button>
-<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold shadow-sm transition-all" type="button">
-<span>Tiếp nhận ngay</span>
-<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- ROW 2: STT #07 (Elderly, Extreme Wait, Severe High BP) -->
-<tr class="hover:bg-primary-fixed/10 transition-colors group bg-error-container/5">
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-surface-container-high text-on-surface font-bold font-mono text-[14px]">
-                #07
-              </span>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<div class="flex items-center gap-1.5">
-<span class="font-title-md text-title-md font-bold text-on-surface">Đỗ Trọng Đức</span>
-<span class="font-label-xs text-label-xs px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant">Nam • 67t</span>
-</div>
-<div class="flex items-center gap-2 mt-0.5">
-<span class="font-mono text-primary font-semibold font-label-xs text-label-xs">BN0009</span>
-<span class="text-outline text-xs">•</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs">Thu phí dịch vụ</span>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">08:11</span>
-<span class="inline-flex items-center gap-1 text-error font-semibold font-label-xs text-label-xs mt-0.5">
-<span class="material-symbols-outlined text-[13px]">notification_important</span>
-<span>Chờ 67 phút (Lâu)</span>
-</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-medium text-error font-semibold">Khó thở nhẹ về đêm, đau thắt ngực</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs">Tiền sử Tăng huyết áp 7 năm</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-wrap items-center gap-1.5">
-<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error text-on-error font-mono font-bold font-label-xs text-label-xs animate-pulse" title="Huyết áp tăng độ 2">
-                  HA: 160/100
-                </span>
-<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-surface-container text-on-surface font-mono font-label-xs text-label-xs">
-                  92 l/p
-                </span>
-<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-error-container/60 text-error font-mono font-semibold font-label-xs text-label-xs">
-                  SpO2 95%
-                </span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col gap-1 items-start">
-<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-xs text-label-xs font-semibold">
-<span class="material-symbols-outlined text-[13px]">elderly</span>
-<span>Ưu tiên NCT (&gt;65 tuổi)</span>
-</span>
-</div>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center gap-1.5 justify-end">
-<button class="p-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-primary transition-colors" title="Gọi loa" type="button">
-<span class="material-symbols-outlined text-[18px]">volume_up</span>
-</button>
-<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-primary hover:text-on-primary text-on-surface font-label-sm text-label-sm font-semibold transition-all" type="button">
-<span>Gọi vào khám</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- ROW 3: STT #08 -->
-<tr class="hover:bg-primary-fixed/10 transition-colors group">
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-surface-container-high text-on-surface font-bold font-mono text-[14px]">
-                #08
-              </span>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<div class="flex items-center gap-1.5">
-<span class="font-title-md text-title-md font-bold text-on-surface">Vũ Kim Oanh</span>
-<span class="font-label-xs text-label-xs px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant">Nữ • 45t</span>
-</div>
-<div class="flex items-center gap-2 mt-0.5">
-<span class="font-mono text-primary font-semibold font-label-xs text-label-xs">BN0045</span>
-<span class="text-outline text-xs">•</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs">BHYT Đúng tuyến</span>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">08:35</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs mt-0.5">Chờ 43 phút</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">Ho kéo dài, ngứa cổ, tức ngực</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs">Triệu chứng kéo dài 1 tuần</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-wrap items-center gap-1.5">
-<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container text-on-surface font-mono font-label-xs text-label-xs">
-                  HA: 120/80
-                </span>
-<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-surface-container text-on-surface font-mono font-label-xs text-label-xs">
-                  76 l/p
-                </span>
-<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono font-label-xs text-label-xs">
-                  37.0°C
-                </span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="text-outline font-label-xs text-label-xs italic">Chưa ghi nhận</span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center gap-1.5 justify-end">
-<button class="p-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-primary transition-colors" title="Gọi loa" type="button">
-<span class="material-symbols-outlined text-[18px]">volume_up</span>
-</button>
-<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-primary hover:text-on-primary text-on-surface font-label-sm text-label-sm font-semibold transition-all" type="button">
-<span>Gọi vào khám</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- ROW 4: STT #09 -->
-<tr class="hover:bg-primary-fixed/10 transition-colors group">
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-surface-container-high text-on-surface font-bold font-mono text-[14px]">
-                #09
-              </span>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<div class="flex items-center gap-1.5">
-<span class="font-title-md text-title-md font-bold text-on-surface">Bùi Hoàng Nam</span>
-<span class="font-label-xs text-label-xs px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant">Nam • 31t</span>
-</div>
-<div class="flex items-center gap-2 mt-0.5">
-<span class="font-mono text-primary font-semibold font-label-xs text-label-xs">BN0052</span>
-<span class="text-outline text-xs">•</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs">Gói Khám VIP</span>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">08:38</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs mt-0.5">Chờ 40 phút</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">Khám sức khoẻ định kỳ công ty</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs">Gói chuyên sâu Nội Tim mạch</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-wrap items-center gap-1.5">
-<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container text-on-surface font-mono font-label-xs text-label-xs">
-                  HA: 115/75
-                </span>
-<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-surface-container text-on-surface font-mono font-label-xs text-label-xs">
-                  72 l/p
-                </span>
-<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono font-label-xs text-label-xs">
-                  36.5°C
-                </span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-fixed/40 text-secondary font-label-xs text-label-xs font-semibold">
-<span>VIP Doanh nghiệp</span>
-</span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center gap-1.5 justify-end">
-<button class="p-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-primary transition-colors" title="Gọi loa" type="button">
-<span class="material-symbols-outlined text-[18px]">volume_up</span>
-</button>
-<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-primary hover:text-on-primary text-on-surface font-label-sm text-label-sm font-semibold transition-all" type="button">
-<span>Gọi vào khám</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- ROW 5: STT #12 -->
-<tr class="hover:bg-primary-fixed/10 transition-colors group">
-<td class="py-3.5 px-4 text-center">
-<span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-surface-container-high text-on-surface font-bold font-mono text-[14px]">
-                #12
-              </span>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<div class="flex items-center gap-1.5">
-<span class="font-title-md text-title-md font-bold text-on-surface">Trần Thị Mai</span>
-<span class="font-label-xs text-label-xs px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant">Nữ • 35t</span>
-</div>
-<div class="flex items-center gap-2 mt-0.5">
-<span class="font-mono text-primary font-semibold font-label-xs text-label-xs">BN0025</span>
-<span class="text-outline text-xs">•</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs">BHYT Đúng tuyến</span>
-</div>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">08:50</span>
-<span class="text-tertiary font-label-xs text-label-xs mt-0.5">Chờ 28 phút</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-col">
-<span class="font-medium text-on-surface">Tim đập nhanh, hồi hộp, bốc hỏa</span>
-<span class="text-on-surface-variant font-label-xs text-label-xs">Nghi ngờ rối loạn thần kinh tim</span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<div class="flex flex-wrap items-center gap-1.5">
-<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container text-on-surface font-mono font-label-xs text-label-xs">
-                  HA: 130/85
-                </span>
-<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded bg-error-container/40 text-error font-mono font-semibold font-label-xs text-label-xs">
-                  98 l/p (Nhanh)
-                </span>
-</div>
-</td>
-<td class="py-3.5 px-4">
-<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs">
-<span>Tiểu đường Tuýp 2</span>
-</span>
-</td>
-<td class="py-3.5 px-4 text-right">
-<div class="inline-flex items-center gap-1.5 justify-end">
-<button class="p-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-primary transition-colors" title="Gọi loa" type="button">
-<span class="material-symbols-outlined text-[18px]">volume_up</span>
-</button>
-<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-primary hover:text-on-primary text-on-surface font-label-sm text-label-sm font-semibold transition-all" type="button">
-<span>Gọi vào khám</span>
-</button>
-</div>
-</td>
-</tr>
+@if (IsLoading)
+{
+    <tr><td class="py-6 px-4 text-center text-on-surface-variant" colspan="6">Đang tải...</td></tr>
+}
+else if (FilteredQueue.Count == 0)
+{
+    <tr><td class="py-6 px-4 text-center text-on-surface-variant" colspan="6">Không có bệnh nhân nào đang chờ.</td></tr>
+}
+else
+{
+    @foreach (var appointment in FilteredQueue)
+    {
+        <tr class="hover:bg-primary-fixed/10 transition-colors">
+            <td class="py-3.5 px-4 text-center">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-primary-container text-on-primary font-bold font-mono text-[14px]">#@(appointment.QueueNumber?.ToString("D2") ?? "-")</span>
+            </td>
+            <td class="py-3.5 px-4">
+                <span class="font-title-md text-title-md font-bold text-on-surface">@appointment.PatientName</span>
+            </td>
+            <td class="py-3.5 px-4">@(appointment.CheckedInAt?.ToLocalTime().ToString("HH:mm") ?? "-")</td>
+            <td class="py-3.5 px-4">@appointment.Reason</td>
+            <td class="py-3.5 px-4">@StatusLabel(appointment.Status)</td>
+            <td class="py-3.5 px-4 text-right">
+                <button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold shadow-sm transition-all disabled:opacity-50" type="button" disabled="@(BusyAppointmentId == appointment.Id)" @onclick="() => StartExamAsync(appointment.Id)">
+                    <span>@(appointment.Status == AppointmentStatus.InProgress ? "Tiếp tục khám" : "Tiếp nhận")</span>
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </button>
+            </td>
+        </tr>
+    }
+}
 </tbody>
 </table>
 </div>
-<!-- Table Pagination & Quick Summary -->
-<div class="p-space-md bg-surface-container-low/40 border-t border-surface-container flex flex-col sm:flex-row items-center justify-between gap-space-sm font-body-sm text-body-sm text-on-surface-variant">
-<div class="flex items-center gap-2">
-<span>Hiển thị <strong class="text-on-surface">1 - 5</strong> trong tổng số <strong class="text-on-surface">5</strong> bệnh nhân chờ</span>
-<span class="text-outline">•</span>
-<span class="text-primary font-medium">Buồng khám 203 đang vận hành đúng tiến độ</span>
-</div>
-<div class="flex items-center gap-1">
-<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-high text-outline cursor-not-allowed font-label-sm text-label-sm" disabled="" type="button">Trước</button>
-<button class="w-8 h-8 rounded-lg bg-primary-container text-on-primary font-bold font-label-sm text-label-sm flex items-center justify-center shadow-sm" type="button">1</button>
-<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-high text-outline cursor-not-allowed font-label-sm text-label-sm" disabled="" type="button">Sau</button>
 </div>
 </div>
-</div>
-<!-- CLINICAL ASSISTANT & REAL-TIME CONNECTIVITY DOCK -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
-<!-- CLS Incoming Notifications -->
-<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col gap-3">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-[20px] text-secondary">assignment_returned</span>
-<span class="font-title-md text-title-md font-bold text-on-surface">Kết quả Cận lâm sàng mới</span>
-</div>
-<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-xs text-label-xs font-semibold">3 ca vừa hoàn thành</span>
-</div>
-<div class="flex flex-col gap-2">
-<div class="p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors flex items-center justify-between cursor-pointer">
-<div class="flex flex-col min-w-0">
-<span class="font-label-sm text-label-sm font-semibold text-on-surface truncate">#02 Lê Văn Thịnh • Điện tim ECG</span>
-<span class="font-label-xs text-label-xs text-secondary font-medium">Nhịp xoang nhanh 105ck/p - Có kết quả</span>
-</div>
-<span class="material-symbols-outlined text-[18px] text-primary">visibility</span>
-</div>
-<div class="p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors flex items-center justify-between cursor-pointer">
-<div class="flex flex-col min-w-0">
-<span class="font-label-sm text-label-sm font-semibold text-on-surface truncate">#03 Hoàng Thu Thảo • Sinh hóa máu</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Glucose 7.8 mmol/L, HbA1c 6.9%</span>
-</div>
-<span class="material-symbols-outlined text-[18px] text-primary">visibility</span>
-</div>
-</div>
-</div>
-<!-- Connected Nurse Station Info -->
-<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between gap-3">
-<div>
-<div class="flex items-center justify-between mb-2">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-[20px] text-primary">contact_phone</span>
-<span class="font-title-md text-title-md font-bold text-on-surface">Bàn Điều dưỡng tiếp nhận</span>
-</div>
-<span class="w-2.5 h-2.5 rounded-full bg-primary" title="Đang kết nối liên lạc"></span>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant">
-          Điều dưỡng phân luồng tiếp đón &amp; đo sinh hiệu trực tiếp ngoài sảnh chờ buồng 203:
-        </p>
-<div class="mt-2 p-2.5 bg-surface-container-low rounded-lg flex items-center justify-between">
-<div class="flex items-center gap-2">
-<div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">LH</div>
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm font-semibold text-on-surface">ĐD. Lê Thị Hà</span>
-<span class="font-label-xs text-label-xs text-outline">Khu khám Nội B - Tầng 2</span>
-</div>
-</div>
-<div class="flex items-center gap-1.5 font-mono text-primary font-semibold font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-[16px]">call</span>
-<span>Ext: 2031</span>
-</div>
-</div>
-</div>
-<div class="flex items-center justify-between pt-2 border-t border-surface-container font-label-xs text-label-xs text-on-surface-variant">
-<span>Tốc độ đo sinh hiệu: ~2.5 phút/bệnh nhân</span>
-<button class="text-primary font-semibold hover:underline" type="button">Nhắn nội bộ</button>
-</div>
-</div>
-<!-- Keyboard Shortcuts Helper Card -->
-<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between">
-<div>
-<div class="flex items-center gap-2 mb-2">
-<span class="material-symbols-outlined text-[20px] text-tertiary">keyboard</span>
-<span class="font-title-md text-title-md font-bold text-on-surface">Phím tắt thao tác nhanh</span>
-</div>
-<p class="font-body-sm text-body-sm text-on-surface-variant mb-3">
-          Tối ưu hóa tốc độ khám lâm sàng không cần dùng chuột:
-        </p>
-<div class="grid grid-cols-2 gap-2 font-label-xs text-label-xs">
-<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
-<span class="text-on-surface">Gọi số tiếp</span>
-<kbd class="px-2 py-0.5 rounded bg-surface-container-lowest text-primary font-mono font-bold shadow-sm">F2</kbd>
-</div>
-<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
-<span class="text-on-surface">Kê đơn nhanh</span>
-<kbd class="px-2 py-0.5 rounded bg-surface-container-lowest text-primary font-mono font-bold shadow-sm">F3</kbd>
-</div>
-<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
-<span class="text-on-surface">Tìm kiếm BN</span>
-<kbd class="px-2 py-0.5 rounded bg-surface-container-lowest text-primary font-mono font-bold shadow-sm">F4</kbd>
-</div>
-<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
-<span class="text-on-surface">Tạm dừng ca</span>
-<kbd class="px-2 py-0.5 rounded bg-surface-container-lowest text-primary font-mono font-bold shadow-sm">Space</kbd>
-</div>
-</div>
-</div>
-<div class="mt-3 pt-2 border-t border-surface-container text-right">
-<span class="font-label-xs text-label-xs text-outline">Vitalis His System • Ver 3.4.1</span>
-</div>
-</div>
-</div>
-<!-- INLINE INTERACTION SCRIPT FOR SPEAKER CALL & LIVE TIME -->
 
-</div>
-<script src="js/pages/DoctorQueue.js"></script>
+@code {
+    private List<AppointmentDto> TodayAppointments { get; set; } = [];
+    private bool IsLoading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+    private string SearchTerm { get; set; } = "";
+    private int? BusyAppointmentId { get; set; }
+
+    private List<AppointmentDto> WaitingAppointments =>
+        TodayAppointments.Where(a => a.Status is AppointmentStatus.CheckedIn or AppointmentStatus.InProgress).ToList();
+
+    private int CompletedCount => TodayAppointments.Count(a => a.Status == AppointmentStatus.Completed);
+
+    private List<AppointmentDto> FilteredQueue =>
+        WaitingAppointments
+            .Where(a => string.IsNullOrWhiteSpace(SearchTerm) || a.PatientName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(a => a.QueueNumber)
+            .ToList();
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+        try
+        {
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var result = await Api.GetAsync<PagedResult<AppointmentDto>>($"api/appointments?date={today:yyyy-MM-dd}&pageSize=100");
+            TodayAppointments = result.Items.ToList();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task StartExamAsync(int appointmentId)
+    {
+        BusyAppointmentId = appointmentId;
+        ErrorMessage = null;
+        try
+        {
+            await Api.PatchAsync<object?, Vitalis.Application.DTOs.MedicalRecords.MedicalRecordDto>($"api/appointments/{appointmentId}/start-exam", null);
+            Navigation.NavigateTo($"/doctor/exam?appointmentId={appointmentId}");
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+            BusyAppointmentId = null;
+        }
+    }
+
+    private static string StatusLabel(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.CheckedIn => "Đã check-in",
+        AppointmentStatus.InProgress => "Đang khám",
+        AppointmentStatus.Completed => "Đã hoàn thành",
+        AppointmentStatus.Cancelled => "Đã huỷ",
+        AppointmentStatus.NoShow => "Không đến",
+        _ => status.ToString(),
+    };
+}
