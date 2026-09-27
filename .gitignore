@@ -75,3 +75,4 @@ learning-notes/
 
 # Generated secrets for the Azure deploy (never commit credentials)
 .azure-sql-password.txt
+.azure-jwt-secret.txt
