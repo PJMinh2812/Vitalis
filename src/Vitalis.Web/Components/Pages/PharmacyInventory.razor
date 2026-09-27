@@ -1,10 +1,35 @@
 @page "/pharmacy/inventory"
 @layout PharmacyLayout
+@attribute [Authorize(Roles = "Pharmacist")]
+@using Vitalis.Application.DTOs.Pharmacy
+@using Vitalis.Domain.Enums
+@inject VitalisApiClient Api
+@inject NavigationManager Navigation
 
 <PageTitle>Kho thuốc · Vitalis</PageTitle>
 
 <div class="flex flex-col w-full">
 
+@if (LoadError is not null)
+{
+<div class="mx-margin mt-space-md flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@LoadError</p>
+<button class="text-on-error-container hover:opacity-75" @onclick="() => LoadError = null" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+}
+@if (AdjustError is not null)
+{
+<div class="mx-margin mt-space-md flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@AdjustError</p>
+<button class="text-on-error-container hover:opacity-75" @onclick="() => AdjustError = null" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+}
 <!-- Workspace Sub-Header & Breadcrumb Bar -->
 <div class="px-margin pt-space-lg pb-space-md flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
 <div class="flex flex-col gap-1 min-w-0">
@@ -45,7 +70,7 @@
 <span class="material-symbols-outlined text-[18px] text-on-surface-variant">file_download</span>
 <span>Xuất file BHYT</span>
 </button>
-<button class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md shadow-sm hover:bg-primary transition-colors" type="button">
+<button class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md shadow-sm hover:bg-primary transition-colors" @onclick='() => Navigation.NavigateTo("/pharmacy/receipt")' type="button">
 <span class="material-symbols-outlined text-[18px]">add_circle</span>
 <span>+ Nhập kho mới (F2)</span>
 </button>
@@ -91,7 +116,7 @@
               Dưới định mức tồn (Min)
             </span>
 <div class="font-headline-lg text-headline-lg text-error font-bold tracking-tight flex items-baseline gap-2">
-              08 <span class="font-title-md text-title-md text-on-surface font-semibold">mặt hàng</span>
+              @LowStockCount.ToString("00") <span class="font-title-md text-title-md text-on-surface font-semibold">mặt hàng</span>
 </div>
 </div>
 <div class="w-10 h-10 rounded-lg bg-error-container/60 flex items-center justify-center text-error shrink-0">
@@ -99,11 +124,7 @@
 </div>
 </div>
 <div class="mt-space-md pt-space-xs flex items-center justify-between font-label-xs text-label-xs">
-<span class="text-error font-semibold flex items-center gap-1">
-<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
-            3 thuốc cấp thiết hết cơ số
-          </span>
-<a class="text-primary hover:underline font-semibold flex items-center gap-0.5" href="#inventory-table">
+<a class="text-primary hover:underline font-semibold flex items-center gap-0.5 ml-auto" href="#inventory-table">
             Xem ngay <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
 </a>
 </div>
@@ -118,7 +139,7 @@
               Cận hạn sử dụng (&lt; 90 ngày)
             </span>
 <div class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight flex items-baseline gap-2">
-              14 <span class="font-title-md text-title-md text-on-surface font-semibold">mặt hàng</span>
+              @NearExpiryCount.ToString("00") <span class="font-title-md text-title-md text-on-surface font-semibold">mặt hàng</span>
 </div>
 </div>
 <div class="w-10 h-10 rounded-lg bg-secondary-fixed/50 flex items-center justify-center text-secondary shrink-0">
@@ -126,8 +147,7 @@
 </div>
 </div>
 <div class="mt-space-md pt-space-xs flex items-center justify-between font-label-xs text-label-xs text-on-surface-variant">
-<span>Ước tính giá trị: <b class="text-on-surface">34.500.000 đ</b></span>
-<span class="px-2 py-0.5 rounded-full bg-surface-container text-secondary font-semibold">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-secondary font-semibold ml-auto">
             FEFO Active
           </span>
 </div>
@@ -161,8 +181,7 @@
 <!-- Live Search Field -->
 <div class="relative flex-1 min-w-[280px]">
 <span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[20px]">search</span>
-<input class="w-full h-10 pl-10 pr-10 bg-surface rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant outline-none focus:bg-surface-container-low transition-all" id="table-search" placeholder="Tìm theo tên biệt dược, hoạt chất, số đăng ký, số lô, mã vạch (BarCode)..." type="text"/>
-<span class="material-symbols-outlined absolute right-3 top-2.5 text-on-surface-variant text-[18px] cursor-pointer hover:text-on-surface">qr_code_scanner</span>
+<input class="w-full h-10 pl-10 pr-10 bg-surface rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant outline-none focus:bg-surface-container-low transition-all" id="table-search" placeholder="Tìm theo tên biệt dược, hoạt chất, mã thuốc..." type="text" @bind="SearchText" @bind:event="oninput"/>
 </div>
 <!-- Filter Selects -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
@@ -202,12 +221,10 @@
 </div>
 <!-- Trạng thái tồn -->
 <div class="relative">
-<select class="w-full h-10 px-3 py-2 bg-surface rounded-lg font-label-sm text-label-sm text-on-surface outline-none cursor-pointer appearance-none pr-8 hover:bg-surface-container-low transition-colors font-medium">
-<option value="">Mọi mức độ tồn kho</option>
-<option value="an-toan">Tồn an toàn (Normal)</option>
-<option value="duoi-min">Dưới định mức min (Low)</option>
-<option value="can-date">Cận date (&lt; 90 ngày)</option>
-<option value="vuot-max">Vượt mức dự trữ (High)</option>
+<select class="w-full h-10 px-3 py-2 bg-surface rounded-lg font-label-sm text-label-sm text-on-surface outline-none cursor-pointer appearance-none pr-8 hover:bg-surface-container-low transition-colors font-medium" @bind="StatusFilter">
+<option value="@InventoryStatusFilter.All">Mọi mức độ tồn kho</option>
+<option value="@InventoryStatusFilter.LowStock">Dưới định mức min (Low)</option>
+<option value="@InventoryStatusFilter.NearExpiry">Cận date (&lt; 90 ngày)</option>
 </select>
 <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
 </div>
@@ -217,20 +234,14 @@
 <div class="flex items-center justify-between flex-wrap gap-space-sm pt-space-xs">
 <div class="flex items-center gap-1.5 flex-wrap">
 <span class="font-label-xs text-label-xs text-on-surface-variant mr-1">Bộ lọc nhanh:</span>
-<button class="px-3 py-1 rounded-full font-label-xs text-label-xs bg-primary-container text-on-primary font-semibold shadow-xs">
-            Tất cả (682)
+<button class="px-3 py-1 rounded-full font-label-xs text-label-xs font-semibold transition-colors @(StatusFilter == InventoryStatusFilter.All ? "bg-primary-container text-on-primary shadow-xs" : "bg-surface-container text-on-surface-variant hover:bg-surface-container-highest")" @onclick='() => StatusFilter = InventoryStatusFilter.All' type="button">
+            Tất cả (@AllItems.Count)
           </button>
-<button class="px-3 py-1 rounded-full font-label-xs text-label-xs bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-error transition-colors">
-            Cần đặt gấp (08)
+<button class="px-3 py-1 rounded-full font-label-xs text-label-xs font-semibold transition-colors @(StatusFilter == InventoryStatusFilter.LowStock ? "bg-error-container text-error shadow-xs" : "bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-error")" @onclick='() => StatusFilter = InventoryStatusFilter.LowStock' type="button">
+            Cần đặt gấp (@LowStockCount)
           </button>
-<button class="px-3 py-1 rounded-full font-label-xs text-label-xs bg-surface-container text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container transition-colors">
-            Hạn dùng &lt; 90 ngày (14)
-          </button>
-<button class="px-3 py-1 rounded-full font-label-xs text-label-xs bg-surface-container text-on-surface-variant hover:bg-surface-container-highest transition-colors">
-            Thuốc BHYT (320)
-          </button>
-<button class="px-3 py-1 rounded-full font-label-xs text-label-xs bg-surface-container text-on-surface-variant hover:bg-surface-container-highest transition-colors">
-            Thuốc KS đặc biệt (12)
+<button class="px-3 py-1 rounded-full font-label-xs text-label-xs font-semibold transition-colors @(StatusFilter == InventoryStatusFilter.NearExpiry ? "bg-secondary-container text-on-secondary-container shadow-xs" : "bg-surface-container text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container")" @onclick='() => StatusFilter = InventoryStatusFilter.NearExpiry' type="button">
+            Hạn dùng &lt; 90 ngày (@NearExpiryCount)
           </button>
 </div>
 <div class="flex items-center gap-space-sm font-label-xs text-label-xs text-on-surface-variant">
@@ -248,709 +259,109 @@
 <table class="w-full text-left border-collapse min-w-[1240px]">
 <thead>
 <tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
-<th class="py-3 px-4 w-12 text-center">
-<input class="rounded accent-primary cursor-pointer w-4 h-4" type="checkbox"/>
-</th>
-<th class="py-3 px-4 min-w-[240px]">Biệt dược / Hoạt chất / ĐK</th>
-<th class="py-3 px-3">Phân loại &amp; Nhóm</th>
-<th class="py-3 px-3 text-center">ĐVT &amp; Đóng gói</th>
-<th class="py-3 px-3">Vị trí kệ GSP</th>
+<th class="py-3 px-4 min-w-[240px]">Biệt dược / Hoạt chất / Mã</th>
 <th class="py-3 px-3 min-w-[170px]">Tồn khả dụng / Định mức</th>
-<th class="py-3 px-3 min-w-[150px]">Số lô &amp; Hạn dùng</th>
-<th class="py-3 px-3 text-right">Đơn giá nhập / Bán</th>
+<th class="py-3 px-3 min-w-[150px]">Hạn dùng gần nhất</th>
 <th class="py-3 px-3 text-center">Trạng thái tồn</th>
-<th class="py-3 px-4 text-center w-28">Thao tác</th>
+<th class="py-3 px-4 text-center w-40">Thao tác</th>
 </tr>
 </thead>
 <tbody class="divide-y-0 text-on-surface font-body-sm text-body-sm">
-<!-- Row 1: Clopidogrel 75mg -->
-<tr class="hover:bg-surface-container-low/70 transition-colors group">
-<td class="py-3 px-4 text-center">
-<input class="rounded accent-primary cursor-pointer w-4 h-4" type="checkbox"/>
-</td>
+@if (IsLoading)
+{
+<tr><td colspan="5" class="py-6 px-4 text-center text-on-surface-variant">Đang tải danh sách thuốc...</td></tr>
+}
+else if (FilteredItems.Count == 0)
+{
+<tr><td colspan="5" class="py-6 px-4 text-center text-on-surface-variant">Không tìm thấy thuốc phù hợp.</td></tr>
+}
+else
+{
+@foreach (var med in FilteredItems)
+{
+var rowClass = med.LowStock ? "hover:bg-error-container/20 transition-colors group bg-error-container/5"
+    : med.NearExpiry ? "hover:bg-surface-container-high/60 transition-colors group bg-secondary-fixed/10"
+    : "hover:bg-surface-container-low/70 transition-colors group";
+<tr class="@rowClass">
 <td class="py-3 px-4">
 <div class="flex flex-col">
-<span class="font-title-md text-title-md text-primary font-bold tracking-tight">
-                    Plavix 75mg
+<span class="font-title-md text-title-md @(med.LowStock ? "text-error" : "text-primary") font-bold tracking-tight">
+                    @med.Name
                   </span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">
-                    Clopidogrel (dưới dạng bisulfat) 75mg • Sanofi-Aventis
-                  </span>
-<span class="font-label-xs text-[10px] text-outline font-mono mt-0.5">SĐK: VN-21045-18 • Barcode: 893456789012</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1 items-start">
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-surface-container text-on-surface-variant">
-                    Tim mạch
-                  </span>
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-primary-fixed text-on-primary-fixed">
-                    BHYT 100%
-                  </span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<div class="flex flex-col">
-<span class="font-semibold text-on-surface">Hộp</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">3 vỉ x 10 viên</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex items-center gap-1.5 font-label-xs text-label-xs">
-<span class="material-symbols-outlined text-[16px] text-primary">shelves</span>
-<span class="font-semibold text-on-surface">Kệ A2-04</span>
-<span class="text-on-surface-variant">(Kho Ngoại trú)</span>
+@if (med.ActiveIngredient is not null)
+{
+<span class="font-label-xs text-label-xs text-on-surface-variant">@med.ActiveIngredient</span>
+}
+@if (med.Code is not null)
+{
+<span class="font-label-xs text-[10px] text-outline font-mono mt-0.5">Mã: @med.Code</span>
+}
 </div>
 </td>
 <td class="py-3 px-3">
 <div class="flex flex-col gap-1">
 <div class="flex justify-between items-baseline font-label-xs text-label-xs">
-<span class="font-bold text-on-surface text-[14px]">180</span>
-<span class="text-on-surface-variant">Min: 50 | Max: 300</span>
+<span class="font-bold @(med.LowStock ? "text-error" : "text-on-surface") text-[14px]">@med.TotalStock</span>
+<span class="@(med.LowStock ? "text-error font-medium" : "text-on-surface-variant")">Min: @(med.MinStock?.ToString() ?? "—")</span>
 </div>
-<div class="w-full h-1.5 rounded-full bg-surface-container overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 60%;"></div>
-</div>
-<span class="font-label-xs text-[10px] text-on-surface-variant">Thực tồn: 180 (Khả dụng: 175)</span>
 </div>
 </td>
 <td class="py-3 px-3">
-<div class="flex flex-col">
-<span class="font-mono font-semibold text-label-xs text-on-surface">LOT26081</span>
-<div class="flex items-center gap-1 text-label-xs font-medium text-tertiary">
+@if (med.NearestExpiry is not null)
+{
+<div class="flex items-center gap-1 text-label-xs font-medium @(med.NearExpiry ? "text-error" : "text-tertiary")">
 <span class="material-symbols-outlined text-[13px]">event_available</span>
-<span>12/2027</span>
-<span class="text-[10px] text-on-surface-variant">(14 tháng)</span>
+<span>@med.NearestExpiry.Value.ToString("dd/MM/yyyy")</span>
 </div>
-</div>
-</td>
-<td class="py-3 px-3 text-right">
-<div class="flex flex-col">
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nhập: 350.000 đ</span>
-<span class="font-semibold text-on-surface">385.000 đ</span>
-</div>
+}
+else
+{
+<span class="text-on-surface-variant font-label-xs text-label-xs">—</span>
+}
 </td>
 <td class="py-3 px-3 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#DCFCE7] text-[#166534]">
-<span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
-                  Tồn an toàn
-                </span>
-</td>
-<td class="py-3 px-4 text-center">
-<div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Xem thẻ kho chi tiết">
-<span class="material-symbols-outlined text-[18px]">receipt_long</span>
-</button>
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-secondary transition-colors" title="Lập dự trù mua hàng">
-<span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-</button>
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" title="Thao tác khác">
-<span class="material-symbols-outlined text-[18px]">more_vert</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- Row 2: Concor 2.5mg (Low Stock) -->
-<tr class="hover:bg-error-container/20 transition-colors group bg-error-container/5">
-<td class="py-3 px-4 text-center">
-<input class="rounded accent-primary cursor-pointer w-4 h-4" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="flex flex-col">
-<div class="flex items-center gap-1.5">
-<span class="font-title-md text-title-md text-on-surface font-bold tracking-tight">
-                      Concor 2.5mg
-                    </span>
-<span class="px-1.5 py-0.2 rounded font-label-xs text-[9px] bg-error text-on-error uppercase font-bold">Cấp thiết</span>
-</div>
-<span class="font-label-xs text-label-xs text-on-surface-variant">
-                    Bisoprolol fumarate 2.5mg • Merck KGaA
-                  </span>
-<span class="font-label-xs text-[10px] text-outline font-mono mt-0.5">SĐK: VN-18921-15 • Barcode: 405432109871</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1 items-start">
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-surface-container text-on-surface-variant">
-                    Tim mạch
-                  </span>
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-primary-fixed text-on-primary-fixed">
-                    BHYT 100%
-                  </span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<div class="flex flex-col">
-<span class="font-semibold text-on-surface">Hộp</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">3 vỉ x 10 viên</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex items-center gap-1.5 font-label-xs text-label-xs">
-<span class="material-symbols-outlined text-[16px] text-primary">shelves</span>
-<span class="font-semibold text-on-surface">Kệ A1-08</span>
-<span class="text-on-surface-variant">(Kho Ngoại trú)</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1">
-<div class="flex justify-between items-baseline font-label-xs text-label-xs">
-<span class="font-bold text-error text-[14px]">25</span>
-<span class="text-error font-medium">Min: 40 | Max: 200</span>
-</div>
-<div class="w-full h-1.5 rounded-full bg-surface-container overflow-hidden">
-<div class="h-full bg-error rounded-full" style="width: 12.5%;"></div>
-</div>
-<span class="font-label-xs text-[10px] text-error font-semibold">Thiếu 15 hộp so với min</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col">
-<span class="font-mono font-semibold text-label-xs text-on-surface">CON3312</span>
-<div class="flex items-center gap-1 text-label-xs font-medium text-on-surface-variant">
-<span class="material-symbols-outlined text-[13px]">event_available</span>
-<span>04/2028</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-3 text-right">
-<div class="flex flex-col">
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nhập: 128.000 đ</span>
-<span class="font-semibold text-on-surface">142.000 đ</span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
+@if (med.LowStock)
+{
 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#FEE2E2] text-[#991B1B]">
 <span class="w-1.5 h-1.5 rounded-full bg-[#991B1B] animate-pulse"></span>
                   DƯỚI ĐỊNH MỨC
                 </span>
-</td>
-<td class="py-3 px-4 text-center">
-<div class="flex items-center justify-center gap-1">
-<button class="px-2 py-1 rounded bg-error text-on-error font-label-xs text-[11px] font-semibold shadow-xs hover:bg-on-error-container transition-colors flex items-center gap-1" title="Lập dự trù mua gấp">
-<span class="material-symbols-outlined text-[14px]">add_shopping_cart</span> Đặt gấp
-                  </button>
-</div>
-</td>
-</tr>
-<!-- Row 3: Augmentin 1g (Expiring Soon - FEFO Priority) -->
-<tr class="hover:bg-surface-container-high/60 transition-colors group bg-secondary-fixed/10">
-<td class="py-3 px-4 text-center">
-<input class="rounded accent-primary cursor-pointer w-4 h-4" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="flex flex-col">
-<div class="flex items-center gap-1.5">
-<span class="font-title-md text-title-md text-primary font-bold tracking-tight">
-                      Augmentin 1g
-                    </span>
-<span class="px-1.5 py-0.2 rounded font-label-xs text-[9px] bg-secondary-container text-on-secondary-container uppercase font-bold">FEFO Cần xuất</span>
-</div>
-<span class="font-label-xs text-label-xs text-on-surface-variant">
-                    Amoxicillin 875mg + Acid clavulanic 125mg • GlaxoSmithKline
-                  </span>
-<span class="font-label-xs text-[10px] text-outline font-mono mt-0.5">SĐK: VN-17843-14 • Barcode: 501234567890</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1 items-start">
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-surface-container text-on-surface-variant">
-                    Kháng sinh
-                  </span>
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-primary-fixed text-on-primary-fixed">
-                    BHYT 100%
-                  </span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<div class="flex flex-col">
-<span class="font-semibold text-on-surface">Hộp</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">2 vỉ x 7 viên</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex items-center gap-1.5 font-label-xs text-label-xs">
-<span class="material-symbols-outlined text-[16px] text-primary">shelves</span>
-<span class="font-semibold text-on-surface">Kệ D1-05</span>
-<span class="text-on-surface-variant">(Kho Chính)</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1">
-<div class="flex justify-between items-baseline font-label-xs text-label-xs">
-<span class="font-bold text-on-surface text-[14px]">95</span>
-<span class="text-on-surface-variant">Min: 50 | Max: 200</span>
-</div>
-<div class="w-full h-1.5 rounded-full bg-surface-container overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 47.5%;"></div>
-</div>
-<span class="font-label-xs text-[10px] text-on-surface-variant">Tồn ổn định</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col">
-<span class="font-mono font-semibold text-label-xs text-on-surface">AUG1102</span>
-<div class="flex items-center gap-1 text-label-xs font-bold text-error">
-<span class="material-symbols-outlined text-[14px] animate-pulse">timer</span>
-<span>15/12/2026</span>
-<span class="text-[10px] bg-error/10 px-1 rounded">(Còn 52 ngày)</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-3 text-right">
-<div class="flex flex-col">
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nhập: 242.000 đ</span>
-<span class="font-semibold text-on-surface">265.000 đ</span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
+}
+else if (med.NearExpiry)
+{
 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#FEF3C7] text-[#92400E]">
 <span class="w-1.5 h-1.5 rounded-full bg-[#92400E]"></span>
                   CẬN HẠN DÙNG
                 </span>
+}
+else
+{
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#DCFCE7] text-[#166534]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
+                  Tồn an toàn
+                </span>
+}
 </td>
 <td class="py-3 px-4 text-center">
 <div class="flex items-center justify-center gap-1">
-<button class="p-1.5 rounded-lg text-secondary hover:bg-secondary-fixed/50 transition-colors" title="Ưu tiên phát theo đơn FEFO">
-<span class="material-symbols-outlined text-[18px]">forward_to_inbox</span>
-</button>
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" title="Xem thẻ kho">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Xem thẻ kho" @onclick="() => ViewTransactionsAsync(med.Id)" type="button">
 <span class="material-symbols-outlined text-[18px]">receipt_long</span>
 </button>
-</div>
-</td>
-</tr>
-<!-- Row 4: Nitromint 2.6mg (Emergency Sub-Stock) -->
-<tr class="hover:bg-surface-container-low/70 transition-colors group">
-<td class="py-3 px-4 text-center">
-<input class="rounded accent-primary cursor-pointer w-4 h-4" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="flex flex-col">
-<span class="font-title-md text-title-md text-on-surface font-bold tracking-tight">
-                    Nitromint 2.6mg
-                  </span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">
-                    Nitroglycerin giải phóng kéo dài • Egis Pharmaceuticals
-                  </span>
-<span class="font-label-xs text-[10px] text-outline font-mono mt-0.5">SĐK: VN-12903-11 • Lọ bảo vệ ánh sáng</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1 items-start">
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-error-container text-error">
-                    Tim mạch - Cấp cứu
-                  </span>
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-primary-fixed text-on-primary-fixed">
-                    BHYT 100%
-                  </span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<div class="flex flex-col">
-<span class="font-semibold text-on-surface">Lọ</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">Lọ 30 viên</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex items-center gap-1.5 font-label-xs text-label-xs">
-<span class="material-symbols-outlined text-[16px] text-error">emergency</span>
-<span class="font-semibold text-on-surface">Kệ B1-12</span>
-<span class="text-on-surface-variant">(P.Cấp cứu)</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1">
-<div class="flex justify-between items-baseline font-label-xs text-label-xs">
-<span class="font-bold text-on-surface text-[14px]">12</span>
-<span class="text-on-surface-variant">Min: 20 | Max: 60</span>
-</div>
-<div class="w-full h-1.5 rounded-full bg-surface-container overflow-hidden">
-<div class="h-full bg-secondary-container rounded-full" style="width: 20%;"></div>
-</div>
-<span class="font-label-xs text-[10px] text-on-surface-variant">Cần bù tủ trực</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col">
-<span class="font-mono font-semibold text-label-xs text-on-surface">NIT9043</span>
-<div class="flex items-center gap-1 text-label-xs font-medium text-tertiary">
-<span class="material-symbols-outlined text-[13px]">event_available</span>
-<span>08/2027</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-3 text-right">
-<div class="flex flex-col">
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nhập: 88.000 đ</span>
-<span class="font-semibold text-on-surface">98.000 đ</span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#FEF3C7] text-[#92400E]">
-<span class="w-1.5 h-1.5 rounded-full bg-[#92400E]"></span>
-                  CẦN DỰ TRÙ
-                </span>
-</td>
-<td class="py-3 px-4 text-center">
-<div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Lập phiếu chuyển">
-<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
-</button>
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" title="Xem thẻ kho">
-<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-error transition-colors" title="Điều chỉnh kho (xuất huỷ)" @onclick="() => OpenAdjustForm(med)" type="button">
+<span class="material-symbols-outlined text-[18px]">remove_circle</span>
 </button>
 </div>
 </td>
 </tr>
-<!-- Row 5: Lipitor 20mg -->
-<tr class="hover:bg-surface-container-low/70 transition-colors group">
-<td class="py-3 px-4 text-center">
-<input class="rounded accent-primary cursor-pointer w-4 h-4" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="flex flex-col">
-<span class="font-title-md text-title-md text-primary font-bold tracking-tight">
-                    Lipitor 20mg
-                  </span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">
-                    Atorvastatin calcium trihydrate 20mg • Pfizer
-                  </span>
-<span class="font-label-xs text-[10px] text-outline font-mono mt-0.5">SĐK: VN-22119-19 • Thuốc kê đơn</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1 items-start">
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-surface-container text-on-surface-variant">
-                    Hạ lipid máu
-                  </span>
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-primary-fixed text-on-primary-fixed">
-                    BHYT 100%
-                  </span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<div class="flex flex-col">
-<span class="font-semibold text-on-surface">Hộp</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">3 vỉ x 10 viên</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex items-center gap-1.5 font-label-xs text-label-xs">
-<span class="material-symbols-outlined text-[16px] text-primary">shelves</span>
-<span class="font-semibold text-on-surface">Kệ C3-02</span>
-<span class="text-on-surface-variant">(Kho Ngoại trú)</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1">
-<div class="flex justify-between items-baseline font-label-xs text-label-xs">
-<span class="font-bold text-on-surface text-[14px]">210</span>
-<span class="text-on-surface-variant">Min: 60 | Max: 250</span>
-</div>
-<div class="w-full h-1.5 rounded-full bg-surface-container overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 84%;"></div>
-</div>
-<span class="font-label-xs text-[10px] text-on-surface-variant">Cơ số dồi dào</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col">
-<span class="font-mono font-semibold text-label-xs text-on-surface">LIP5520</span>
-<div class="flex items-center gap-1 text-label-xs font-medium text-tertiary">
-<span class="material-symbols-outlined text-[13px]">event_available</span>
-<span>10/2027</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-3 text-right">
-<div class="flex flex-col">
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nhập: 480.000 đ</span>
-<span class="font-semibold text-on-surface">520.000 đ</span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#DCFCE7] text-[#166534]">
-<span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
-                  Tồn an toàn
-                </span>
-</td>
-<td class="py-3 px-4 text-center">
-<div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Xem thẻ kho">
-<span class="material-symbols-outlined text-[18px]">receipt_long</span>
-</button>
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" title="In nhãn thuốc">
-<span class="material-symbols-outlined text-[18px]">print</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- Row 6: Glucophage 850mg -->
-<tr class="hover:bg-surface-container-low/70 transition-colors group">
-<td class="py-3 px-4 text-center">
-<input class="rounded accent-primary cursor-pointer w-4 h-4" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="flex flex-col">
-<span class="font-title-md text-title-md text-primary font-bold tracking-tight">
-                    Glucophage 850mg
-                  </span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">
-                    Metformin hydrochloride 850mg • Merck Santé S.A.S
-                  </span>
-<span class="font-label-xs text-[10px] text-outline font-mono mt-0.5">SĐK: VN-16782-13 • Đái tháo đường Type 2</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1 items-start">
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-surface-container text-on-surface-variant">
-                    Nội tiết
-                  </span>
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-primary-fixed text-on-primary-fixed">
-                    BHYT 100%
-                  </span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<div class="flex flex-col">
-<span class="font-semibold text-on-surface">Hộp</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">5 vỉ x 20 viên</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex items-center gap-1.5 font-label-xs text-label-xs">
-<span class="material-symbols-outlined text-[16px] text-primary">shelves</span>
-<span class="font-semibold text-on-surface">Kệ B2-01</span>
-<span class="text-on-surface-variant">(Kho Ngoại trú)</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1">
-<div class="flex justify-between items-baseline font-label-xs text-label-xs">
-<span class="font-bold text-on-surface text-[14px]">85</span>
-<span class="text-on-surface-variant">Min: 30 | Max: 150</span>
-</div>
-<div class="w-full h-1.5 rounded-full bg-surface-container overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 56.6%;"></div>
-</div>
-<span class="font-label-xs text-[10px] text-on-surface-variant">Tồn an toàn</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col">
-<span class="font-mono font-semibold text-label-xs text-on-surface">GLU8831</span>
-<div class="flex items-center gap-1 text-label-xs font-medium text-tertiary">
-<span class="material-symbols-outlined text-[13px]">event_available</span>
-<span>09/2028</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-3 text-right">
-<div class="flex flex-col">
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nhập: 180.000 đ</span>
-<span class="font-semibold text-on-surface">195.000 đ</span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#DCFCE7] text-[#166534]">
-<span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
-                  Tồn an toàn
-                </span>
-</td>
-<td class="py-3 px-4 text-center">
-<div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Xem thẻ kho">
-<span class="material-symbols-outlined text-[18px]">receipt_long</span>
-</button>
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" title="Lập dự trù">
-<span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- Row 7: Nexium 40mg -->
-<tr class="hover:bg-surface-container-low/70 transition-colors group">
-<td class="py-3 px-4 text-center">
-<input class="rounded accent-primary cursor-pointer w-4 h-4" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="flex flex-col">
-<span class="font-title-md text-title-md text-primary font-bold tracking-tight">
-                    Nexium 40mg
-                  </span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">
-                    Esomeprazole magnesium trihydrate 40mg • AstraZeneca
-                  </span>
-<span class="font-label-xs text-[10px] text-outline font-mono mt-0.5">SĐK: VN-19002-15 • PPI chống trào ngược</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1 items-start">
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-surface-container text-on-surface-variant">
-                    Tiêu hóa
-                  </span>
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-primary-fixed text-on-primary-fixed">
-                    BHYT 100%
-                  </span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<div class="flex flex-col">
-<span class="font-semibold text-on-surface">Hộp</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">4 vỉ x 7 viên</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex items-center gap-1.5 font-label-xs text-label-xs">
-<span class="material-symbols-outlined text-[16px] text-primary">shelves</span>
-<span class="font-semibold text-on-surface">Kệ C1-10</span>
-<span class="text-on-surface-variant">(Kho Chính)</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1">
-<div class="flex justify-between items-baseline font-label-xs text-label-xs">
-<span class="font-bold text-on-surface text-[14px]">140</span>
-<span class="text-on-surface-variant">Min: 40 | Max: 200</span>
-</div>
-<div class="w-full h-1.5 rounded-full bg-surface-container overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 70%;"></div>
-</div>
-<span class="font-label-xs text-[10px] text-on-surface-variant">Tồn an toàn</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col">
-<span class="font-mono font-semibold text-label-xs text-on-surface">NEX4490</span>
-<div class="flex items-center gap-1 text-label-xs font-medium text-tertiary">
-<span class="material-symbols-outlined text-[13px]">event_available</span>
-<span>03/2028</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-3 text-right">
-<div class="flex flex-col">
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nhập: 380.000 đ</span>
-<span class="font-semibold text-on-surface">410.000 đ</span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#DCFCE7] text-[#166534]">
-<span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
-                  Tồn an toàn
-                </span>
-</td>
-<td class="py-3 px-4 text-center">
-<div class="flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Xem thẻ kho">
-<span class="material-symbols-outlined text-[18px]">receipt_long</span>
-</button>
-<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" title="Chuyển quầy">
-<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
-</button>
-</div>
-</td>
-</tr>
-<!-- Row 8: Ventolin Inhaler 100mcg (Critical Stockout Risk) -->
-<tr class="hover:bg-error-container/20 transition-colors group bg-error-container/10">
-<td class="py-3 px-4 text-center">
-<input class="rounded accent-primary cursor-pointer w-4 h-4" type="checkbox"/>
-</td>
-<td class="py-3 px-4">
-<div class="flex flex-col">
-<div class="flex items-center gap-1.5">
-<span class="font-title-md text-title-md text-error font-bold tracking-tight">
-                      Ventolin Inhaler 100mcg
-                    </span>
-<span class="px-1.5 py-0.2 rounded font-label-xs text-[9px] bg-error text-on-error uppercase font-bold">Khẩn cấp</span>
-</div>
-<span class="font-label-xs text-label-xs text-on-surface-variant">
-                    Salbutamol sulfat 100mcg/liều • Glaxo Wellcome S.A
-                  </span>
-<span class="font-label-xs text-[10px] text-outline font-mono mt-0.5">SĐK: VN-15403-12 • Thuốc giãn phế quản cấp cứu</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1 items-start">
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-error-container text-error">
-                    Hô hấp - Cấp cứu
-                  </span>
-<span class="px-2 py-0.5 rounded-full font-label-xs text-[10px] font-semibold bg-primary-fixed text-on-primary-fixed">
-                    BHYT 100%
-                  </span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<div class="flex flex-col">
-<span class="font-semibold text-on-surface">Bình</span>
-<span class="font-label-xs text-label-xs text-on-surface-variant">Bình xịt 200 liều</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex items-center gap-1.5 font-label-xs text-label-xs">
-<span class="material-symbols-outlined text-[16px] text-error">emergency</span>
-<span class="font-semibold text-on-surface">Kệ E1-02</span>
-<span class="text-on-surface-variant">(Kho Ngoại trú)</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col gap-1">
-<div class="flex justify-between items-baseline font-label-xs text-label-xs">
-<span class="font-bold text-error text-[15px]">08</span>
-<span class="text-error font-semibold">Min: 25 | Max: 100</span>
-</div>
-<div class="w-full h-1.5 rounded-full bg-surface-container overflow-hidden">
-<div class="h-full bg-error rounded-full" style="width: 8%;"></div>
-</div>
-<span class="font-label-xs text-[10px] text-error font-bold">Chỉ còn đủ dùng 1.5 ngày</span>
-</div>
-</td>
-<td class="py-3 px-3">
-<div class="flex flex-col">
-<span class="font-mono font-semibold text-label-xs text-on-surface">VEN1024</span>
-<div class="flex items-center gap-1 text-label-xs font-medium text-tertiary">
-<span class="material-symbols-outlined text-[13px]">event_available</span>
-<span>02/2027</span>
-</div>
-</div>
-</td>
-<td class="py-3 px-3 text-right">
-<div class="flex flex-col">
-<span class="font-label-xs text-label-xs text-on-surface-variant">Nhập: 82.000 đ</span>
-<span class="font-semibold text-on-surface">92.000 đ</span>
-</div>
-</td>
-<td class="py-3 px-3 text-center">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-label-xs text-[11px] font-semibold bg-[#FEE2E2] text-[#991B1B]">
-<span class="w-1.5 h-1.5 rounded-full bg-[#991B1B] animate-ping"></span>
-                  SẮP HẾT HÀNG
-                </span>
-</td>
-<td class="py-3 px-4 text-center">
-<div class="flex items-center justify-center gap-1">
-<button class="px-2 py-1 rounded bg-error text-on-error font-label-xs text-[11px] font-semibold shadow-xs hover:bg-on-error-container transition-colors flex items-center gap-1" title="Lập dự trù mua ngay">
-<span class="material-symbols-outlined text-[14px]">bolt</span> Mua ngay
-                  </button>
-</div>
-</td>
-</tr>
+}
+}
 </tbody>
 </table>
 </div>
 <!-- Professional Clinical Table Pagination Bar -->
 <div class="px-space-md py-3 bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-space-sm font-label-sm text-label-sm text-on-surface-variant">
 <div class="flex items-center gap-space-md">
-<span>Hiển thị <b class="text-on-surface">1 - 8</b> trong tổng số <b class="text-on-surface">682</b> biệt dược</span>
-<div class="flex items-center gap-2">
-<span>Hiển thị:</span>
-<select class="px-2 py-1 rounded bg-surface-container-lowest text-on-surface text-label-xs outline-none">
-<option>10 dòng / trang</option>
-<option>25 dòng / trang</option>
-<option>50 dòng / trang</option>
-<option>100 dòng / trang</option>
-</select>
-</div>
+<span>Hiển thị <b class="text-on-surface">@FilteredItems.Count</b> trong tổng số <b class="text-on-surface">@AllItems.Count</b> biệt dược</span>
 </div>
 <div class="flex items-center gap-1">
 <button class="px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-0.5">
@@ -1117,76 +528,216 @@
 </a>
 </div>
 </div>
-<!-- Panel 3: Nhật ký xuất nhập kho gần nhất -->
+<!-- Panel 3: Thẻ kho (real stock transactions for the selected medicine) -->
 <div class="lg:col-span-3 bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
 <div>
 <div class="flex items-center justify-between pb-space-xs">
 <h2 class="font-title-md text-title-md text-on-surface font-bold">
-              Nhật ký kho gần nhất
+              Thẻ kho @(TransactionsMedicineName is null ? "" : $"• {TransactionsMedicineName}")
             </h2>
-<span class="font-label-xs text-label-xs text-primary font-semibold">
-              Hôm nay
-            </span>
 </div>
+@if (TransactionsMedicineName is null)
+{
+<p class="mt-space-md font-body-sm text-body-sm text-on-surface-variant">Bấm biểu tượng "Xem thẻ kho" trên một dòng thuốc để xem lịch sử xuất/nhập/điều chỉnh thực tế.</p>
+}
+else if (Transactions.Count == 0)
+{
+<p class="mt-space-md font-body-sm text-body-sm text-on-surface-variant">Chưa có giao dịch kho nào cho thuốc này.</p>
+}
+else
+{
 <div class="mt-space-md space-y-3 relative before:absolute before:top-2 before:bottom-2 before:left-[11px] before:w-[2px] before:bg-surface-container">
-<!-- Log 1 -->
+@foreach (var t in Transactions.Take(10))
+{
+var (icon, colorClass, label) = t.Type switch
+{
+    StockTransactionType.In => ("arrow_downward", "bg-primary text-on-primary", "Nhập kho"),
+    StockTransactionType.Out => ("arrow_upward", "bg-secondary text-on-secondary", "Xuất phát thuốc"),
+    _ => ("swap_horiz", "bg-tertiary-container text-on-tertiary-container", "Điều chỉnh kho"),
+};
 <div class="flex items-start gap-3 relative">
-<div class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center shrink-0 z-10 shadow-xs">
-<span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+<div class="w-6 h-6 rounded-full @colorClass flex items-center justify-center shrink-0 z-10 shadow-xs">
+<span class="material-symbols-outlined text-[14px]">@icon</span>
 </div>
 <div class="flex flex-col min-w-0">
 <div class="flex items-baseline justify-between gap-1">
-<span class="font-label-sm text-label-sm text-on-surface font-semibold truncate">Nhập lô thuốc NovoNordisk</span>
-<span class="font-label-xs text-[10px] text-on-surface-variant shrink-0">08:30</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold truncate">@label</span>
+<span class="font-label-xs text-[10px] text-on-surface-variant shrink-0">@t.CreatedAt.ToLocalTime().ToString("HH:mm dd/MM")</span>
 </div>
 <span class="font-label-xs text-label-xs text-on-surface-variant">
-                  PNK-2026-1024 • 12 biệt dược • 142.500.000 đ
+                  Lô #@t.BatchId • Số lượng: @t.Quantity
                 </span>
-<span class="font-label-xs text-[10px] text-primary font-medium">Bởi: DS. Hoàng Nam</span>
 </div>
 </div>
-<!-- Log 2 -->
-<div class="flex items-start gap-3 relative">
-<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0 z-10 shadow-xs">
-<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+}
 </div>
-<div class="flex flex-col min-w-0">
-<div class="flex items-baseline justify-between gap-1">
-<span class="font-label-sm text-label-sm text-on-surface font-semibold truncate">Xuất Quầy phát số 01</span>
-<span class="font-label-xs text-[10px] text-on-surface-variant shrink-0">09:22</span>
-</div>
-<span class="font-label-xs text-label-xs text-on-surface-variant">
-                  PXK-2026-0891 • Cấp 45 đơn ngoại trú
-                </span>
-<span class="font-label-xs text-[10px] text-secondary font-medium">Bởi: DS. Mai Trang</span>
-</div>
-</div>
-<!-- Log 3 -->
-<div class="flex items-start gap-3 relative">
-<div class="w-6 h-6 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center shrink-0 z-10 shadow-xs">
-<span class="material-symbols-outlined text-[14px]">swap_horiz</span>
-</div>
-<div class="flex flex-col min-w-0">
-<div class="flex items-baseline justify-between gap-1">
-<span class="font-label-sm text-label-sm text-on-surface font-semibold truncate">Chuyển tủ trực P.Cấp cứu</span>
-<span class="font-label-xs text-[10px] text-on-surface-variant shrink-0">09:40</span>
-</div>
-<span class="font-label-xs text-label-xs text-on-surface-variant">
-                  PDC-2026-0312 • 4 mặt hàng khẩn cấp
-                </span>
-<span class="font-label-xs text-[10px] text-tertiary font-medium">Đã giao nhận</span>
-</div>
-</div>
-</div>
-</div>
-<div class="mt-space-md pt-space-xs">
-<a class="w-full py-2 rounded-lg bg-surface-container-low text-on-surface font-label-sm text-label-sm font-semibold flex items-center justify-center gap-1 hover:bg-surface-container transition-colors" href="#">
-<span>Xem toàn bộ nhật ký xuất nhập tồn</span>
-<span class="material-symbols-outlined text-[16px]">chevron_right</span>
-</a>
+}
 </div>
 </div>
 </section>
 </div>
 </div>
+@if (AdjustingMedicine is not null)
+{
+<div class="fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm flex items-center justify-center p-4">
+<div class="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-xl p-6 flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Điều chỉnh kho (xuất huỷ): @AdjustingMedicine.Name</h3>
+<button class="text-outline hover:text-on-surface" @onclick="CloseAdjustForm" type="button">
+<span class="material-symbols-outlined text-xl">close</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Chỉ dùng để ghi giảm tồn (hao hụt, hết hạn, hỏng vỡ...). Nhập đúng mã lô (Batch ID) cần trừ.</p>
+<form class="flex flex-col gap-3" @onsubmit="SubmitAdjustAsync" @onsubmit:preventDefault="true">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Mã lô (Batch ID) <span class="text-error">*</span></label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface outline-none" type="number" @bind="AdjustBatchId"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Số lượng trừ <span class="text-error">*</span></label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface outline-none" type="number" @bind="AdjustQuantity"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Lý do <span class="text-error">*</span></label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface outline-none" type="text" @bind="AdjustReason" placeholder="Vd: hết hạn, hỏng vỡ..."/>
+</div>
+<div class="flex items-center justify-end gap-3 mt-2">
+<button class="px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-md text-title-md transition-colors" @onclick="CloseAdjustForm" type="button">
+            Huỷ bỏ
+          </button>
+<button class="px-5 py-2.5 rounded-lg bg-error text-on-error font-title-md text-title-md font-semibold transition-colors shadow-sm disabled:opacity-60" disabled="@IsAdjusting" type="submit">
+            @(IsAdjusting ? "Đang xử lý..." : "Xác nhận điều chỉnh")
+          </button>
+</div>
+</form>
+</div>
+</div>
+}
+
 <script src="js/pages/PharmacyInventory.js"></script>
+
+@code {
+    private List<MedicineInventoryDto> AllItems { get; set; } = [];
+    private bool IsLoading { get; set; } = true;
+    private string? LoadError { get; set; }
+    private string SearchText { get; set; } = "";
+    private InventoryStatusFilter StatusFilter { get; set; } = InventoryStatusFilter.All;
+
+    private int LowStockCount => AllItems.Count(m => m.LowStock);
+    private int NearExpiryCount => AllItems.Count(m => m.NearExpiry);
+
+    private List<MedicineInventoryDto> FilteredItems => AllItems
+        .Where(m => StatusFilter switch
+        {
+            InventoryStatusFilter.LowStock => m.LowStock,
+            InventoryStatusFilter.NearExpiry => m.NearExpiry,
+            _ => true,
+        })
+        .Where(m => string.IsNullOrWhiteSpace(SearchText)
+            || m.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+            || (m.ActiveIngredient?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (m.Code?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false))
+        .ToList();
+
+    private int? TransactionsMedicineId { get; set; }
+    private string? TransactionsMedicineName { get; set; }
+    private List<StockTransactionDto> Transactions { get; set; } = [];
+
+    private MedicineInventoryDto? AdjustingMedicine { get; set; }
+    private string AdjustBatchId { get; set; } = "";
+    private string AdjustQuantity { get; set; } = "";
+    private string AdjustReason { get; set; } = "";
+    private bool IsAdjusting { get; set; }
+    private string? AdjustError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInventoryAsync();
+    }
+
+    private async Task LoadInventoryAsync()
+    {
+        IsLoading = true;
+        LoadError = null;
+        try
+        {
+            AllItems = (await Api.GetAsync<List<MedicineInventoryDto>>("api/medicines/inventory")).ToList();
+        }
+        catch (ApiException ex)
+        {
+            LoadError = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ViewTransactionsAsync(int medicineId)
+    {
+        TransactionsMedicineId = medicineId;
+        TransactionsMedicineName = AllItems.FirstOrDefault(m => m.Id == medicineId)?.Name;
+        try
+        {
+            Transactions = (await Api.GetAsync<List<StockTransactionDto>>($"api/medicines/{medicineId}/transactions"))
+                .OrderByDescending(t => t.CreatedAt)
+                .ToList();
+        }
+        catch (ApiException ex)
+        {
+            LoadError = ex.Message;
+            Transactions = [];
+        }
+    }
+
+    private void OpenAdjustForm(MedicineInventoryDto medicine)
+    {
+        AdjustingMedicine = medicine;
+        AdjustBatchId = "";
+        AdjustQuantity = "";
+        AdjustReason = "";
+        AdjustError = null;
+    }
+
+    private void CloseAdjustForm()
+    {
+        AdjustingMedicine = null;
+    }
+
+    private async Task SubmitAdjustAsync()
+    {
+        if (AdjustingMedicine is null)
+            return;
+
+        if (!int.TryParse(AdjustBatchId, out var batchId) || !int.TryParse(AdjustQuantity, out var quantity) || string.IsNullOrWhiteSpace(AdjustReason))
+        {
+            AdjustError = "Vui lòng nhập đầy đủ mã lô, số lượng và lý do hợp lệ.";
+            return;
+        }
+
+        IsAdjusting = true;
+        AdjustError = null;
+        try
+        {
+            await Api.PostNoContentAsync($"api/medicines/{AdjustingMedicine.Id}/adjust",
+                new AdjustStockRequest(batchId, quantity, AdjustReason));
+            AdjustingMedicine = null;
+            await LoadInventoryAsync();
+        }
+        catch (ApiException ex)
+        {
+            AdjustError = ex.Message;
+        }
+        finally
+        {
+            IsAdjusting = false;
+        }
+    }
+
+    private enum InventoryStatusFilter
+    {
+        All,
+        LowStock,
+        NearExpiry,
+    }
+}

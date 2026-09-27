@@ -1,11 +1,32 @@
 @page "/pharmacy/receipt"
 @layout PharmacyLayout
+@attribute [Authorize(Roles = "Pharmacist")]
+@using Vitalis.Application.DTOs.Medicines
+@using Vitalis.Application.DTOs.Pharmacy
+@inject VitalisApiClient Api
 
 <PageTitle>Nhập thuốc · Vitalis</PageTitle>
 
 <div class="flex flex-col w-full">
 <!-- Content Canvas Container -->
 <div class="p-space-lg max-w-[1720px] mx-auto w-full space-y-space-md">
+@if (SubmitError is not null)
+{
+<div class="flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@SubmitError</p>
+<button class="text-on-error-container hover:opacity-75" @onclick="() => SubmitError = null" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+}
+@if (SubmitSuccessMessage is not null)
+{
+<div class="flex items-start gap-3 p-3.5 rounded-xl bg-[#DCFCE7] text-[#166534] shadow-sm">
+<span class="material-symbols-outlined text-[#166534] text-xl shrink-0 mt-0.5">check_circle</span>
+<p class="flex-1 font-body-sm text-body-sm">@SubmitSuccessMessage</p>
+</div>
+}
 <!-- Section 1: Breadcrumb, Page Title & Action Bar -->
 <section class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
 <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-space-md">
@@ -44,7 +65,7 @@
 <span class="material-symbols-outlined text-[18px]">receipt_long</span>
 <span>Nhập XML e-Invoice</span>
 </button>
-<button class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg font-label-md text-label-md bg-primary-container text-on-primary shadow-sm hover:opacity-95 transition-opacity" type="button">
+<button class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg font-label-md text-label-md bg-primary-container text-on-primary shadow-sm hover:opacity-95 transition-opacity" @onclick="() => IsCreateFormOpen = !IsCreateFormOpen" type="button">
 <span class="material-symbols-outlined text-[18px]">add_circle</span>
 <span>+ Tạo phiếu nhập mới</span>
 <kbd class="ml-1 text-[11px] bg-primary/40 px-1 rounded text-on-primary">F2</kbd>
@@ -52,6 +73,122 @@
 </div>
 </div>
 </section>
+@if (IsCreateFormOpen)
+{
+<section class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<h2 class="font-title-md text-title-md text-on-surface font-bold">Tạo Phiếu Nhập Kho Mới</h2>
+<button class="text-outline hover:text-on-surface" @onclick="() => IsCreateFormOpen = false" type="button">
+<span class="material-symbols-outlined text-xl">close</span>
+</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Nhà cung cấp</label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface outline-none" type="text" @bind="SupplierName" placeholder="Tên nhà cung cấp (tuỳ chọn)"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface">Số hoá đơn / Mã tham chiếu</label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-low text-on-surface outline-none" type="text" @bind="ReferenceCode" placeholder="Số hoá đơn (tuỳ chọn)"/>
+</div>
+</div>
+
+<div class="p-space-sm rounded-lg bg-surface-container-low space-y-2">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Tìm thuốc để thêm vào phiếu</span>
+<div class="flex flex-col sm:flex-row gap-2">
+<input class="flex-1 h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface outline-none" type="text" @bind="MedicineSearchKeyword" @bind:event="oninput" placeholder="Nhập tên thuốc..."/>
+<button class="h-10 px-4 rounded-lg bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold hover:bg-surface-container-high transition-colors disabled:opacity-60" disabled="@IsSearchingMedicines" @onclick="SearchMedicinesAsync" type="button">
+@(IsSearchingMedicines ? "Đang tìm..." : "Tìm thuốc")
+</button>
+</div>
+@if (MedicineSearchResults.Count > 0)
+{
+<div class="max-h-48 overflow-y-auto divide-y divide-surface-container">
+@foreach (var m in MedicineSearchResults)
+{
+<button class="w-full text-left py-2 px-1 hover:bg-surface-container-lowest transition-colors flex items-center justify-between" @onclick="() => SelectMedicine(m)" type="button">
+<span class="font-label-sm text-label-sm text-on-surface">@m.Name <span class="text-on-surface-variant font-label-xs">(@m.ActiveIngredient)</span></span>
+<span class="font-label-xs text-label-xs text-primary">Chọn</span>
+</button>
+}
+</div>
+}
+</div>
+
+@if (SelectedMedicine is not null)
+{
+<div class="p-space-sm rounded-lg bg-primary-fixed/10 space-y-2">
+<span class="font-label-sm text-label-sm font-semibold text-primary">Thêm dòng nhập: @SelectedMedicine.Name</span>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Số lô <span class="text-error">*</span></label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface outline-none" type="text" @bind="NewLineBatchNo"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Hạn dùng <span class="text-error">*</span></label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface outline-none" type="date" @bind="NewLineExpiryDate"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Số lượng <span class="text-error">*</span></label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface outline-none" type="number" @bind="NewLineQuantity"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-xs text-label-xs text-on-surface-variant">Giá nhập <span class="text-error">*</span></label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface outline-none" type="number" @bind="NewLineImportPrice"/>
+</div>
+</div>
+<button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-semibold hover:opacity-90 transition-opacity" @onclick="AddLine" type="button">
++ Thêm dòng vào phiếu
+</button>
+</div>
+}
+
+@if (ReceiptLines.Count > 0)
+{
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Các dòng đã thêm (@ReceiptLines.Count)</span>
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-xs text-label-xs uppercase">
+<th class="py-2 px-2">Thuốc</th>
+<th class="py-2 px-2">Số lô</th>
+<th class="py-2 px-2">Hạn dùng</th>
+<th class="py-2 px-2 text-right">SL</th>
+<th class="py-2 px-2 text-right">Giá nhập</th>
+<th class="py-2 px-2"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-sm text-body-sm">
+@for (var i = 0; i < ReceiptLines.Count; i++)
+{
+var index = i;
+var line = ReceiptLines[index];
+<tr>
+<td class="py-2 px-2">@line.MedicineName</td>
+<td class="py-2 px-2 font-mono">@line.BatchNo</td>
+<td class="py-2 px-2">@line.ExpiryDate.ToString("dd/MM/yyyy")</td>
+<td class="py-2 px-2 text-right">@line.Quantity</td>
+<td class="py-2 px-2 text-right">@line.ImportPrice.ToString("N0") đ</td>
+<td class="py-2 px-2 text-right">
+<button class="text-error hover:underline font-label-xs text-label-xs" @onclick="() => ReceiptLines.RemoveAt(index)" type="button">Xoá</button>
+</td>
+</tr>
+}
+</tbody>
+</table>
+</div>
+}
+
+<div class="flex items-center justify-end gap-3 pt-2">
+<button class="px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-md text-title-md transition-colors" @onclick="ResetForm" type="button">
+Huỷ bỏ
+</button>
+<button class="px-5 py-2.5 rounded-lg bg-primary-container text-on-primary font-title-md text-title-md font-semibold transition-colors shadow-sm disabled:opacity-60" disabled="@(ReceiptLines.Count == 0 || IsSubmitting)" @onclick="SubmitReceiptAsync" type="button">
+@(IsSubmitting ? "Đang lưu..." : "Lưu phiếu nhập")
+</button>
+</div>
+</section>
+}
 <!-- Section 2: Top KPI Cards (Clinical Pharmacy Intelligence) -->
 <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md">
 <!-- Card 1: Giá trị nhập -->
@@ -731,3 +868,119 @@
 </div>
 
 <script src="js/pages/PharmacyReceipt.js"></script>
+
+@code {
+    private bool IsCreateFormOpen { get; set; }
+
+    private string? SupplierName { get; set; }
+    private string? ReferenceCode { get; set; }
+
+    private string MedicineSearchKeyword { get; set; } = "";
+    private bool IsSearchingMedicines { get; set; }
+    private List<MedicineSearchDto> MedicineSearchResults { get; set; } = [];
+    private MedicineSearchDto? SelectedMedicine { get; set; }
+
+    private string NewLineBatchNo { get; set; } = "";
+    private DateOnly NewLineExpiryDate { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddYears(1));
+    private string NewLineQuantity { get; set; } = "";
+    private string NewLineImportPrice { get; set; } = "";
+
+    private record ReceiptLineForm(int MedicineId, string MedicineName, string BatchNo, DateOnly ExpiryDate, int Quantity, decimal ImportPrice);
+    private List<ReceiptLineForm> ReceiptLines { get; set; } = [];
+
+    private bool IsSubmitting { get; set; }
+    private string? SubmitError { get; set; }
+    private string? SubmitSuccessMessage { get; set; }
+
+    private async Task SearchMedicinesAsync()
+    {
+        if (string.IsNullOrWhiteSpace(MedicineSearchKeyword))
+        {
+            MedicineSearchResults = [];
+            return;
+        }
+
+        IsSearchingMedicines = true;
+        try
+        {
+            MedicineSearchResults = (await Api.GetAsync<List<MedicineSearchDto>>(
+                $"api/medicines/search?keyword={Uri.EscapeDataString(MedicineSearchKeyword)}")).ToList();
+        }
+        catch (ApiException ex)
+        {
+            SubmitError = ex.Message;
+            MedicineSearchResults = [];
+        }
+        finally
+        {
+            IsSearchingMedicines = false;
+        }
+    }
+
+    private void SelectMedicine(MedicineSearchDto medicine)
+    {
+        SelectedMedicine = medicine;
+        NewLineBatchNo = "";
+        NewLineQuantity = "";
+        NewLineImportPrice = "";
+    }
+
+    private void AddLine()
+    {
+        if (SelectedMedicine is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(NewLineBatchNo) || !int.TryParse(NewLineQuantity, out var quantity)
+            || !decimal.TryParse(NewLineImportPrice, out var importPrice) || quantity <= 0)
+        {
+            SubmitError = "Vui lòng nhập đầy đủ số lô, số lượng và giá nhập hợp lệ cho dòng thuốc.";
+            return;
+        }
+
+        SubmitError = null;
+        ReceiptLines.Add(new ReceiptLineForm(SelectedMedicine.Id, SelectedMedicine.Name, NewLineBatchNo, NewLineExpiryDate, quantity, importPrice));
+        SelectedMedicine = null;
+        MedicineSearchResults = [];
+        MedicineSearchKeyword = "";
+    }
+
+    private async Task SubmitReceiptAsync()
+    {
+        if (ReceiptLines.Count == 0)
+            return;
+
+        IsSubmitting = true;
+        SubmitError = null;
+        SubmitSuccessMessage = null;
+        try
+        {
+            var request = new MedicineReceiptRequest(
+                SupplierName,
+                ReferenceCode,
+                ReceiptLines.Select(l => new ReceiptItemRequest(l.MedicineId, l.BatchNo, l.ExpiryDate, l.Quantity, l.ImportPrice)).ToList());
+
+            var updated = await Api.PostAsync<MedicineReceiptRequest, List<MedicineDto>>("api/medicines/receipts", request);
+            SubmitSuccessMessage = $"Đã lưu phiếu nhập thành công. Cập nhật tồn kho cho {updated.Count} biệt dược.";
+            ResetForm();
+        }
+        catch (ApiException ex)
+        {
+            SubmitError = ex.Message;
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        IsCreateFormOpen = false;
+        SupplierName = null;
+        ReferenceCode = null;
+        MedicineSearchKeyword = "";
+        MedicineSearchResults = [];
+        SelectedMedicine = null;
+        ReceiptLines = [];
+    }
+}
