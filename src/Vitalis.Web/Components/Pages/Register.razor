@@ -1,5 +1,8 @@
 @page "/register"
 @layout AuthLayout
+@inject VitalisApiClient Api
+@inject AuthTokenStore TokenStore
+@inject NavigationManager Navigation
 
 <PageTitle>Đăng ký · Vitalis</PageTitle>
 
@@ -86,14 +89,21 @@
             Dành cho bệnh nhân đăng ký khám tại hệ thống phòng khám Vitalis
           </p>
 </div>
-<form class="space-y-4" id="patient-registration-form" onsubmit="event.preventDefault();">
+<form class="space-y-4" id="patient-registration-form" @onsubmit="HandleRegisterAsync" @onsubmit:preventDefault="true">
+@if (ErrorMessage is not null)
+{
+<div class="flex items-start gap-3 p-3.5 rounded-lg bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@ErrorMessage</p>
+</div>
+}
 <!-- Field 1: Họ và tên -->
 <div class="space-y-1.5">
 <label class="block font-label-md text-label-md text-on-surface" for="fullName">
               Họ và tên <span class="text-error">*</span>
 </label>
 <div class="relative">
-<input class="w-full h-10 px-3 py-2 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="fullName" name="fullName" placeholder="Ví dụ: Nguyễn Văn An" type="text" value="Nguyễn Văn An"/>
+<input class="w-full h-10 px-3 py-2 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="fullName" name="fullName" placeholder="Ví dụ: Nguyễn Văn An" type="text" @bind="FullName"/>
 <span class="material-symbols-outlined absolute right-3 top-2.5 text-[20px] text-outline">badge</span>
 </div>
 </div>
@@ -104,45 +114,39 @@
 </label>
 <div class="flex items-center gap-2">
 <div class="relative flex-1">
-<input class="w-full h-10 px-3 py-2 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="phone" name="phone" placeholder="Nhập số điện thoại đăng ký" type="tel" value="0912 345 678"/>
+<input class="w-full h-10 px-3 py-2 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="phone" name="phone" placeholder="Nhập số điện thoại đăng ký" type="tel" @bind="Phone"/>
 <span class="material-symbols-outlined absolute right-3 top-2.5 text-[20px] text-outline">call</span>
 </div>
-<button class="h-10 px-4 shrink-0 bg-surface-container-lowest text-primary font-label-md text-label-md rounded-lg shadow-sm hover:bg-primary-fixed/20 active:bg-primary-fixed/30 transition-colors inline-flex items-center gap-1.5" id="btn-check-profile" type="button">
+<button class="h-10 px-4 shrink-0 bg-surface-container-lowest text-primary font-label-md text-label-md rounded-lg shadow-sm hover:bg-primary-fixed/20 active:bg-primary-fixed/30 transition-colors inline-flex items-center gap-1.5 disabled:opacity-60" disabled="@IsCheckingProfile" type="button" @onclick="CheckProfileAsync">
 <span class="material-symbols-outlined text-[18px]">manage_search</span>
 <span>Kiểm tra hồ sơ</span>
 </button>
 </div>
-<!-- Simulated Validation Error state example -->
-<p class="hidden font-body-sm text-body-sm text-error flex items-center gap-1 mt-1" id="phone-validation-error">
-<span class="material-symbols-outlined text-[16px]">error</span>
-<span>Số điện thoại không hợp lệ. Vui lòng nhập đủ 10 số.</span>
-</p>
 </div>
-<!-- Dynamic Profile Search Feedback States Container -->
-<div class="space-y-2 pt-1" id="profile-status-wrapper">
-<!-- STATE A: Found existing profile state (Default Active Demonstration) -->
-<div class="flex items-start gap-3 p-3.5 rounded-lg bg-[#DCFCE7] text-[#166534] shadow-sm" id="state-found-profile">
+<!-- Dynamic Profile Search Feedback (VC-02: GET /api/patients/lookup?phone=) -->
+@if (LookupResult is not null)
+{
+@if (LookupResult.Found)
+{
+<div class="flex items-start gap-3 p-3.5 rounded-lg bg-[#DCFCE7] text-[#166534] shadow-sm">
 <span class="material-symbols-outlined text-[20px] text-[#166534] mt-0.5 shrink-0" style="font-variation-settings: 'FILL' 1;">check_circle</span>
 <div class="flex-1 text-label-sm font-label-sm leading-relaxed">
 <span class="font-title-md text-title-md block text-[#166534] mb-0.5">Tìm thấy hồ sơ khám trước đây:</span>
-                Bệnh nhân <strong class="font-title-md text-title-md">Nguyễn V*** A</strong>, mã hồ sơ <span class="bg-[#BBF7D0] px-1.5 py-0.5 rounded font-mono font-bold">BN0012</span>. Tài khoản mới sẽ được liên kết với hồ sơ này để đồng bộ lịch sử khám chữa bệnh.
+                Bệnh nhân <strong class="font-title-md text-title-md">@LookupResult.MaskedName</strong>, mã hồ sơ <span class="bg-[#BBF7D0] px-1.5 py-0.5 rounded font-mono font-bold">@LookupResult.PatientCode</span>. Tài khoản mới sẽ được liên kết với hồ sơ này để đồng bộ lịch sử khám chữa bệnh.
               </div>
-<button class="text-[#166534] hover:opacity-75" onclick="toggleProfileBanner()" title="Chuyển chế độ mẫu" type="button">
-<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
-</button>
 </div>
-<!-- STATE B: Not found profile state -->
-<div class="hidden flex items-start gap-3 p-3.5 rounded-lg bg-surface-container text-on-surface-variant shadow-sm" id="state-not-found-profile">
+}
+else
+{
+<div class="flex items-start gap-3 p-3.5 rounded-lg bg-surface-container text-on-surface-variant shadow-sm">
 <span class="material-symbols-outlined text-[20px] text-secondary mt-0.5 shrink-0">info</span>
 <div class="flex-1 text-label-sm font-label-sm leading-relaxed">
 <span class="font-title-md text-title-md block text-on-surface mb-0.5">Hồ sơ bệnh nhân mới:</span>
                 Không tìm thấy hồ sơ liên kết với số điện thoại này. Một mã hồ sơ bệnh án điện tử mới sẽ được tạo tự động ngay sau khi hoàn tất đăng ký.
               </div>
-<button class="text-on-surface-variant hover:opacity-75" onclick="toggleProfileBanner()" title="Chuyển chế độ mẫu" type="button">
-<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
-</button>
 </div>
-</div>
+}
+}
 <!-- Dual Column: Email & Ngày sinh -->
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 <!-- Field 4: Email -->
@@ -151,7 +155,7 @@
                 Email
               </label>
 <div class="relative">
-<input class="w-full h-10 px-3 py-2 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="email" name="email" placeholder="name@@example.com" type="email"/>
+<input class="w-full h-10 px-3 py-2 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="email" name="email" placeholder="name@@example.com" type="email" @bind="Email"/>
 <span class="material-symbols-outlined absolute right-3 top-2.5 text-[20px] text-outline">mail</span>
 </div>
 </div>
@@ -161,7 +165,7 @@
                 Ngày sinh
               </label>
 <div class="relative">
-<input class="w-full h-10 px-3 py-2 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="dob" name="dob" placeholder="DD/MM/YYYY" type="text" value="15/08/1988"/>
+<input class="w-full h-10 px-3 py-2 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="dob" name="dob" type="date" @bind="DateOfBirth"/>
 <span class="material-symbols-outlined absolute right-3 top-2.5 text-[20px] text-outline">calendar_month</span>
 </div>
 </div>
@@ -174,7 +178,7 @@
                 Mật khẩu <span class="text-error">*</span>
 </label>
 <div class="relative">
-<input class="w-full h-10 px-3 py-2 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="password" name="password" placeholder="Tối thiểu 8 ký tự" type="password" value="MatKhau@@123"/>
+<input class="w-full h-10 px-3 py-2 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="password" name="password" placeholder="Tối thiểu 8 ký tự" type="password" @bind="Password"/>
 <button class="absolute right-3 top-2.5 text-outline hover:text-on-surface" onclick="togglePasswordVisibility('password', this)" type="button">
 <span class="material-symbols-outlined text-[20px]">visibility</span>
 </button>
@@ -187,22 +191,24 @@
                 Nhập lại mật khẩu <span class="text-error">*</span>
 </label>
 <div class="relative">
-<input class="w-full h-10 px-3 py-2 bg-error-container/40 text-on-error-container font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-error shadow-sm" id="confirmPassword" name="confirmPassword" placeholder="Xác nhận mật khẩu" type="password" value="MatKhau@@456"/>
+<input class="w-full h-10 px-3 py-2 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="confirmPassword" name="confirmPassword" placeholder="Xác nhận mật khẩu" type="password" @bind="ConfirmPassword"/>
 <button class="absolute right-3 top-2.5 text-outline hover:text-on-surface" onclick="togglePasswordVisibility('confirmPassword', this)" type="button">
 <span class="material-symbols-outlined text-[20px]">visibility</span>
 </button>
 </div>
-<!-- Validation error example -->
+@if (Password.Length > 0 && ConfirmPassword.Length > 0 && Password != ConfirmPassword)
+{
 <p class="font-body-sm text-body-sm text-error flex items-center gap-1 mt-1">
 <span class="material-symbols-outlined text-[16px]">error</span>
 <span>Mật khẩu nhập lại không khớp</span>
 </p>
+}
 </div>
 </div>
 <!-- Field 9: Terms agreement checkbox -->
 <div class="pt-2">
 <label class="flex items-start gap-3 cursor-pointer group">
-<input checked="" class="mt-1 w-4 h-4 text-primary rounded bg-surface-container-lowest focus:ring-primary accent-primary cursor-pointer shrink-0" id="terms" type="checkbox"/>
+<input class="mt-1 w-4 h-4 text-primary rounded bg-surface-container-lowest focus:ring-primary accent-primary cursor-pointer shrink-0" id="terms" type="checkbox" @bind="AgreedToTerms"/>
 <span class="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface select-none">
                 Tôi đồng ý với <a class="text-primary font-label-md text-label-md hover:underline" href="#">Điều khoản sử dụng</a> và <a class="text-primary font-label-md text-label-md hover:underline" href="#">Chính sách bảo mật dữ liệu y tế</a> của hệ thống Vitalis.
               </span>
@@ -210,16 +216,16 @@
 </div>
 <!-- Field 10: Primary Registration Action Button -->
 <div class="pt-2">
-<button class="w-full h-11 px-4 bg-primary text-on-primary font-label-md text-label-md rounded-lg shadow-md hover:bg-primary-container active:bg-primary transition-all flex items-center justify-center gap-2 group" type="submit">
-<span>Đăng ký tài khoản</span>
+<button class="w-full h-11 px-4 bg-primary text-on-primary font-label-md text-label-md rounded-lg shadow-md hover:bg-primary-container active:bg-primary transition-all flex items-center justify-center gap-2 group disabled:opacity-60" disabled="@IsBusy" type="submit">
+<span>@(IsBusy ? "Đang đăng ký..." : "Đăng ký tài khoản")</span>
 <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
 </button>
 </div>
 <!-- Field 11: Footer login redirection -->
 <div class="text-center pt-2">
 <p class="font-body-sm text-body-sm text-on-surface-variant">
-              Đã có tài khoản khám bệnh? 
-              <a class="font-title-md text-title-md text-primary hover:underline ml-1" href="#">Đăng nhập ngay</a>
+              Đã có tài khoản khám bệnh?
+              <a class="font-title-md text-title-md text-primary hover:underline ml-1" href="/login">Đăng nhập ngay</a>
 </p>
 </div>
 </form>
@@ -229,3 +235,82 @@
 
 </div>
 <script src="js/pages/Register.js"></script>
+
+@code {
+    private string FullName { get; set; } = "";
+    private string Phone { get; set; } = "";
+    private string Email { get; set; } = "";
+    private DateOnly? DateOfBirth { get; set; }
+    private string Password { get; set; } = "";
+    private string ConfirmPassword { get; set; } = "";
+    private bool AgreedToTerms { get; set; }
+
+    private bool IsCheckingProfile { get; set; }
+    private Vitalis.Application.DTOs.Patients.PatientLookupResult? LookupResult { get; set; }
+
+    private bool IsBusy { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    // VC-02: pre-login lookup so the patient can see their old walk-in profile
+    // will be linked, before they even submit the form.
+    private async Task CheckProfileAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Phone))
+            return;
+
+        IsCheckingProfile = true;
+        try
+        {
+            LookupResult = await Api.GetAsync<Vitalis.Application.DTOs.Patients.PatientLookupResult>(
+                $"api/patients/lookup?phone={Uri.EscapeDataString(Phone)}");
+        }
+        catch (ApiException)
+        {
+            LookupResult = null;
+        }
+        finally
+        {
+            IsCheckingProfile = false;
+        }
+    }
+
+    private async Task HandleRegisterAsync()
+    {
+        ErrorMessage = null;
+
+        if (!AgreedToTerms)
+        {
+            ErrorMessage = "Bạn cần đồng ý với Điều khoản sử dụng để tiếp tục.";
+            return;
+        }
+        if (Password != ConfirmPassword)
+        {
+            ErrorMessage = "Mật khẩu nhập lại không khớp.";
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var request = new RegisterPatientRequest
+            {
+                FullName = FullName,
+                Phone = Phone,
+                Email = string.IsNullOrWhiteSpace(Email) ? null : Email,
+                DateOfBirth = DateOfBirth,
+                Password = Password,
+            };
+            var response = await Api.RegisterAsync(request);
+            TokenStore.SetSession(response.AccessToken, response.RefreshToken, response.User);
+            Navigation.NavigateTo("/my-appointments", forceLoad: true);
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

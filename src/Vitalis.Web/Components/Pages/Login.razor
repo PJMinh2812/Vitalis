@@ -1,5 +1,8 @@
 @page "/login"
 @layout AuthLayout
+@inject VitalisApiClient Api
+@inject AuthTokenStore TokenStore
+@inject NavigationManager Navigation
 
 <PageTitle>Đăng nhập · Vitalis</PageTitle>
 
@@ -92,23 +95,23 @@
 <span class="font-label-xs text-label-xs text-primary font-medium">Nhấp để điền nhanh</span>
 </div>
 <div class="flex flex-wrap gap-2">
-<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-xs text-label-xs transition-colors shadow-sm flex items-center gap-1.5" onclick="setRole('receptionist')" type="button">
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-xs text-label-xs transition-colors shadow-sm flex items-center gap-1.5" @onclick='() => SetRole("receptionist")' type="button">
 <span class="material-symbols-outlined text-sm text-primary">badge</span>
 <span>Lễ tân</span>
 </button>
-<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-xs text-label-xs transition-colors shadow-sm flex items-center gap-1.5" onclick="setRole('doctor')" type="button">
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-xs text-label-xs transition-colors shadow-sm flex items-center gap-1.5" @onclick='() => SetRole("doctor")' type="button">
 <span class="material-symbols-outlined text-sm text-primary">stethoscope</span>
 <span>Bác sĩ</span>
 </button>
-<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-xs text-label-xs transition-colors shadow-sm flex items-center gap-1.5" onclick="setRole('pharmacist')" type="button">
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-xs text-label-xs transition-colors shadow-sm flex items-center gap-1.5" @onclick='() => SetRole("pharmacist")' type="button">
 <span class="material-symbols-outlined text-sm text-primary">medication</span>
 <span>Dược sĩ</span>
 </button>
-<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-xs text-label-xs transition-colors shadow-sm flex items-center gap-1.5" onclick="setRole('admin')" type="button">
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-xs text-label-xs transition-colors shadow-sm flex items-center gap-1.5" @onclick='() => SetRole("admin")' type="button">
 <span class="material-symbols-outlined text-sm text-primary">admin_panel_settings</span>
 <span>Quản trị</span>
 </button>
-<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-xs text-label-xs transition-colors shadow-sm flex items-center gap-1.5" onclick="setRole('patient')" type="button">
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-xs text-label-xs transition-colors shadow-sm flex items-center gap-1.5" @onclick='() => SetRole("patient")' type="button">
 <span class="material-symbols-outlined text-sm text-secondary">person</span>
 <span>Bệnh nhân</span>
 </button>
@@ -116,37 +119,19 @@
 </div>
 <!-- Main Login Container (400px centered card) -->
 <div class="w-full max-w-[420px] mx-auto my-auto flex flex-col gap-5">
-<!-- Interactive Error Simulator Toggles -->
-<div class="flex items-center justify-end gap-2 text-outline">
-<span class="font-label-xs text-label-xs">Mô phỏng lỗi:</span>
-<button class="text-error font-label-xs text-label-xs hover:underline" onclick="toggleAlert('error-pass')" type="button">Sai pass</button>
-<span>•</span>
-<button class="text-error font-label-xs text-label-xs hover:underline" onclick="toggleAlert('error-locked')" type="button">Khoá tài khoản</button>
-<span>•</span>
-<button class="text-primary font-label-xs text-label-xs hover:underline" onclick="toggleAlert('clear')" type="button">Xoá cảnh báo</button>
-</div>
-<!-- Error State 1: Invalid Password Alert -->
-<div class="hidden flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm transition-all duration-200" id="alert-pass">
+@if (ErrorMessage is not null)
+{
+<div class="flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm transition-all duration-200">
 <span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">error</span>
 <div class="flex-1 text-left">
 <h5 class="font-label-md text-label-md font-bold">Đăng nhập không thành công</h5>
-<p class="font-body-sm text-body-sm text-on-error-container/90">Tên đăng nhập hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.</p>
+<p class="font-body-sm text-body-sm text-on-error-container/90">@ErrorMessage</p>
 </div>
-<button class="text-on-error-container hover:opacity-75" onclick="this.parentElement.classList.add('hidden')" type="button">
+<button class="text-on-error-container hover:opacity-75" @onclick="() => ErrorMessage = null" type="button">
 <span class="material-symbols-outlined text-base">close</span>
 </button>
 </div>
-<!-- Error State 2: Account Locked Alert -->
-<div class="hidden flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm transition-all duration-200" id="alert-locked">
-<span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">lock_clock</span>
-<div class="flex-1 text-left">
-<h5 class="font-label-md text-label-md font-bold">Tài khoản tạm khoá</h5>
-<p class="font-body-sm text-body-sm text-on-error-container/90">Tài khoản này đã bị tạm khoá do nhập sai quá 5 lần. Vui lòng liên hệ Quản trị viên phòng khám.</p>
-</div>
-<button class="text-on-error-container hover:opacity-75" onclick="this.parentElement.classList.add('hidden')" type="button">
-<span class="material-symbols-outlined text-base">close</span>
-</button>
-</div>
+}
 <!-- The 400px Form Card -->
 <div class="bg-surface-container-lowest rounded-xl p-8 shadow-md">
 <div class="flex flex-col items-center text-center mb-6">
@@ -156,7 +141,7 @@
 <h2 class="font-headline-md text-headline-md text-on-surface">Đăng nhập hệ thống</h2>
 <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Truy cập phân hệ làm việc Vitalis Clinic</p>
 </div>
-<form class="flex flex-col gap-4" onsubmit="handleLogin(event)">
+<form class="flex flex-col gap-4" @onsubmit="HandleLoginAsync" @onsubmit:preventDefault="true">
 <!-- Account / Email Input -->
 <div class="flex flex-col gap-1.5 text-left">
 <label class="font-label-md text-label-md text-on-surface flex items-center gap-1" for="username">
@@ -164,7 +149,7 @@
 </label>
 <div class="relative flex items-center">
 <span class="material-symbols-outlined absolute left-3 text-outline text-lg pointer-events-none">person</span>
-<input class="w-full h-11 pl-10 pr-3 rounded-lg bg-surface-container-lowest text-on-surface placeholder:text-outline font-body-md text-body-md focus:bg-surface-container-low transition-all duration-150 outline-none shadow-sm" id="username" placeholder="Nhập email hoặc tên tài khoản" required="" type="text" value="bs.minhtri@@vitalis.vn"/>
+<input class="w-full h-11 pl-10 pr-3 rounded-lg bg-surface-container-lowest text-on-surface placeholder:text-outline font-body-md text-body-md focus:bg-surface-container-low transition-all duration-150 outline-none shadow-sm" id="username" placeholder="Nhập email hoặc tên tài khoản" required="" type="text" @bind="Username"/>
 </div>
 </div>
 <!-- Password Input with Reveal Toggle -->
@@ -174,7 +159,7 @@
 </label>
 <div class="relative flex items-center">
 <span class="material-symbols-outlined absolute left-3 text-outline text-lg pointer-events-none">lock</span>
-<input class="w-full h-11 pl-10 pr-10 rounded-lg bg-surface-container-lowest text-on-surface placeholder:text-outline font-body-md text-body-md focus:bg-surface-container-low transition-all duration-150 outline-none shadow-sm" id="password" placeholder="••••••••" required="" type="password" value="DoctorPass2025#"/>
+<input class="w-full h-11 pl-10 pr-10 rounded-lg bg-surface-container-lowest text-on-surface placeholder:text-outline font-body-md text-body-md focus:bg-surface-container-low transition-all duration-150 outline-none shadow-sm" id="password" placeholder="••••••••" required="" type="password" @bind="Password"/>
 <button aria-label="Hiện hoặc ẩn mật khẩu" class="absolute right-3 text-outline hover:text-on-surface transition-colors focus:outline-none" id="togglePasswordBtn" onclick="togglePasswordVisibility()" type="button">
 <span class="material-symbols-outlined text-xl" id="eyeIcon">visibility</span>
 </button>
@@ -191,16 +176,24 @@
               </button>
 </div>
 <!-- Submit Button -->
-<button class="w-full h-11 mt-2 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-title-md text-title-md font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-[0.99]" id="submitBtn" type="submit">
+<button class="w-full h-11 mt-2 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-title-md text-title-md font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-60" disabled="@IsBusy" type="submit">
+@if (IsBusy)
+{
+<span class="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+<span>Đang xác thực...</span>
+}
+else
+{
 <span>Đăng nhập</span>
 <span class="material-symbols-outlined text-lg">arrow_forward</span>
+}
 </button>
 </form>
 <!-- Register Link -->
 <div class="mt-6 pt-5 bg-surface-container-low/60 -mx-8 -mb-8 p-4 text-center rounded-b-xl">
 <p class="font-body-sm text-body-sm text-on-surface-variant">
               Chưa có tài khoản lâm sàng?
-              <a class="font-label-sm text-label-sm text-primary font-semibold hover:underline ml-1" href="#register">Đăng ký ngay</a>
+              <a class="font-label-sm text-label-sm text-primary font-semibold hover:underline ml-1" href="/register">Đăng ký ngay</a>
 </p>
 </div>
 </div>
@@ -245,26 +238,29 @@
 <p class="font-body-md text-body-md text-on-surface-variant text-left leading-relaxed">
         Nhập địa chỉ email đăng ký trên hệ thống Vitalis. Chúng tôi sẽ gửi hướng dẫn khôi phục tài khoản trong ít phút.
       </p>
-<form class="flex flex-col gap-4 mt-1" onsubmit="handleSendReset(event)">
+<form class="flex flex-col gap-4 mt-1" @onsubmit="HandleForgotPasswordAsync" @onsubmit:preventDefault="true">
 <div class="flex flex-col gap-1.5 text-left">
 <label class="font-label-md text-label-md text-on-surface" for="reset-email">
             Email xác thực <span class="text-error font-bold">*</span>
 </label>
 <div class="relative flex items-center">
 <span class="material-symbols-outlined absolute left-3 text-outline text-lg pointer-events-none">mail</span>
-<input class="w-full h-11 pl-10 pr-3 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline font-body-md text-body-md focus:bg-surface-container-lowest transition-all duration-150 outline-none shadow-sm" id="reset-email" placeholder="ten.nguoidung@@vitalis.vn" required="" type="email"/>
+<input class="w-full h-11 pl-10 pr-3 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline font-body-md text-body-md focus:bg-surface-container-lowest transition-all duration-150 outline-none shadow-sm" id="reset-email" placeholder="ten.nguoidung@@vitalis.vn" required="" type="email" @bind="ResetEmail"/>
 </div>
 </div>
-<div class="hidden p-3 rounded-lg bg-surface-container text-primary font-body-sm text-body-sm flex items-center gap-2" id="reset-success-msg">
+@if (ResetLinkSent)
+{
+<div class="p-3 rounded-lg bg-surface-container text-primary font-body-sm text-body-sm flex items-center gap-2">
 <span class="material-symbols-outlined text-base">check_circle</span>
 <span>Liên kết đã được gửi! Vui lòng kiểm tra hòm thư đến hoặc thư rác.</span>
 </div>
+}
 <div class="flex items-center justify-end gap-3 mt-3">
 <button class="px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-md text-title-md transition-colors" onclick="closeForgotPasswordModal()" type="button">
             Huỷ bỏ
           </button>
-<button class="px-5 py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-title-md text-title-md font-semibold transition-colors shadow-sm" id="resetSubmitBtn" type="submit">
-            Gửi liên kết đặt lại
+<button class="px-5 py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-title-md text-title-md font-semibold transition-colors shadow-sm" disabled="@IsResetBusy" type="submit">
+            @(ResetLinkSent ? "Đã gửi" : "Gửi liên kết đặt lại")
           </button>
 </div>
 </form>
@@ -273,3 +269,74 @@
 </div>
 
 <script src="js/pages/Login.js"></script>
+
+@code {
+    private string Username { get; set; } = "";
+    private string Password { get; set; } = "";
+    private string? ErrorMessage { get; set; }
+    private bool IsBusy { get; set; }
+
+    private string ResetEmail { get; set; } = "";
+    private bool IsResetBusy { get; set; }
+    private bool ResetLinkSent { get; set; }
+
+    // Quick-fill demo accounts (VC-01) — matches DbSeeder's seeded accounts per role.
+    private void SetRole(string role)
+    {
+        (Username, Password) = role switch
+        {
+            "admin" => ("admin", "Admin@123"),
+            "doctor" => ("doctor", "Doctor@123"),
+            "receptionist" => ("reception", "Reception@123"),
+            "pharmacist" => ("pharmacist", "Pharmacist@123"),
+            "patient" => ("patient", "Patient@123"),
+            _ => (Username, Password),
+        };
+        ErrorMessage = null;
+    }
+
+    private async Task HandleLoginAsync()
+    {
+        ErrorMessage = null;
+        IsBusy = true;
+        try
+        {
+            var response = await Api.LoginAsync(new LoginRequest { Username = Username, Password = Password });
+            TokenStore.SetSession(response.AccessToken, response.RefreshToken, response.User);
+            Navigation.NavigateTo(LandingPageFor(response.User.Roles), forceLoad: true);
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task HandleForgotPasswordAsync()
+    {
+        IsResetBusy = true;
+        try
+        {
+            await Api.ForgotPasswordAsync(new ForgotPasswordRequest { Email = ResetEmail });
+            ResetLinkSent = true;
+        }
+        finally
+        {
+            IsResetBusy = false;
+        }
+    }
+
+    // forceLoad: true so the freshly-authenticated circuit's AuthenticationState
+    // (and every layout's role-based nav) rebuilds cleanly on the target page.
+    private static string LandingPageFor(IReadOnlyList<string> roles) => roles switch
+    {
+        _ when roles.Contains("Admin") => "/admin/reports",
+        _ when roles.Contains("Doctor") => "/doctor/queue",
+        _ when roles.Contains("Receptionist") => "/reception",
+        _ when roles.Contains("Pharmacist") => "/pharmacy/inventory",
+        _ => "/my-appointments",
+    };
+}
