@@ -11,7 +11,7 @@ COPY src/Vitalis.Domain/ src/Vitalis.Domain/
 COPY src/Vitalis.Application/ src/Vitalis.Application/
 COPY src/Vitalis.Infrastructure/ src/Vitalis.Infrastructure/
 COPY src/Vitalis.WebApi/ src/Vitalis.WebApi/
-RUN dotnet publish src/Vitalis.WebApi/Vitalis.WebApi.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish src/Vitalis.WebApi/Vitalis.WebApi.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app

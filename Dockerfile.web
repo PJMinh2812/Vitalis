@@ -9,7 +9,12 @@ RUN dotnet restore src/Vitalis.Web/Vitalis.Web.csproj
 COPY src/Vitalis.Domain/ src/Vitalis.Domain/
 COPY src/Vitalis.Application/ src/Vitalis.Application/
 COPY src/Vitalis.Web/ src/Vitalis.Web/
-RUN dotnet publish src/Vitalis.Web/Vitalis.Web.csproj -c Release -o /app/publish --no-restore
+# No --no-restore here: with only the .csproj restored earlier (before wwwroot/
+# Razor content existed), the static web assets manifest is incomplete —
+# publish must restore again now that the full project is present, or
+# Blazor's own interactive-server JS (wwwroot/_framework/blazor.web.js) never
+# gets generated and every @onclick/@bind in the app silently does nothing.
+RUN dotnet publish src/Vitalis.Web/Vitalis.Web.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
