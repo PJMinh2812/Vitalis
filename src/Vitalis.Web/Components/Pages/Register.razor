@@ -302,7 +302,7 @@ else
             };
             var response = await Api.RegisterAsync(request);
             TokenStore.SetSession(response.AccessToken, response.RefreshToken, response.User);
-            Navigation.NavigateTo("/my-appointments", forceLoad: true);
+            Navigation.NavigateTo("/my-appointments");
         }
         catch (ApiException ex)
         {

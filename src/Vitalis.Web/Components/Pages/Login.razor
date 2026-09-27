@@ -303,7 +303,7 @@ else
         {
             var response = await Api.LoginAsync(new LoginRequest { Username = Username, Password = Password });
             TokenStore.SetSession(response.AccessToken, response.RefreshToken, response.User);
-            Navigation.NavigateTo(LandingPageFor(response.User.Roles), forceLoad: true);
+            Navigation.NavigateTo(LandingPageFor(response.User.Roles));
         }
         catch (ApiException ex)
         {
@@ -329,8 +329,6 @@ else
         }
     }
 
-    // forceLoad: true so the freshly-authenticated circuit's AuthenticationState
-    // (and every layout's role-based nav) rebuilds cleanly on the target page.
     private static string LandingPageFor(IReadOnlyList<string> roles) => roles switch
     {
         _ when roles.Contains("Admin") => "/admin/reports",
