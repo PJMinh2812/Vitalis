@@ -1,0 +1,850 @@
+@page "/reception/queue"
+@layout ReceptionLayout
+
+<PageTitle>Hàng chờ &amp; cấp số · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full">
+<!-- Interactive Toast Notification Container -->
+<div class="fixed top-20 right-8 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl bg-on-background text-inverse-on-surface shadow-2xl transition-all duration-300 transform translate-y-[-100%] opacity-0 pointer-events-none" id="toastNotification">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-primary text-[18px]">volume_up</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold" id="toastTitle">Đang gọi loa phát thanh...</span>
+<span class="font-body-sm text-body-sm text-surface-container-high" id="toastDesc">Bệnh nhân Nguyễn Văn An (Số #05) tới Phòng 203</span>
+</div>
+</div>
+<!-- Re-order / Move to end Confirmation Modal -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-on-background/40 backdrop-blur-sm hidden transition-opacity" id="modalConfirmMove">
+<div class="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-2xl p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">swap_vert</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface">Chuyển bệnh nhân về cuối hàng chờ?</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Bệnh nhân vắng mặt hoặc chưa kịp chuẩn bị</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant bg-surface-container-low p-3 rounded-lg leading-relaxed">
+        Bệnh nhân <strong class="text-on-surface" id="modalPatientName">Nguyễn Văn An (#05)</strong> sẽ được cập nhật số thứ tự mới ở cuối danh sách tiếp nhận của phòng khám này.
+      </p>
+<div class="flex items-center justify-end gap-3 pt-2">
+<button class="px-4 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high transition-colors" onclick="closeModalMove()">
+          Hủy bỏ
+        </button>
+<button class="px-4 py-2 rounded-lg font-label-md text-label-md bg-primary-container text-on-primary hover:bg-primary transition-colors flex items-center gap-1.5 shadow-sm" onclick="confirmMoveEndAction()">
+<span class="material-symbols-outlined text-[16px]">done</span>
+          Xác nhận chuyển
+        </button>
+</div>
+</div>
+</div>
+<!-- Main Content Wrapper -->
+<div class="px-space-xl py-space-lg flex flex-col gap-space-xl max-w-[1600px] mx-auto w-full">
+<!-- Top Action Bar & Page Header -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-primary px-2 py-0.5 rounded bg-primary/10">Điều phối luồng khám</span>
+<span class="text-outline-variant">•</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Hệ thống phân luồng tự động v3.2</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Hàng chờ phòng khám &amp; Điều phối cấp số</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Theo dõi thời gian thực tiến độ khám tại các phòng ban và điều phối luồng bệnh nhân</p>
+</div>
+<!-- Control Toolbar -->
+<div class="flex flex-wrap items-center gap-3">
+<!-- Auto refresh badge -->
+<div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-lowest shadow-sm">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary-container"></span>
+</span>
+<span class="font-label-sm text-label-sm text-on-surface">Tự động cập nhật mỗi <span class="font-bold text-primary">10 giây</span></span>
+<span class="text-outline-variant">•</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Lần cuối: <span class="font-semibold text-on-surface" id="lastUpdatedTimer">08:45:12</span></span>
+<button class="ml-1 p-1 hover:bg-surface-container-high rounded text-on-surface-variant hover:text-primary transition-colors flex items-center" onclick="triggerImmediateRefresh()" title="Làm mới ngay">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+</button>
+</div>
+<!-- TV Mode Fullscreen Button -->
+<button class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary-container text-on-secondary-container hover:bg-secondary font-label-md text-label-md shadow-sm transition-all group" onclick="scrollToTVPreview()">
+<span class="material-symbols-outlined text-[18px] group-hover:scale-110 transition-transform">tv</span>
+<span>Mở chế độ TV / Sảnh chờ</span>
+</button>
+<!-- Quick Issue Number Button -->
+<button class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-label-md text-label-md shadow-sm transition-all group" onclick="quickIssueTicket()">
+<span class="material-symbols-outlined text-[18px] group-hover:rotate-90 transition-transform">confirmation_number</span>
+<span>+ Cấp số vãng lai nhanh</span>
+</button>
+</div>
+</div>
+<!-- KHỐI 1: CÁC THẺ PHÒNG KHÁM ĐANG HOẠT ĐỘNG (Active Clinical Workstations) -->
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">meeting_room</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Phòng khám đang hoạt động</h2>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-xs text-label-xs font-bold">3 phòng mở</span>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant font-label-xs text-label-xs">
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span> Đang có bệnh nhân</span>
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-surface-container-highest"></span> Sẵn sàng đón tiếp</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
+<!-- CARD 1: Phòng 203 - Nội Tim mạch -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
+<!-- Room Header -->
+<div class="p-space-md bg-surface-container-low flex items-start justify-between">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-primary-container text-on-primary font-label-xs text-label-xs font-bold uppercase tracking-wider">Phòng 203</span>
+<span class="font-title-md text-title-md text-on-surface font-bold">Nội Tim mạch</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">stethoscope</span>
+<span>BS.CKII Nguyễn Văn Linh</span>
+</div>
+</div>
+<span class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-secondary font-label-xs text-label-xs font-bold">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+              Tầng 2
+            </span>
+</div>
+<div class="p-space-md flex flex-col gap-space-md flex-1 justify-between">
+<!-- Split: Current & Next -->
+<div class="grid grid-cols-2 gap-3">
+<!-- Current Patient (ĐANG KHÁM) -->
+<div class="p-3.5 rounded-xl bg-primary-container text-on-primary flex flex-col justify-between shadow-sm relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 text-on-primary/10 select-none pointer-events-none">
+<span class="material-symbols-outlined text-[80px]">vital_signs</span>
+</div>
+<div class="flex items-center justify-between mb-1 relative z-10">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-on-primary/90 flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary-fixed animate-ping"></span>
+                    Đang khám
+                  </span>
+<span class="font-label-xs text-label-xs bg-on-primary/20 px-1.5 py-0.5 rounded">14 phút</span>
+</div>
+<div class="my-1 relative z-10">
+<span class="font-display text-display font-black tracking-tight leading-none">#04</span>
+</div>
+<div class="flex flex-col relative z-10">
+<span class="font-title-md text-title-md font-bold truncate">Phạm Quốc Bảo</span>
+<span class="font-label-xs text-label-xs text-on-primary/80">Nam · 58 tuổi</span>
+</div>
+</div>
+<!-- Next Patient (TIẾP THEO) -->
+<div class="p-3.5 rounded-xl bg-surface-container-low flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    Tiếp theo
+                  </span>
+<span class="font-label-xs text-label-xs text-primary font-semibold">Chuẩn bị</span>
+</div>
+<div class="my-1">
+<span class="font-display text-display font-black tracking-tight text-on-surface leading-none">#05</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md font-bold text-on-surface truncate">Nguyễn Văn An</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Nam · 42 tuổi</span>
+</div>
+</div>
+</div>
+<!-- Workload status footer -->
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">groups</span>
+<span>Đang chờ: <strong class="text-on-surface font-semibold">4 người</strong></span>
+<span class="text-outline-variant">•</span>
+<span>Chờ TB <strong class="text-on-surface font-semibold">15 ph</strong></span>
+</div>
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-high hover:bg-primary-container hover:text-on-primary text-on-surface font-label-xs text-label-xs font-bold transition-colors flex items-center gap-1" onclick="callAudible('05', 'Nguyễn Văn An', '203')">
+<span class="material-symbols-outlined text-[15px]">campaign</span>
+                Nhắc loa
+              </button>
+</div>
+</div>
+</div>
+<!-- CARD 2: Phòng 105 - Tai Mũi Họng -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
+<!-- Room Header -->
+<div class="p-space-md bg-surface-container-low flex items-start justify-between">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-primary-container text-on-primary font-label-xs text-label-xs font-bold uppercase tracking-wider">Phòng 105</span>
+<span class="font-title-md text-title-md text-on-surface font-bold">Tai Mũi Họng</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">stethoscope</span>
+<span>ThS.BS Trần Mai Phương</span>
+</div>
+</div>
+<span class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-secondary font-label-xs text-label-xs font-bold">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+              Tầng 1
+            </span>
+</div>
+<div class="p-space-md flex flex-col gap-space-md flex-1 justify-between">
+<!-- Split: Current & Next -->
+<div class="grid grid-cols-2 gap-3">
+<!-- Current Patient (ĐANG KHÁM) -->
+<div class="p-3.5 rounded-xl bg-primary-container text-on-primary flex flex-col justify-between shadow-sm relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 text-on-primary/10 select-none pointer-events-none">
+<span class="material-symbols-outlined text-[80px]">hearing</span>
+</div>
+<div class="flex items-center justify-between mb-1 relative z-10">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-on-primary/90 flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary-fixed animate-ping"></span>
+                    Đang khám
+                  </span>
+<span class="font-label-xs text-label-xs bg-on-primary/20 px-1.5 py-0.5 rounded">08 phút</span>
+</div>
+<div class="my-1 relative z-10">
+<span class="font-display text-display font-black tracking-tight leading-none">#02</span>
+</div>
+<div class="flex flex-col relative z-10">
+<span class="font-title-md text-title-md font-bold truncate">Trần Mạnh Dũng</span>
+<span class="font-label-xs text-label-xs text-on-primary/80">Nam · 50 tuổi</span>
+</div>
+</div>
+<!-- Next Patient (TIẾP THEO) -->
+<div class="p-3.5 rounded-xl bg-surface-container-low flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    Tiếp theo
+                  </span>
+<span class="font-label-xs text-label-xs text-primary font-semibold">Chuẩn bị</span>
+</div>
+<div class="my-1">
+<span class="font-display text-display font-black tracking-tight text-on-surface leading-none">#03</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md font-bold text-on-surface truncate">Lê Thị Lan Hương</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Nữ · 34 tuổi</span>
+</div>
+</div>
+</div>
+<!-- Workload status footer -->
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">groups</span>
+<span>Đang chờ: <strong class="text-on-surface font-semibold">5 người</strong></span>
+<span class="text-outline-variant">•</span>
+<span>Chờ TB <strong class="text-on-surface font-semibold">20 ph</strong></span>
+</div>
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-high hover:bg-primary-container hover:text-on-primary text-on-surface font-label-xs text-label-xs font-bold transition-colors flex items-center gap-1" onclick="callAudible('03', 'Lê Thị Lan Hương', '105')">
+<span class="material-symbols-outlined text-[15px]">campaign</span>
+                Nhắc loa
+              </button>
+</div>
+</div>
+</div>
+<!-- CARD 3: Phòng 102 - Nội Tổng quát -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
+<!-- Room Header -->
+<div class="p-space-md bg-surface-container-low flex items-start justify-between">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-primary-container text-on-primary font-label-xs text-label-xs font-bold uppercase tracking-wider">Phòng 102</span>
+<span class="font-title-md text-title-md text-on-surface font-bold">Nội Tổng quát</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">stethoscope</span>
+<span>BS. Lê Hoàng Long</span>
+</div>
+</div>
+<span class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-secondary font-label-xs text-label-xs font-bold">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+              Tầng 1
+            </span>
+</div>
+<div class="p-space-md flex flex-col gap-space-md flex-1 justify-between">
+<!-- Split: Current & Next -->
+<div class="grid grid-cols-2 gap-3">
+<!-- Current Patient (ĐANG KHÁM) -->
+<div class="p-3.5 rounded-xl bg-primary-container text-on-primary flex flex-col justify-between shadow-sm relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 text-on-primary/10 select-none pointer-events-none">
+<span class="material-symbols-outlined text-[80px]">medical_services</span>
+</div>
+<div class="flex items-center justify-between mb-1 relative z-10">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-on-primary/90 flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary-fixed animate-ping"></span>
+                    Đang khám
+                  </span>
+<span class="font-label-xs text-label-xs bg-on-primary/20 px-1.5 py-0.5 rounded">22 phút</span>
+</div>
+<div class="my-1 relative z-10">
+<span class="font-display text-display font-black tracking-tight leading-none">#01</span>
+</div>
+<div class="flex flex-col relative z-10">
+<span class="font-title-md text-title-md font-bold truncate">Lê Thu Trang</span>
+<span class="font-label-xs text-label-xs text-on-primary/80">Nữ · 29 tuổi</span>
+</div>
+</div>
+<!-- Next Patient (TIẾP THEO) -->
+<div class="p-3.5 rounded-xl bg-surface-container-low flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    Tiếp theo
+                  </span>
+<span class="font-label-xs text-label-xs text-primary font-semibold">Chuẩn bị</span>
+</div>
+<div class="my-1">
+<span class="font-display text-display font-black tracking-tight text-on-surface leading-none">#06</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md font-bold text-on-surface truncate">Hoàng Thảo My</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Nữ · 24 tuổi</span>
+</div>
+</div>
+</div>
+<!-- Workload status footer -->
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">groups</span>
+<span>Đang chờ: <strong class="text-on-surface font-semibold">2 người</strong></span>
+<span class="text-outline-variant">•</span>
+<span>Chờ TB <strong class="text-on-surface font-semibold">10 ph</strong></span>
+</div>
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-high hover:bg-primary-container hover:text-on-primary text-on-surface font-label-xs text-label-xs font-bold transition-colors flex items-center gap-1" onclick="callAudible('06', 'Hoàng Thảo My', '102')">
+<span class="material-symbols-outlined text-[15px]">campaign</span>
+                Nhắc loa
+              </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- KHỐI 2: BẢNG ĐIỀU PHỐI DANH SÁCH CHỜ KHÁM TẠI SẢNH (Queue Management Table) -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<!-- Table Controls Toolbar -->
+<div class="p-space-md bg-surface-container-lowest flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-center gap-3">
+<div class="relative w-80">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">search</span>
+<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-primary shadow-inner" id="queueSearchInput" onkeyup="filterQueueTable()" placeholder="Lọc theo tên, số phiếu #, mã BN..." type="text"/>
+</div>
+<!-- Filter chips -->
+<div class="hidden xl:flex items-center gap-1.5">
+<button class="px-3 py-1.5 rounded-full bg-primary-container text-on-primary font-label-xs text-label-xs font-bold shadow-sm">Tất cả (11)</button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface font-label-xs text-label-xs font-medium transition-colors">Phòng 203 (4)</button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface font-label-xs text-label-xs font-medium transition-colors">Phòng 105 (5)</button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface font-label-xs text-label-xs font-medium transition-colors">Phòng 102 (2)</button>
+<button class="px-3 py-1.5 rounded-full bg-error-container text-on-error-container font-label-xs text-label-xs font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">warning</span> Chờ lâu &gt;30p (1)
+            </button>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Sắp xếp:</span>
+<select class="h-9 px-3 rounded-lg bg-surface-container-low text-on-surface font-label-sm text-label-sm focus:outline-none focus:ring-1 focus:ring-primary">
+<option>Theo thứ tự cấp phiếu (STT)</option>
+<option>Thời gian chờ lâu nhất</option>
+<option>Theo phòng khám</option>
+</select>
+</div>
+</div>
+<!-- Table Viewport -->
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left" id="mainQueueTable">
+<thead class="bg-surface-container-low sticky top-0 z-10 text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider select-none">
+<tr>
+<th class="py-3 px-4 w-16 text-center">STT</th>
+<th class="py-3 px-4 min-w-[190px]">Bệnh nhân</th>
+<th class="py-3 px-4 min-w-[100px]">Mã BN</th>
+<th class="py-3 px-4 min-w-[200px]">Phòng khám &amp; Bác sĩ</th>
+<th class="py-3 px-4 min-w-[90px]">Giờ hẹn</th>
+<th class="py-3 px-4 min-w-[110px]">Check-in lúc</th>
+<th class="py-3 px-4 min-w-[140px]">Thời gian chờ</th>
+<th class="py-3 px-4 min-w-[130px]">Trạng thái</th>
+<th class="py-3 px-4 min-w-[180px] text-right">Thao tác điều phối</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body-sm text-body-sm">
+<!-- Row 1: STT #05 (Next 203) -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-headline-sm text-headline-sm font-black">#05</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md font-bold text-on-surface">Nguyễn Văn An</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Nam · 42 tuổi · 0918 ••• 322</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm font-semibold text-primary">BN0012</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">P.203 - Nội Tim mạch</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">BS.CKII Nguyễn Văn Linh</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-md text-label-md font-medium text-on-surface">08:30</span>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm text-on-surface-variant">08:24:10</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm font-semibold">21 phút</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-xs text-label-xs font-bold">
+                  Chuẩn bị vào phòng
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="px-2.5 py-1.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-label-xs text-label-xs font-bold transition-colors flex items-center gap-1 shadow-sm" onclick="callAudible('05', 'Nguyễn Văn An', '203')" title="Gọi số vào loa">
+<span class="material-symbols-outlined text-[15px]">campaign</span>
+                    Gọi số
+                  </button>
+<button class="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" onclick="openModalMove('Nguyễn Văn An (#05)')" title="Chuyển cuối hàng">
+<span class="material-symbols-outlined text-[18px]">vertical_align_bottom</span>
+</button>
+<button class="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant" onclick="toggleActionMenu(this)" title="Thao tác khác">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: STT #03 (Next 105) -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-headline-sm text-headline-sm font-black">#03</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md font-bold text-on-surface">Lê Thị Lan Hương</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Nữ · 34 tuổi · 0903 ••• 884</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm font-semibold text-primary">BN0024</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">P.105 - Tai Mũi Họng</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">ThS.BS Trần Mai Phương</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-md text-label-md font-medium text-on-surface">08:45</span>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm text-on-surface-variant">08:28:44</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm font-semibold">17 phút</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-xs text-label-xs font-bold">
+                  Chuẩn bị vào phòng
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="px-2.5 py-1.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-label-xs text-label-xs font-bold transition-colors flex items-center gap-1 shadow-sm" onclick="callAudible('03', 'Lê Thị Lan Hương', '105')" title="Gọi số vào loa">
+<span class="material-symbols-outlined text-[15px]">campaign</span>
+                    Gọi số
+                  </button>
+<button class="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" onclick="openModalMove('Lê Thị Lan Hương (#03)')" title="Chuyển cuối hàng">
+<span class="material-symbols-outlined text-[18px]">vertical_align_bottom</span>
+</button>
+<button class="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant" onclick="toggleActionMenu(this)" title="Thao tác khác">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: STT #06 (Next 102) -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface font-headline-sm text-headline-sm font-black">#06</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md font-bold text-on-surface">Hoàng Thảo My</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Nữ · 24 tuổi · 0972 ••• 190</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm font-semibold text-primary">BN0031</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">P.102 - Nội Tổng quát</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">BS. Lê Hoàng Long</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-md text-label-md font-medium text-on-surface">08:45</span>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm text-on-surface-variant">08:32:05</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+<span class="font-label-sm text-label-sm font-semibold">13 phút</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs font-bold">
+                  Đang chờ gọi
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-high hover:bg-primary-container hover:text-on-primary text-on-surface font-label-xs text-label-xs font-bold transition-colors flex items-center gap-1" onclick="callAudible('06', 'Hoàng Thảo My', '102')" title="Gọi số vào loa">
+<span class="material-symbols-outlined text-[15px]">campaign</span>
+                    Gọi số
+                  </button>
+<button class="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" onclick="openModalMove('Hoàng Thảo My (#06)')" title="Chuyển cuối hàng">
+<span class="material-symbols-outlined text-[18px]">vertical_align_bottom</span>
+</button>
+<button class="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant" onclick="toggleActionMenu(this)" title="Thao tác khác">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: STT #07 (CRITICAL: OVERDUE 34 MINS WARNING) -->
+<tr class="bg-error-container/20 hover:bg-error-container/30 transition-colors group">
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-headline-sm text-headline-sm font-black">#07</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md font-bold text-on-surface">Đỗ Trọng Đức</span>
+<span class="material-symbols-outlined text-error text-[16px]" title="Chờ quá hạn trung bình">warning</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Nam · 67 tuổi · 0936 ••• 415</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm font-semibold text-primary">BN0009</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">P.203 - Nội Tim mạch</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">BS.CKII Nguyễn Văn Linh</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-md text-label-md font-medium text-on-surface">08:15</span>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm text-on-surface-variant">08:11:15</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-black text-error flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
+                    34 phút
+                  </span>
+<span class="font-label-xs text-label-xs text-error font-semibold">Quá hạn TB (+19p)</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-xs text-label-xs font-bold">
+                  Đã gọi lần 1
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="px-2.5 py-1.5 rounded-lg bg-error text-on-error hover:bg-error/90 font-label-xs text-label-xs font-bold transition-colors flex items-center gap-1 shadow-sm" onclick="callAudible('07', 'Đỗ Trọng Đức', '203')" title="Gọi loa ưu tiên">
+<span class="material-symbols-outlined text-[15px]">campaign</span>
+                    Gọi lại
+                  </button>
+<button class="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" onclick="openModalMove('Đỗ Trọng Đức (#07)')" title="Chuyển cuối hàng">
+<span class="material-symbols-outlined text-[18px]">vertical_align_bottom</span>
+</button>
+<button class="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant" onclick="toggleActionMenu(this)" title="Thao tác khác">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5: STT #08 (Waiting 105) -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface font-headline-sm text-headline-sm font-black">#08</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md font-bold text-on-surface">Vũ Kim Oanh</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Nữ · 45 tuổi · 0984 ••• 702</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm font-semibold text-primary">BN0045</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">P.105 - Tai Mũi Họng</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">ThS.BS Trần Mai Phương</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-md text-label-md font-medium text-on-surface">09:00</span>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm text-on-surface-variant">08:35:12</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+<span class="font-label-sm text-label-sm font-semibold">10 phút</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs font-bold">
+                  Đang chờ gọi
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-high hover:bg-primary-container hover:text-on-primary text-on-surface font-label-xs text-label-xs font-bold transition-colors flex items-center gap-1" onclick="callAudible('08', 'Vũ Kim Oanh', '105')" title="Gọi số vào loa">
+<span class="material-symbols-outlined text-[15px]">campaign</span>
+                    Gọi số
+                  </button>
+<button class="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" onclick="openModalMove('Vũ Kim Oanh (#08)')" title="Chuyển cuối hàng">
+<span class="material-symbols-outlined text-[18px]">vertical_align_bottom</span>
+</button>
+<button class="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant" onclick="toggleActionMenu(this)" title="Thao tác khác">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 6: STT #09 (Waiting 203) -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4 text-center">
+<span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface font-headline-sm text-headline-sm font-black">#09</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md font-bold text-on-surface">Bùi Hoàng Nam</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Nam · 31 tuổi · 0912 ••• 991</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm font-semibold text-primary">BN0052</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">P.203 - Nội Tim mạch</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">BS.CKII Nguyễn Văn Linh</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-md text-label-md font-medium text-on-surface">09:00</span>
+</td>
+<td class="py-3 px-4">
+<span class="font-label-sm text-label-sm text-on-surface-variant">08:38:00</span>
+</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+<span class="font-label-sm text-label-sm font-semibold">07 phút</span>
+</div>
+</td>
+<td class="py-3 px-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs font-bold">
+                  Đang chờ gọi
+                </span>
+</td>
+<td class="py-3 px-4 text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-high hover:bg-primary-container hover:text-on-primary text-on-surface font-label-xs text-label-xs font-bold transition-colors flex items-center gap-1" onclick="callAudible('09', 'Bùi Hoàng Nam', '203')" title="Gọi số vào loa">
+<span class="material-symbols-outlined text-[15px]">campaign</span>
+                    Gọi số
+                  </button>
+<button class="p-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors" onclick="openModalMove('Bùi Hoàng Nam (#09)')" title="Chuyển cuối hàng">
+<span class="material-symbols-outlined text-[18px]">vertical_align_bottom</span>
+</button>
+<button class="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant" onclick="toggleActionMenu(this)" title="Thao tác khác">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination & Queue Footer Summary -->
+<div class="p-space-md bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-on-surface-variant font-label-sm text-label-sm">
+<div class="flex items-center gap-2">
+<span>Hiển thị <strong class="text-on-surface">1 - 6</strong> trong số <strong class="text-on-surface">11</strong> bệnh nhân trong sảnh</span>
+<span class="text-outline-variant">•</span>
+<span class="text-primary font-medium">Thời gian chờ bình quân sảnh: 17.5 phút</span>
+</div>
+<div class="flex items-center gap-1 self-end sm:self-auto">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-semibold transition-colors disabled:opacity-50">Trước</button>
+<button class="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-bold">1</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-semibold transition-colors">2</button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-semibold transition-colors">Sau</button>
+</div>
+</div>
+</div>
+<!-- KHỐI 3: PREVIEW KHUNG "CHẾ ĐỘ MÀN HÌNH LỚN / TV SẢNH CHỜ" (Large Public Waiting TV Display) -->
+<div class="flex flex-col gap-space-md pt-2" id="tvPreviewContainer">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[24px]">desktop_windows</span>
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Giao diện TV Sảnh chờ (Bản xem trước Màn hình công cộng)</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Chế độ hiển thị toàn màn hình tối ưu tầm nhìn xa 10-25m cho người bệnh tại sảnh tiếp đón</span>
+</div>
+</div>
+<button class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-inverse-surface text-inverse-on-surface hover:bg-on-background font-label-sm text-label-sm font-semibold transition-colors shadow-sm" onclick="launchFullscreenTV()">
+<span class="material-symbols-outlined text-[18px]">fullscreen</span>
+          Toàn màn hình (F11 / Standalone TV)
+        </button>
+</div>
+<!-- TV Shell Mockup (Dark Navy High Contrast Public View) -->
+<div class="relative w-full rounded-2xl bg-inverse-surface text-inverse-on-surface overflow-hidden shadow-2xl p-6 lg:p-8 flex flex-col justify-between min-h-[460px]">
+<!-- TV Top Brand Header -->
+<div class="flex items-center justify-between pb-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-lg">
+<span class="material-symbols-outlined text-[28px]">local_hospital</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-surface-bright">PHÒNG KHÁM ĐA KHOA QUỐC TẾ VITALIS</span>
+<span class="font-label-md text-label-md text-tertiary-fixed font-semibold tracking-wider uppercase">BẢNG THÔNG BÁO LƯỢT KHÁM BỆNH - TẦNG 1 &amp; 2</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex flex-col items-end">
+<span class="font-display text-display font-black text-surface-bright tracking-tight leading-none" id="tvClock">08:45</span>
+<span class="font-label-sm text-label-sm text-surface-variant font-medium">Thứ Tư, 24/10/2024</span>
+</div>
+<div class="w-3 h-3 rounded-full bg-primary-fixed animate-ping"></div>
+</div>
+</div>
+<!-- TV Multi-column Clinical Grid (Maximal Readability) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-2">
+<!-- TV Column 1 -->
+<div class="rounded-xl bg-on-background/70 p-5 flex flex-col gap-4 shadow-inner">
+<div class="flex items-center justify-between">
+<span class="px-3 py-1 rounded-md bg-primary-container text-on-primary font-headline-sm text-headline-sm font-black tracking-wide">P. 203</span>
+<span class="font-label-md text-label-md font-bold text-surface-bright truncate max-w-[170px]">Nội Tim mạch</span>
+</div>
+<div class="font-body-sm text-body-sm text-surface-variant">BS.CKII Nguyễn Văn Linh · Tầng 2</div>
+<!-- TV Now Calling Focus -->
+<div class="rounded-lg bg-primary-container/30 p-4 flex flex-col items-center justify-center text-center">
+<span class="font-label-xs text-label-xs uppercase tracking-widest text-primary-fixed font-extrabold flex items-center gap-1.5 mb-1">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-fixed animate-pulse"></span>
+                ĐANG GỌI VÀO KHÁM
+              </span>
+<span class="font-display text-[54px] leading-none font-black text-primary-fixed tracking-tight my-1 drop-shadow-md">#04</span>
+<span class="font-title-md text-title-md font-bold text-surface-bright mt-1">Phạm Quốc Bảo</span>
+</div>
+<!-- TV Next in line -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-on-background/50">
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-surface-variant font-bold uppercase">SỐ TIẾP THEO</span>
+<span class="font-headline-sm text-headline-sm font-black text-surface-bright">#05</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-surface-variant truncate max-w-[120px]">Nguyễn Văn An</span>
+</div>
+<!-- Directional indicator -->
+<div class="flex items-center justify-center gap-1.5 font-label-xs text-label-xs text-tertiary-fixed font-semibold">
+<span class="material-symbols-outlined text-[16px]">stairs</span>
+<span>Di chuyển: Thang máy B lên Tầng 2 rẽ phải</span>
+</div>
+</div>
+<!-- TV Column 2 -->
+<div class="rounded-xl bg-on-background/70 p-5 flex flex-col gap-4 shadow-inner">
+<div class="flex items-center justify-between">
+<span class="px-3 py-1 rounded-md bg-primary-container text-on-primary font-headline-sm text-headline-sm font-black tracking-wide">P. 105</span>
+<span class="font-label-md text-label-md font-bold text-surface-bright truncate max-w-[170px]">Tai Mũi Họng</span>
+</div>
+<div class="font-body-sm text-body-sm text-surface-variant">ThS.BS Trần Mai Phương · Tầng 1</div>
+<!-- TV Now Calling Focus -->
+<div class="rounded-lg bg-primary-container/30 p-4 flex flex-col items-center justify-center text-center">
+<span class="font-label-xs text-label-xs uppercase tracking-widest text-primary-fixed font-extrabold flex items-center gap-1.5 mb-1">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-fixed animate-pulse"></span>
+                ĐANG GỌI VÀO KHÁM
+              </span>
+<span class="font-display text-[54px] leading-none font-black text-primary-fixed tracking-tight my-1 drop-shadow-md">#02</span>
+<span class="font-title-md text-title-md font-bold text-surface-bright mt-1">Trần Mạnh Dũng</span>
+</div>
+<!-- TV Next in line -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-on-background/50">
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-surface-variant font-bold uppercase">SỐ TIẾP THEO</span>
+<span class="font-headline-sm text-headline-sm font-black text-surface-bright">#03</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-surface-variant truncate max-w-[120px]">Lê Thị Lan Hương</span>
+</div>
+<!-- Directional indicator -->
+<div class="flex items-center justify-center gap-1.5 font-label-xs text-label-xs text-tertiary-fixed font-semibold">
+<span class="material-symbols-outlined text-[16px]">straight</span>
+<span>Di chuyển: Đi thẳng hành lang Tầng 1 (phía trái)</span>
+</div>
+</div>
+<!-- TV Column 3 -->
+<div class="rounded-xl bg-on-background/70 p-5 flex flex-col gap-4 shadow-inner">
+<div class="flex items-center justify-between">
+<span class="px-3 py-1 rounded-md bg-primary-container text-on-primary font-headline-sm text-headline-sm font-black tracking-wide">P. 102</span>
+<span class="font-label-md text-label-md font-bold text-surface-bright truncate max-w-[170px]">Nội Tổng quát</span>
+</div>
+<div class="font-body-sm text-body-sm text-surface-variant">BS. Lê Hoàng Long · Tầng 1</div>
+<!-- TV Now Calling Focus -->
+<div class="rounded-lg bg-primary-container/30 p-4 flex flex-col items-center justify-center text-center">
+<span class="font-label-xs text-label-xs uppercase tracking-widest text-primary-fixed font-extrabold flex items-center gap-1.5 mb-1">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-fixed animate-pulse"></span>
+                ĐANG GỌI VÀO KHÁM
+              </span>
+<span class="font-display text-[54px] leading-none font-black text-primary-fixed tracking-tight my-1 drop-shadow-md">#01</span>
+<span class="font-title-md text-title-md font-bold text-surface-bright mt-1">Lê Thu Trang</span>
+</div>
+<!-- TV Next in line -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-on-background/50">
+<div class="flex flex-col">
+<span class="font-label-xs text-label-xs text-surface-variant font-bold uppercase">SỐ TIẾP THEO</span>
+<span class="font-headline-sm text-headline-sm font-black text-surface-bright">#06</span>
+</div>
+<span class="font-body-md text-body-md font-medium text-surface-variant truncate max-w-[120px]">Hoàng Thảo My</span>
+</div>
+<!-- Directional indicator -->
+<div class="flex items-center justify-center gap-1.5 font-label-xs text-label-xs text-tertiary-fixed font-semibold">
+<span class="material-symbols-outlined text-[16px]">turn_right</span>
+<span>Di chuyển: Đối diện Quầy Tiếp đón Lễ tân số 1</span>
+</div>
+</div>
+</div>
+<!-- TV Ticker Footer -->
+<div class="pt-6 flex items-center justify-between text-surface-variant font-label-sm text-label-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed text-[18px]">volume_up</span>
+<span>Quý khách chú ý lắng nghe loa gọi số và chuẩn bị sẵn thẻ BHYT / CCCD gắn chip khi vào khám.</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-bold text-surface-bright">Hotline CSKH: 1900 6868</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+<script src="js/pages/ReceptionQueue.js"></script>

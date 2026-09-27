@@ -1,0 +1,667 @@
+@page "/admin/audit-logs"
+@layout AdminLayout
+
+<PageTitle>Nhật ký truy cập · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full gap-space-lg">
+<!-- Top Banner / Compliance Protocol Identifier -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex flex-wrap items-center gap-space-sm">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs tracking-wider uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+          VC-32 • Giám sát Tuân thủ An toàn Dữ liệu Y tế (HIPAA / ISO 27799 / Nghị định 13/2023/NĐ-CP)
+        </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs">
+<span class="material-symbols-outlined text-[14px]">verified_user</span>
+          SHA-256 Immutability Enabled
+        </span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-xs text-label-xs text-on-surface-variant">Chu kỳ ghi vết: 100% thời gian thực</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-xs text-label-xs font-semibold text-primary">WAF &amp; SIEM Active</span>
+</div>
+</div>
+<div class="flex flex-col xl:flex-row xl:items-end justify-between gap-space-md pt-space-xs">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Nhật Ký Truy Cập Bệnh Án &amp; Audit Trail</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl mt-1">
+          Truy vết toàn diện lịch sử Xem, Sửa, Ký số, In ấn và Xóa mềm đối với Hồ sơ Bệnh án điện tử EMR, Đơn thuốc, Kết quả Xét nghiệm và Hóa đơn viện phí theo thời gian thực.
+        </p>
+</div>
+<!-- Action Toolbar Buttons -->
+<div class="flex flex-wrap items-center gap-space-sm shrink-0">
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-label-md text-label-md shadow-sm transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Xuất Báo Cáo Audit</span>
+</button>
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container-lowest text-primary hover:bg-surface-container-high font-label-md text-label-md shadow-sm transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">token</span>
+<span>Xác Thực SHA-256</span>
+</button>
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high font-label-md text-label-md shadow-sm transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span>Cấu Hình Cảnh Báo</span>
+</button>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-container text-on-primary font-label-md text-label-md shadow-md hover:bg-primary transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">security_update_good</span>
+<span>Kiểm Tra Toàn Vẹn</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Security KPIs Section (4 Bento Cards) -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Card 1 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tổng sự kiện hôm nay</span>
+<div class="font-display text-display text-on-surface tracking-tight mt-1">3,842</div>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[24px]">history_toggle_off</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between pt-space-xs bg-surface-container-low/50 -mx-space-md -mb-space-md px-space-md py-2">
+<span class="inline-flex items-center gap-1 font-label-xs text-label-xs text-primary font-semibold">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+          +8.5% so với trung bình
+        </span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Tần suất 2.6 sự kiện/giây</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Hành động rủi ro / Bất thường</span>
+<div class="font-display text-display text-error tracking-tight mt-1">02</div>
+</div>
+<div class="p-2.5 rounded-xl bg-error-container text-on-error-container">
+<span class="material-symbols-outlined text-[24px]">warning</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between pt-space-xs bg-error-container/30 -mx-space-md -mb-space-md px-space-md py-2">
+<span class="font-label-xs text-label-xs text-error font-semibold truncate max-w-[210px]">
+          1 truy cập ngoài ca • 1 WAF 403 block
+        </span>
+<span class="font-label-xs text-label-xs text-error underline cursor-pointer">Xử lý ngay</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tài khoản thao tác nhiều nhất</span>
+<div class="font-headline-md text-headline-md text-on-surface mt-1 truncate">BS.CKII Nguyễn Văn Linh</div>
+<span class="font-label-xs text-label-xs text-primary font-semibold">48 lượt ký &amp; duyệt bệnh án</span>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-container text-secondary">
+<span class="material-symbols-outlined text-[24px]">clinical_notes</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between pt-space-xs bg-surface-container-low/50 -mx-space-md -mb-space-md px-space-md py-2">
+<span class="font-label-xs text-label-xs text-on-surface-variant">Lịch trực: PK.203 Ngoại tim mạch</span>
+<span class="font-label-xs text-label-xs text-primary font-semibold">Hợp lệ 100%</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="relative overflow-hidden p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Bảo vệ tính toàn vẹn EMR</span>
+<div class="font-display text-display text-primary tracking-tight mt-1">100%</div>
+</div>
+<div class="p-2.5 rounded-xl bg-primary-fixed text-on-primary-fixed">
+<span class="material-symbols-outlined text-[24px]">verified</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between pt-space-xs bg-surface-container-low/50 -mx-space-md -mb-space-md px-space-md py-2">
+<span class="font-label-xs text-label-xs text-primary font-semibold flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+          SHA-256 Validated Chain
+        </span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">0 sửa đổi trái phép</span>
+</div>
+</div>
+</div>
+<!-- Multi-Dimensional Search & Filtering Toolbar -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-space-sm items-center">
+<!-- Search Input -->
+<div class="lg:col-span-4 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="w-full h-10 pl-9 pr-8 bg-surface-container-low text-on-surface placeholder:text-outline font-body-sm text-body-sm rounded-xl focus:outline-none focus:bg-surface-container-lowest transition-all" placeholder="Tìm theo Mã bệnh án (BN0048), Tên BS, Mã toa, Viện phí..." type="text" value="BN0048 - Phạm Quốc Bảo"/>
+<button class="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Action Type Dropdown -->
+<div class="lg:col-span-2">
+<select class="w-full h-10 px-3 bg-surface-container-low text-on-surface font-label-md text-label-md rounded-xl focus:outline-none cursor-pointer">
+<option value="">Tất cả hành động (Action)</option>
+<option value="VIEW">VIEW - Xem hồ sơ</option>
+<option value="CREATE">CREATE - Tạo mới</option>
+<option value="UPDATE">UPDATE - Sửa đổi</option>
+<option selected="" value="SIGN">SIGN - Ký số EMR</option>
+<option value="EXPORT">EXPORT - In / Xuất</option>
+<option value="SOFT_DELETE">SOFT_DELETE - Xóa mềm</option>
+</select>
+</div>
+<!-- Entity Type Dropdown -->
+<div class="lg:col-span-2">
+<select class="w-full h-10 px-3 bg-surface-container-low text-on-surface font-label-md text-label-md rounded-xl focus:outline-none cursor-pointer">
+<option value="">Tất cả thực thể (Entity)</option>
+<option selected="" value="EMR">Hồ sơ EMR &amp; Khám bệnh</option>
+<option value="LIS_PACS">Cận lâm sàng LIS / PACS</option>
+<option value="PRESCRIPTION">Đơn thuốc ngoại trú</option>
+<option value="BILLING">Hóa đơn viện phí</option>
+<option value="USER_AUTH">Xác thực tài khoản</option>
+</select>
+</div>
+<!-- Time Window Dropdown -->
+<div class="lg:col-span-2">
+<select class="w-full h-10 px-3 bg-surface-container-low text-on-surface font-label-md text-label-md rounded-xl focus:outline-none cursor-pointer">
+<option selected="" value="today">Hôm nay (24/10/2026)</option>
+<option value="24h">24 giờ qua</option>
+<option value="7d">7 ngày qua</option>
+<option value="custom">Tùy chọn khoảng giờ...</option>
+</select>
+</div>
+<!-- Severity Filter -->
+<div class="lg:col-span-2">
+<select class="w-full h-10 px-3 bg-surface-container-low text-on-surface font-label-md text-label-md rounded-xl focus:outline-none cursor-pointer">
+<option value="">Mức độ (Tất cả)</option>
+<option value="INFO">INFO - Thông tin bình thường</option>
+<option value="WARNING">WARNING - Cảnh báo rủi ro</option>
+<option value="CRITICAL">CRITICAL - Nghiêm trọng</option>
+</select>
+</div>
+</div>
+<!-- Active Filter Badges Bar -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-2">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-label-xs text-label-xs text-on-surface-variant uppercase">Bộ lọc đang áp dụng:</span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container font-label-xs text-label-xs text-primary font-semibold">
+          Từ khóa: BN0048 - Phạm Quốc Bảo
+          <span class="material-symbols-outlined text-[14px] cursor-pointer">close</span>
+</span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container font-label-xs text-label-xs text-primary font-semibold">
+          Thực thể: EMR Bệnh án
+          <span class="material-symbols-outlined text-[14px] cursor-pointer">close</span>
+</span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container font-label-xs text-label-xs text-on-surface-variant">
+          Thời gian: Hôm nay
+          <span class="material-symbols-outlined text-[14px] cursor-pointer">close</span>
+</span>
+<button class="text-error font-label-xs text-label-xs hover:underline ml-1" type="button">Xóa tất cả bộ lọc</button>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">
+        Tìm thấy <strong class="text-on-surface font-semibold">7 sự kiện</strong> liên quan trong tổng số 3,842 lượt ghi
+      </div>
+</div>
+</div>
+<!-- Audit Trail Master Layout: Table + Integrated Live Metadata Drawer Preview -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- Master Audit Log Table (7 cols on large screens, expands naturally) -->
+<div class="lg:col-span-7 xl:col-span-8 flex flex-col rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden">
+<!-- Table Header Bar -->
+<div class="px-space-md py-3 bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">table_rows</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold">Sổ Nhật Ký Thao Tác (Audit Log Stream)</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container text-label-xs font-label-xs inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">sync</span> Tự động làm mới (5s)
+          </button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">view_column</span>
+</button>
+</div>
+</div>
+<!-- Responsive Table View -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-xs text-label-xs uppercase tracking-wider">
+<th class="py-3 px-space-md">Dấu thời gian</th>
+<th class="py-3 px-space-md">Người thao tác</th>
+<th class="py-3 px-space-md">Hành động</th>
+<th class="py-3 px-space-md">Đối tượng &amp; Mã hồ sơ</th>
+<th class="py-3 px-space-md">IP &amp; Nguồn</th>
+<th class="py-3 px-space-md text-center">Trạng thái</th>
+<th class="py-3 px-space-md text-right">Chi tiết</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low font-body-sm text-body-sm text-on-surface">
+<!-- Row 1: Selected / Inspected Row (BS.CKII Nguyễn Văn Linh Ký số) -->
+<tr class="bg-surface-container/60 hover:bg-surface-container transition-colors cursor-pointer" onclick="selectAuditRow('EVT-20261024-9982')">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-label-md text-label-md font-semibold text-on-surface font-mono">10:48:15</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">24/10/2026</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-sm font-semibold">NL</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">BS.CKII Nguyễn Văn Linh</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">NV0021 • Bác sĩ Tim mạch</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+<span class="material-symbols-outlined text-[13px]">draw</span>
+                  SIGN (Ký số)
+                </span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-semibold text-primary">EMR #BN0048</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant truncate max-w-[180px]">Bệnh án tim mạch: Phạm Quốc Bảo</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-mono font-label-sm text-label-sm text-on-surface">192.168.1.104</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Trạm PK.203 Ngoại trú</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                  200 OK
+                </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<button class="p-1 rounded-lg bg-primary-container text-on-primary hover:bg-primary shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 2: KTV Trần Quốc Hùng (Cobas c501) -->
+<tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="selectAuditRow('EVT-20261024-9975')">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-label-md text-label-md font-semibold text-on-surface font-mono">10:42:00</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">24/10/2026</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-label-sm font-semibold">QH</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">KTV. Trần Quốc Hùng</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">NV0119 • Xét nghiệm Hóa sinh</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container-highest text-on-surface font-label-xs text-label-xs font-semibold">
+<span class="material-symbols-outlined text-[13px]">edit_note</span>
+                  UPDATE (Sửa)
+                </span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-semibold text-secondary">LIS #XN-9941</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant truncate max-w-[180px]">Glucose &amp; HbA1c (Cobas c501)</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-mono font-label-sm text-label-sm text-on-surface">192.168.1.55</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Phòng Lab C.501</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                  200 OK
+                </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<button class="p-1 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high" type="button">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 3: BS.CKI Đặng Minh Tuấn đọc PACS -->
+<tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="selectAuditRow('EVT-20261024-9961')">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-label-md text-label-md font-semibold text-on-surface font-mono">10:35:20</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">24/10/2026</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant flex items-center justify-center font-label-sm font-semibold">MT</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">BS.CKI Đặng Minh Tuấn</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">NV0045 • Chẩn đoán hình ảnh</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+<span class="material-symbols-outlined text-[13px]">draw</span>
+                  SIGN (Ký số)
+                </span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-semibold text-primary">PACS #CDHA-402</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant truncate max-w-[180px]">Siêu âm tim màu Doppler qua ngực</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-mono font-label-sm text-label-sm text-on-surface">192.168.1.88</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Phòng Siêu âm P.108</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                  200 OK
+                </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<button class="p-1 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high" type="button">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 4: DS.CKI Lê Hoàng Nam xuất đơn thuốc -->
+<tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="selectAuditRow('EVT-20261024-9934')">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-label-md text-label-md font-semibold text-on-surface font-mono">10:15:40</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">24/10/2026</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-primary flex items-center justify-center font-label-sm font-semibold">HN</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">DS.CKI Lê Hoàng Nam</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">NV0067 • Kho Dược Ngoại Trú</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+<span class="material-symbols-outlined text-[13px]">file_upload</span>
+                  EXPORT (Xuất)
+                </span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-semibold text-on-surface">Toa thuốc #RX-8812</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant truncate max-w-[180px]">Concor 5mg, Clopidogrel 75mg</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-mono font-label-sm text-label-sm text-on-surface">192.168.1.42</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Quầy Dược Nhà thuốc số 1</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                  200 OK
+                </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<button class="p-1 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high" type="button">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 5: ĐD Nguyễn Thị Mai in hóa đơn viện phí -->
+<tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="selectAuditRow('EVT-20261024-9889')">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-label-md text-label-md font-semibold text-on-surface font-mono">09:12:05</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">24/10/2026</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center font-label-sm font-semibold">TM</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">ĐD. Nguyễn Thị Mai</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">NV0089 • Quầy Thu Viện Phí</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-xs text-label-xs font-semibold">
+<span class="material-symbols-outlined text-[13px]">print</span>
+                  PRINT (In)
+                </span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-semibold text-on-surface">Biên lai #HD-9921</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant truncate max-w-[180px]">Tạm ứng viện phí 250.000 VNĐ</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-mono font-label-sm text-label-sm text-on-surface">192.168.1.12</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Quầy Viện Phí Tầng 1</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                  200 OK
+                </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<button class="p-1 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high" type="button">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 6: Bệnh nhân Phạm Quốc Bảo tra cứu EMR qua Mobile App -->
+<tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="selectAuditRow('EVT-20261024-9840')">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-label-md text-label-md font-semibold text-on-surface font-mono">08:30:10</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">24/10/2026</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-primary flex items-center justify-center font-label-sm font-semibold">QB</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">Phạm Quốc Bảo</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">BN0048 • Chủ sở hữu hồ sơ</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-xs text-label-xs font-semibold">
+<span class="material-symbols-outlined text-[13px]">visibility</span>
+                  VIEW (Xem)
+                </span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-semibold text-on-surface">Lịch sử khám #LS-2026</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant truncate max-w-[180px]">Tra cứu hồ sơ cá nhân qua App</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-mono font-label-sm text-label-sm text-on-surface">14.162.77.102</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">iOS Vitalis App v3.4.1</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-xs text-label-xs font-semibold">
+                  200 OK
+                </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<button class="p-1 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high" type="button">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 7: CRITICAL/WARNING WAF Block Row -->
+<tr class="bg-error-container/20 hover:bg-error-container/30 transition-colors cursor-pointer" onclick="selectAuditRow('EVT-20261024-9710')">
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-label-md text-label-md font-semibold text-error font-mono">07:15:00</div>
+<div class="font-label-xs text-label-xs text-error">24/10/2026</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-error text-on-error flex items-center justify-center font-label-sm font-semibold">??</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-error">Unknown Client (Bot/Scan)</div>
+<div class="font-label-xs text-label-xs text-error">N/A • Trái phép</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-xs text-label-xs font-semibold">
+<span class="material-symbols-outlined text-[13px]">block</span>
+                  BLOCKED (Chặn)
+                </span>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="font-label-md text-label-md font-semibold text-error">API /v2/emr/export-all</div>
+<div class="font-label-xs text-label-xs text-error truncate max-w-[180px]">Yêu cầu dump dữ liệu ngoài giờ</div>
+</td>
+<td class="py-3.5 px-space-md whitespace-nowrap">
+<div class="font-mono font-label-sm text-label-sm text-error">103.21.244.2</div>
+<div class="font-label-xs text-label-xs text-error">Tor / Proxy Exit Node</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-error text-on-error font-label-xs text-label-xs font-semibold">
+                  403 DENIED
+                </span>
+</td>
+<td class="py-3.5 px-space-md text-right whitespace-nowrap">
+<button class="p-1 rounded-lg bg-error-container text-on-error-container hover:bg-error hover:text-on-error" type="button">
+<span class="material-symbols-outlined text-[16px]">security</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="px-space-md py-3 bg-surface-container-low flex flex-wrap items-center justify-between gap-space-sm">
+<div class="font-label-sm text-label-sm text-on-surface-variant">
+          Hiển thị <span class="font-semibold text-on-surface">1 - 25</span> trong số <span class="font-semibold text-on-surface">3,842</span> bản ghi truy vết
+        </div>
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 rounded-lg text-on-surface-variant hover:bg-surface-container font-label-sm text-label-sm" disabled="" type="button">Trước</button>
+<button class="w-8 h-8 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold" type="button">1</button>
+<button class="w-8 h-8 rounded-lg text-on-surface hover:bg-surface-container font-label-sm text-label-sm" type="button">2</button>
+<button class="w-8 h-8 rounded-lg text-on-surface hover:bg-surface-container font-label-sm text-label-sm" type="button">3</button>
+<span class="px-1 text-on-surface-variant">...</span>
+<button class="w-8 h-8 rounded-lg text-on-surface hover:bg-surface-container font-label-sm text-label-sm" type="button">154</button>
+<button class="px-2.5 py-1 rounded-lg text-on-surface hover:bg-surface-container font-label-sm text-label-sm" type="button">Sau</button>
+</div>
+</div>
+</div>
+<!-- Integrated Audit Metadata Drawer / Evidence Inspector Panel (5 cols on large screens) -->
+<div class="lg:col-span-5 xl:col-span-4 flex flex-col rounded-xl bg-surface-container-lowest shadow-md overflow-hidden sticky top-20">
+<!-- Drawer Header -->
+<div class="p-space-md bg-surface-container flex items-start justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-label-xs text-label-xs text-primary font-semibold uppercase tracking-wider">Audit Forensic Inspector</span>
+</div>
+<span class="font-title-md text-title-md text-on-surface font-semibold mt-0.5">Bản Ghi Sự Kiện #EVT-20261024-9982</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-mono">Timestamp: 2026-10-24T10:48:15.829+07:00</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container-highest" title="Mở rộng toàn màn hình" type="button">
+<span class="material-symbols-outlined text-[18px]">open_in_full</span>
+</button>
+<button class="p-1 rounded-lg text-on-surface-variant hover:bg-surface-container-highest" title="Đóng" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+<div class="p-space-md flex flex-col gap-space-md divide-y divide-surface-container overflow-y-auto max-h-[calc(100vh-180px)]">
+<!-- Event Overview Summary -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold uppercase tracking-wider">Thông Tin Hành Động</span>
+<div class="grid grid-cols-2 gap-2 mt-1">
+<div class="p-2.5 rounded-lg bg-surface-container-low flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant">Người thực hiện</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface mt-0.5">BS.CKII Nguyễn Văn Linh</span>
+<span class="font-label-xs text-label-xs text-primary">Mã NV: NV0021</span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant">Thao tác &amp; Hồ sơ</span>
+<span class="font-label-sm text-label-sm font-semibold text-primary mt-0.5">SIGN (Ký số EMR)</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Bệnh án #BN0048</span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant">Địa chỉ IP &amp; MAC</span>
+<span class="font-label-sm text-label-sm font-mono text-on-surface mt-0.5">192.168.1.104</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-mono">00:1B:44:11:3A:B7</span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low flex flex-col">
+<span class="font-label-xs text-label-xs text-on-surface-variant">Chữ ký số hợp chuẩn</span>
+<span class="font-label-sm text-label-sm font-semibold text-tertiary mt-0.5">Viettel CA Token Valid</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Hết hạn: 12/2027</span>
+</div>
+</div>
+</div>
+<!-- Before & After Diff Comparison Viewer -->
+<div class="pt-space-md flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold uppercase tracking-wider">Đối Chiếu Dữ Liệu Thay Đổi (Diff Viewer)</span>
+<span class="font-label-xs text-label-xs text-primary font-semibold">Trường: chandoan_xacdinh</span>
+</div>
+<!-- Split Diff Container -->
+<div class="flex flex-col gap-2 mt-1">
+<!-- Before Box -->
+<div class="p-3 rounded-lg bg-error-container/20 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-xs text-label-xs text-error font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">remove_circle</span>
+                  Trước khi ký (Before Payload)
+                </span>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-mono">Status: DRAFT</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface font-mono bg-surface-container-lowest/80 p-2 rounded">
+                "chandoan_bandau": "Tăng huyết áp vô căn (I10)",<br/>
+                "trang_thai_emr": "PENDING_DOCTOR_APPROVAL",<br/>
+                "ky_so_bac_si": null
+              </p>
+</div>
+<!-- After Box -->
+<div class="p-3 rounded-lg bg-surface-container flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-xs text-label-xs text-primary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                  Sau khi cập nhật &amp; Ký số (After Payload)
+                </span>
+<span class="font-label-xs text-label-xs text-primary font-mono font-semibold">Status: SIGNED</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface font-mono bg-surface-container-lowest/80 p-2 rounded">
+                "chandoan_xacdinh": "Tăng huyết áp vô căn (I10) / Đau thắt ngực ổn định (I20)",<br/>
+                "trang_thai_emr": "FINAL_LOCKED",<br/>
+                "digital_cert_serial": "5402 1198 0032 AABB",<br/>
+                "ky_so_bac_si": "BS.CKII Nguyễn Văn Linh - Timestamped"
+              </p>
+</div>
+</div>
+</div>
+<!-- Technical Metadata & SHA-256 Fingerprint -->
+<div class="pt-space-md flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold uppercase tracking-wider">Thông Số Pháp Lý &amp; Bằng Chứng</span>
+<div class="flex flex-col gap-2 mt-1">
+<div class="p-2.5 rounded-lg bg-surface-container-low flex flex-col gap-1">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Băm toàn vẹn SHA-256 Block:</span>
+<div class="flex items-center justify-between gap-2">
+<code class="font-mono text-label-xs text-on-surface bg-surface-container-lowest p-1.5 rounded select-all break-all flex-1">
+                  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                </code>
+<button class="p-1 rounded bg-surface-container text-on-surface-variant hover:text-primary" title="Sao chép mã SHA-256" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 text-label-xs font-label-xs text-on-surface-variant">
+<div>Session ID: <strong class="text-on-surface font-mono">sess_9981a_pk203</strong></div>
+<div>Thời gian phiên: <strong class="text-on-surface">18 phút 40 giây</strong></div>
+<div>Hệ điều hành: <strong class="text-on-surface">macOS 15.1 Sonoma</strong></div>
+<div>Trình duyệt: <strong class="text-on-surface">Chrome 130.0 Enterprise</strong></div>
+</div>
+</div>
+</div>
+<!-- Action Export Buttons -->
+<div class="pt-space-md flex flex-col gap-2">
+<button class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary-container text-on-primary font-label-md text-label-md shadow-md hover:bg-primary transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Tải Bằng Chứng Pháp Lý (.JSON + .PDF Signature)</span>
+</button>
+<button class="w-full inline-flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-surface-container text-on-surface hover:bg-surface-container-high font-label-md text-label-md transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">lock_reset</span>
+<span>Yêu cầu Thu hồi / Vô hiệu Phiên làm việc</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script src="js/pages/AdminAuditLogs.js"></script>

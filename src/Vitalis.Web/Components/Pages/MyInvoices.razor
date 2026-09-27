@@ -1,0 +1,499 @@
+@page "/my-invoices"
+@layout PatientLayout
+
+<PageTitle>Hoá đơn của tôi · Vitalis</PageTitle>
+
+<div class="max-w-[1280px] mx-auto px-gutter py-space-xl"><div class="flex flex-col w-full">
+<!-- Top Header / Meta Area -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md mb-space-lg">
+<div class="flex flex-col gap-space-xs max-w-3xl">
+<!-- Breadcrumb -->
+<nav class="flex items-center gap-space-xs font-label-xs text-label-xs text-outline mb-1">
+<a class="hover:text-primary transition-colors flex items-center gap-0.5" href="#">
+<span class="material-symbols-outlined text-[14px]">home</span>
+          Trang chủ
+        </a>
+<span class="text-outline-variant">/</span>
+<span class="text-on-surface-variant font-label-sm">Hoá đơn &amp; Viện phí</span>
+</nav>
+<div class="flex items-center gap-space-sm">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Hoá đơn của tôi</h1>
+<span class="px-space-sm py-0.5 rounded-full font-label-xs text-label-xs bg-surface-container-high text-on-surface-variant">
+          BN0012 · Nguyễn Văn An
+        </span>
+</div>
+<p class="font-body-md text-body-md text-outline">
+        Tra cứu, theo dõi viện phí, mức hưởng BHYT và tải hoá đơn điện tử hợp lệ của bệnh nhân <strong class="text-on-surface font-label-md">Nguyễn Văn An (BN0012)</strong>.
+      </p>
+</div>
+<!-- Top Action Controls -->
+<div class="flex items-center gap-space-sm shrink-0">
+<div class="relative inline-flex items-center bg-surface-container-lowest rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-outline text-[18px] pl-3 pointer-events-none">calendar_month</span>
+<select aria-label="Chọn năm tài chính" class="bg-transparent pl-2 pr-8 py-2 font-label-md text-label-md text-on-surface focus:outline-none cursor-pointer appearance-none">
+<option value="2026">Năm 2026</option>
+<option value="2025">Năm 2025</option>
+<option value="2024">Năm 2024</option>
+</select>
+<span class="material-symbols-outlined text-outline text-[18px] pr-2 pointer-events-none absolute right-0">expand_more</span>
+</div>
+<button class="inline-flex items-center gap-space-xs px-space-md py-2 bg-surface-container-lowest text-primary rounded-lg font-label-md text-label-md hover:bg-surface-container transition shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Tải sao kê năm 2026</span>
+</button>
+</div>
+</div>
+<!-- KPI Summary Cards (3 Columns) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-space-lg mb-space-xl">
+<!-- Card 1: Tổng hoá đơn -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 w-28 h-28 bg-primary/5 rounded-full blur-xl pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Tổng viện phí phát sinh</span>
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+</div>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display text-on-surface font-bold tracking-tight">4.550.000</span>
+<span class="font-title-md text-title-md text-outline">đ</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center gap-space-xs text-outline font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">receipt_long</span>
+<span>04 hoá đơn đã phát sinh trong năm 2026</span>
+</div>
+</div>
+<!-- Card 2: Đã thanh toán -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 w-28 h-28 bg-secondary/5 rounded-full blur-xl pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Đã quyết toán</span>
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[20px]">task_alt</span>
+</div>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display text-on-surface font-bold tracking-tight">4.100.000</span>
+<span class="font-title-md text-title-md text-outline">đ</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-surface-container-high text-tertiary">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+          Đạt 90.1% tổng viện phí
+        </span>
+<span class="font-body-sm text-body-sm text-outline">Đã quyết toán xong</span>
+</div>
+</div>
+<!-- Card 3: Còn nợ / Cần thanh toán -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-6 -bottom-6 w-32 h-32 bg-error/5 rounded-full blur-xl pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-error uppercase tracking-wider font-semibold">Cần thanh toán</span>
+<div class="w-9 h-9 rounded-lg bg-error-container/40 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[20px]">pending_actions</span>
+</div>
+</div>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display text-error font-bold tracking-tight">450.000</span>
+<span class="font-title-md text-title-md text-error font-medium">đ</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between gap-space-sm">
+<span class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+          01 hoá đơn mới phát sinh
+        </span>
+<button class="px-space-md py-1.5 bg-primary text-on-primary font-label-sm text-label-sm rounded-lg hover:bg-primary-container transition shadow-sm inline-flex items-center gap-1" onclick="openInvoiceDrawer('HD-20260926-001')" type="button">
+<span>Thanh toán ngay</span>
+<span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Filter & Search Toolbar -->
+<section class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm mb-space-lg flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
+<div class="flex-1 flex flex-col sm:flex-row items-center gap-space-sm">
+<!-- Search Input -->
+<div class="relative w-full sm:w-80">
+<span class="material-symbols-outlined text-outline absolute left-3 top-1/2 -translate-y-1/2 text-[18px]">search</span>
+<input class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest shadow-sm" id="invoiceSearchInput" placeholder="Tìm kiếm theo số hoá đơn, dịch vụ..." type="text"/>
+</div>
+<!-- Filter Dropdown 1: Trạng thái -->
+<div class="relative w-full sm:w-auto">
+<select aria-label="Lọc theo trạng thái hoá đơn" class="w-full sm:w-auto h-10 pl-3 pr-8 rounded-lg bg-surface-container-low font-label-md text-label-md text-on-surface cursor-pointer appearance-none focus:outline-none">
+<option value="all">Trạng thái: Tất cả</option>
+<option value="pending">Chưa thanh toán</option>
+<option value="paid">Đã thanh toán</option>
+<option value="partial">Thu một phần</option>
+<option value="cancelled">Đã huỷ</option>
+</select>
+<span class="material-symbols-outlined text-outline text-[18px] pr-2 pointer-events-none absolute right-0 top-1/2 -translate-y-1/2">expand_more</span>
+</div>
+<!-- Filter Dropdown 2: Thời gian -->
+<div class="relative w-full sm:w-auto">
+<select aria-label="Lọc theo thời gian" class="w-full sm:w-auto h-10 pl-3 pr-8 rounded-lg bg-surface-container-low font-label-md text-label-md text-on-surface cursor-pointer appearance-none focus:outline-none">
+<option value="q3-2026">Thời gian: Quý 3/2026</option>
+<option value="q2-2026">Thời gian: Quý 2/2026</option>
+<option value="q1-2026">Thời gian: Quý 1/2026</option>
+<option value="all">Tất cả các quý</option>
+</select>
+<span class="material-symbols-outlined text-outline text-[18px] pr-2 pointer-events-none absolute right-0 top-1/2 -translate-y-1/2">expand_more</span>
+</div>
+</div>
+<!-- Reset Filter -->
+<div class="flex items-center justify-end">
+<button class="inline-flex items-center gap-1 px-space-md py-2 font-label-sm text-label-sm text-outline hover:text-on-surface transition" type="button">
+<span class="material-symbols-outlined text-[18px]">restart_alt</span>
+<span>Đặt lại bộ lọc</span>
+</button>
+</div>
+</section>
+<!-- Main Content Layout: Table with Sticky Representation & Side Drawer (Split Grid) -->
+<div class="relative flex flex-col xl:flex-row items-start gap-space-lg">
+<!-- Invoice Table Container -->
+<div class="w-full flex-1 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low font-label-sm text-label-sm text-outline uppercase tracking-wider">
+<th class="py-3 px-4 font-semibold" scope="col">Số HĐ</th>
+<th class="py-3 px-4 font-semibold" scope="col">Ngày lập</th>
+<th class="py-3 px-4 font-semibold min-w-[200px]" scope="col">Nội dung khám</th>
+<th class="py-3 px-4 font-semibold text-right" scope="col">Tổng tiền</th>
+<th class="py-3 px-4 font-semibold text-right" scope="col">BHYT chi trả</th>
+<th class="py-3 px-4 font-semibold text-right" scope="col">Đã trả</th>
+<th class="py-3 px-4 font-semibold text-right" scope="col">Còn lại</th>
+<th class="py-3 px-4 font-semibold text-center" scope="col">Trạng thái</th>
+<th class="py-3 px-4 font-semibold text-right" scope="col">Thao tác</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md divide-y divide-surface-container-low">
+<!-- Row 1: Selected Row -->
+<tr class="bg-surface-container-high/40 hover:bg-surface-container transition cursor-pointer" id="row-HD-20260920-004" onclick="openInvoiceDrawer('HD-20260920-004')">
+<td class="py-3.5 px-4 font-label-md text-label-md text-primary font-semibold">
+                HD-20260920-004
+              </td>
+<td class="py-3.5 px-4 text-on-surface-variant font-body-sm text-body-sm">
+<div>20/09/2026</div>
+<div class="text-outline text-label-xs font-label-xs">10:45</div>
+</td>
+<td class="py-3.5 px-4 text-on-surface">
+<div class="font-label-md text-label-md line-clamp-1">Khám Nội tổng quát &amp; Cận lâm sàng CLS</div>
+<span class="text-outline text-label-xs font-label-xs">BS.CKII Trần Mạnh Hùng</span>
+</td>
+<td class="py-3.5 px-4 text-right font-label-md text-label-md text-on-surface">1.250.000đ</td>
+<td class="py-3.5 px-4 text-right text-tertiary font-label-md text-label-md">
+                380.000đ
+                <div class="text-outline text-label-xs font-label-xs">30.4%</div>
+</td>
+<td class="py-3.5 px-4 text-right text-on-surface-variant font-label-md text-label-md">870.000đ</td>
+<td class="py-3.5 px-4 text-right text-outline font-label-md text-label-md">0đ</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-surface-container-high text-tertiary">
+                  Đã thanh toán
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap" onclick="event.stopPropagation()">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2.5 py-1 bg-primary text-on-primary rounded font-label-xs text-label-xs hover:bg-primary-container transition shadow-sm" onclick="openInvoiceDrawer('HD-20260920-004')" type="button">
+                    Chi tiết
+                  </button>
+<button aria-label="Tải hoá đơn PDF" class="p-1 rounded text-outline hover:text-primary hover:bg-surface-container transition" type="button">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Pending Payment -->
+<tr class="hover:bg-surface-container-low transition cursor-pointer" id="row-HD-20260926-001" onclick="openInvoiceDrawer('HD-20260926-001')">
+<td class="py-3.5 px-4 font-label-md text-label-md text-on-surface font-semibold">
+                HD-20260926-001
+              </td>
+<td class="py-3.5 px-4 text-on-surface-variant font-body-sm text-body-sm">
+<div>26/09/2026</div>
+<div class="text-outline text-label-xs font-label-xs">08:30</div>
+</td>
+<td class="py-3.5 px-4 text-on-surface">
+<div class="font-label-md text-label-md line-clamp-1">Tái khám định kỳ &amp; Lấy thuốc huyết áp</div>
+<span class="text-outline text-label-xs font-label-xs">BS. Nguyễn Văn Thiện</span>
+</td>
+<td class="py-3.5 px-4 text-right font-label-md text-label-md text-on-surface">450.000đ</td>
+<td class="py-3.5 px-4 text-right text-outline font-label-md text-label-md">0đ</td>
+<td class="py-3.5 px-4 text-right text-outline font-label-md text-label-md">0đ</td>
+<td class="py-3.5 px-4 text-right text-error font-bold font-label-md text-label-md">450.000đ</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-error-container/40 text-error font-semibold">
+                  Chưa thanh toán
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap" onclick="event.stopPropagation()">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2.5 py-1 bg-primary text-on-primary rounded font-label-xs text-label-xs hover:bg-primary-container transition shadow-sm font-semibold" onclick="openInvoiceDrawer('HD-20260926-001')" type="button">
+                    Thanh toán
+                  </button>
+<button class="px-2 py-1 bg-surface-container text-on-surface rounded font-label-xs text-label-xs hover:bg-surface-container-high transition" onclick="openInvoiceDrawer('HD-20260926-001')" type="button">
+                    Chi tiết
+                  </button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition cursor-pointer" id="row-HD-20260615-012" onclick="openInvoiceDrawer('HD-20260615-012')">
+<td class="py-3.5 px-4 font-label-md text-label-md text-on-surface font-semibold">
+                HD-20260615-012
+              </td>
+<td class="py-3.5 px-4 text-on-surface-variant font-body-sm text-body-sm">
+<div>15/06/2026</div>
+<div class="text-outline text-label-xs font-label-xs">15:20</div>
+</td>
+<td class="py-3.5 px-4 text-on-surface">
+<div class="font-label-md text-label-md line-clamp-1">Khám Tai Mũi Họng &amp; Nội soi họng</div>
+<span class="text-outline text-label-xs font-label-xs">BS. Phạm Thuý Hằng</span>
+</td>
+<td class="py-3.5 px-4 text-right font-label-md text-label-md text-on-surface">650.000đ</td>
+<td class="py-3.5 px-4 text-right text-tertiary font-label-md text-label-md">150.000đ</td>
+<td class="py-3.5 px-4 text-right text-on-surface-variant font-label-md text-label-md">500.000đ</td>
+<td class="py-3.5 px-4 text-right text-outline font-label-md text-label-md">0đ</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-surface-container-high text-tertiary">
+                  Đã thanh toán
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap" onclick="event.stopPropagation()">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2.5 py-1 bg-surface-container text-on-surface rounded font-label-xs text-label-xs hover:bg-surface-container-high transition" onclick="openInvoiceDrawer('HD-20260615-012')" type="button">
+                    Chi tiết
+                  </button>
+<button aria-label="Tải hoá đơn PDF" class="p-1 rounded text-outline hover:text-primary hover:bg-surface-container transition" type="button">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition cursor-pointer" id="row-HD-20260202-008" onclick="openInvoiceDrawer('HD-20260202-008')">
+<td class="py-3.5 px-4 font-label-md text-label-md text-on-surface font-semibold">
+                HD-20260202-008
+              </td>
+<td class="py-3.5 px-4 text-on-surface-variant font-body-sm text-body-sm">
+<div>02/02/2026</div>
+<div class="text-outline text-label-xs font-label-xs">09:15</div>
+</td>
+<td class="py-3.5 px-4 text-on-surface">
+<div class="font-label-md text-label-md line-clamp-1">Khám Nội &amp; Xét nghiệm lipid máu toàn phần</div>
+<span class="text-outline text-label-xs font-label-xs">BS.CKII Trần Mạnh Hùng</span>
+</td>
+<td class="py-3.5 px-4 text-right font-label-md text-label-md text-on-surface">2.200.000đ</td>
+<td class="py-3.5 px-4 text-right text-tertiary font-label-md text-label-md">700.000đ</td>
+<td class="py-3.5 px-4 text-right text-on-surface-variant font-label-md text-label-md">1.500.000đ</td>
+<td class="py-3.5 px-4 text-right text-outline font-label-md text-label-md">0đ</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-surface-container-high text-tertiary">
+                  Đã thanh toán
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap" onclick="event.stopPropagation()">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2.5 py-1 bg-surface-container text-on-surface rounded font-label-xs text-label-xs hover:bg-surface-container-high transition" onclick="openInvoiceDrawer('HD-20260202-008')" type="button">
+                    Chi tiết
+                  </button>
+<button aria-label="Tải hoá đơn PDF" class="p-1 rounded text-outline hover:text-primary hover:bg-surface-container transition" type="button">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Toolbar -->
+<div class="px-space-lg py-space-sm bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-space-sm mt-auto">
+<span class="font-body-sm text-body-sm text-outline">
+          Hiển thị <strong class="text-on-surface font-label-sm">1 - 4</strong> trong số <strong class="text-on-surface font-label-sm">4</strong> hoá đơn
+        </span>
+<div class="flex items-center gap-1">
+<button class="px-space-sm py-1 rounded font-label-sm text-label-sm text-outline/50 bg-surface-container-lowest/50 cursor-not-allowed flex items-center gap-0.5" disabled="" type="button">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+            Trước
+          </button>
+<button class="w-8 h-8 rounded bg-primary text-on-primary font-label-sm text-label-sm flex items-center justify-center font-bold" type="button">
+            1
+          </button>
+<button class="px-space-sm py-1 rounded font-label-sm text-label-sm text-outline/50 bg-surface-container-lowest/50 cursor-not-allowed flex items-center gap-0.5" disabled="" type="button">
+            Sau
+            <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Side Detail Drawer / Panel (460px on desktop) -->
+<aside class="w-full xl:w-[460px] shrink-0 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col transition-all" id="invoiceDrawer">
+<!-- Drawer Header -->
+<div class="p-space-lg bg-surface-container-low/60 flex items-start justify-between gap-space-sm">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-md text-title-md text-on-surface font-bold tracking-tight">Chi tiết: HD-20260920-004</span>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full font-label-xs text-label-xs bg-surface-container-high text-tertiary" id="drawerStatusPill">
+              Đã thanh toán
+            </span>
+<span class="font-label-xs text-label-xs text-outline">Thu ngân: Lê Thị Mai (TN02)</span>
+</div>
+<div class="font-body-sm text-body-sm text-outline mt-0.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span>Ngày tạo: 20/09/2026 lúc 10:45</span>
+</div>
+</div>
+<button aria-label="Đóng bảng chi tiết" class="p-1.5 rounded-full text-outline hover:text-on-surface hover:bg-surface-container transition" onclick="closeDrawer()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Drawer Scrollable Body -->
+<div class="p-space-lg flex flex-col gap-space-lg overflow-y-auto max-h-[calc(100vh-320px)]">
+<!-- Section 1: Dịch vụ & Thuốc đã sử dụng -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between mb-1">
+<h2 class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Dịch vụ &amp; Thuốc chỉ định</h2>
+<span class="font-label-xs text-label-xs text-primary font-semibold">05 mục</span>
+</div>
+<div class="rounded-lg overflow-hidden bg-surface-container-low">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-container font-label-xs text-label-xs text-outline">
+<th class="py-2 px-3" scope="col">Tên mục</th>
+<th class="py-2 px-1 text-center" scope="col">SL</th>
+<th class="py-2 px-2 text-right" scope="col">Đơn giá</th>
+<th class="py-2 px-3 text-right" scope="col">Thành tiền</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-high/40">
+<tr>
+<td class="py-2 px-3">
+<div class="font-label-sm text-label-sm text-on-surface">Khám chuyên khoa Nội</div>
+<span class="inline-block px-1.5 py-0.2 rounded font-label-xs text-label-xs bg-surface-container text-primary">Dịch vụ</span>
+</td>
+<td class="py-2 px-1 text-center font-label-sm text-label-sm text-on-surface">1</td>
+<td class="py-2 px-2 text-right text-outline font-label-sm text-label-sm">150.000đ</td>
+<td class="py-2 px-3 text-right font-label-md text-label-md text-on-surface font-semibold">150.000đ</td>
+</tr>
+<tr>
+<td class="py-2 px-3">
+<div class="font-label-sm text-label-sm text-on-surface">Xét nghiệm Sinh hóa máu (8 chỉ số)</div>
+<span class="inline-block px-1.5 py-0.2 rounded font-label-xs text-label-xs bg-surface-container text-primary">Dịch vụ</span>
+</td>
+<td class="py-2 px-1 text-center font-label-sm text-label-sm text-on-surface">1</td>
+<td class="py-2 px-2 text-right text-outline font-label-sm text-label-sm">350.000đ</td>
+<td class="py-2 px-3 text-right font-label-md text-label-md text-on-surface font-semibold">350.000đ</td>
+</tr>
+<tr>
+<td class="py-2 px-3">
+<div class="font-label-sm text-label-sm text-on-surface">Siêu âm tim Doppler màu</div>
+<span class="inline-block px-1.5 py-0.2 rounded font-label-xs text-label-xs bg-surface-container text-primary">Dịch vụ</span>
+</td>
+<td class="py-2 px-1 text-center font-label-sm text-label-sm text-on-surface">1</td>
+<td class="py-2 px-2 text-right text-outline font-label-sm text-label-sm">400.000đ</td>
+<td class="py-2 px-3 text-right font-label-md text-label-md text-on-surface font-semibold">400.000đ</td>
+</tr>
+<tr>
+<td class="py-2 px-3">
+<div class="font-label-sm text-label-sm text-on-surface">Amlodipine 5mg (Hộp 30 viên)</div>
+<span class="inline-block px-1.5 py-0.2 rounded font-label-xs text-label-xs bg-surface-container text-secondary">Thuốc</span>
+</td>
+<td class="py-2 px-1 text-center font-label-sm text-label-sm text-on-surface">1</td>
+<td class="py-2 px-2 text-right text-outline font-label-sm text-label-sm">120.000đ</td>
+<td class="py-2 px-3 text-right font-label-md text-label-md text-on-surface font-semibold">120.000đ</td>
+</tr>
+<tr>
+<td class="py-2 px-3">
+<div class="font-label-sm text-label-sm text-on-surface">Micardis 40mg (Hộp 30 viên)</div>
+<span class="inline-block px-1.5 py-0.2 rounded font-label-xs text-label-xs bg-surface-container text-secondary">Thuốc</span>
+</td>
+<td class="py-2 px-1 text-center font-label-sm text-label-sm text-on-surface">1</td>
+<td class="py-2 px-2 text-right text-outline font-label-sm text-label-sm">230.000đ</td>
+<td class="py-2 px-3 text-right font-label-md text-label-md text-on-surface font-semibold">230.000đ</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Section 2: Tổng kết tài chính (Summary block) -->
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-center justify-between text-body-sm font-body-sm text-outline">
+<span>Tổng tiền dịch vụ &amp; thuốc:</span>
+<span class="font-label-md text-label-md text-on-surface">1.250.000đ</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-tertiary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+              Giảm trừ BHYT (Hưởng 30.4%):
+            </span>
+<span class="font-label-md text-label-md font-semibold">-380.000đ</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-outline">
+<span>Ưu đãi hội viên Vitalis Care:</span>
+<span class="font-label-md text-label-md text-outline">0đ</span>
+</div>
+<div class="pt-2 mt-1 flex items-center justify-between font-label-md text-label-md text-on-surface">
+<span>Tổng người bệnh chi trả:</span>
+<span class="font-title-md text-title-md font-bold text-on-surface">870.000đ</span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-tertiary">
+<span>Đã thanh toán:</span>
+<span class="font-label-md text-label-md font-semibold">870.000đ</span>
+</div>
+<div class="pt-2 mt-1 flex items-center justify-between bg-surface-container-lowest p-2.5 rounded">
+<span class="font-label-md text-label-md text-on-surface font-bold uppercase">CÒN LẠI:</span>
+<span class="font-headline-sm text-headline-sm text-tertiary font-bold">0đ</span>
+</div>
+</div>
+<!-- Section 3: Lịch sử giao dịch & Phương thức -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Nhật ký giao dịch viện phí</span>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface font-semibold">
+<span class="material-symbols-outlined text-primary text-[18px]">qr_code_2</span>
+<span>Chuyển khoản QR Napas 247</span>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded font-label-xs text-label-xs bg-surface-container text-tertiary font-semibold">
+                Thành công
+              </span>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm text-outline">
+<span>Mã GD: <strong class="text-on-surface font-label-sm">VTL98234812</strong></span>
+<span>Số tiền: <strong class="text-on-surface font-label-sm">870.000đ</strong></span>
+</div>
+<div class="text-outline text-label-xs font-label-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">done</span>
+              Ghi nhận lúc 10:50 · Ngày 20/09/2026
+            </div>
+</div>
+</div>
+</div>
+<!-- Drawer Bottom Actions -->
+<div class="p-space-lg bg-surface-container-lowest flex flex-col gap-space-sm mt-auto shadow-sm">
+<div class="flex items-center gap-space-sm">
+<button class="flex-1 py-2.5 px-space-md bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary-container transition shadow-sm inline-flex items-center justify-center gap-space-xs" type="button">
+<span class="material-symbols-outlined text-[18px]">cloud_download</span>
+<span>Tải hoá đơn điện tử (PDF/XML)</span>
+</button>
+<button aria-label="In phiếu thu viện phí" class="p-2.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition inline-flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[20px]">print</span>
+</button>
+</div>
+<p class="font-label-xs text-label-xs text-outline text-center leading-relaxed">
+          Hoá đơn điện tử có mã xác thực của Cơ quan Thuế. Quý khách có thể tra cứu trực tiếp tại 
+          <a class="text-primary underline" href="https://hoadondientu.gdt.gov.vn" rel="noopener noreferrer" target="_blank">hoadondientu.gdt.gov.vn</a>
+</p>
+</div>
+</aside>
+</div>
+</div>
+</div>
+<script src="js/pages/MyInvoices.js"></script>

@@ -1,0 +1,855 @@
+@page "/admin/services"
+@layout AdminLayout
+
+<PageTitle>Danh mục dịch vụ · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full gap-space-lg pb-12">
+<!-- Top Context Header & Actions -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+<div class="flex flex-col gap-2">
+<div class="flex flex-wrap items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs">
+<span class="material-symbols-outlined text-[15px]">verified</span>
+          VC-30 • Chuẩn Thông tư 13/2023/TT-BYT &amp; Quyết định 7618/QĐ-BYT
+        </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+          Đồng bộ Cổng Giám định BHYT &amp; HIS
+        </span>
+</div>
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+          Quản Lý Danh Mục Dịch Vụ Kỹ Thuật &amp; Biểu Giá Viện Phí
+        </h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl mt-1">
+          Thiết lập định mức chi phí, giá viện phí thu trực tiếp, giá trần BHYT thanh toán, tỷ lệ đồng chi trả, cấu hình gói khám doanh nghiệp và kiểm soát phiên bản bảng giá toàn viện.
+        </p>
+</div>
+</div>
+<!-- Global Operations Group -->
+<div class="flex flex-wrap items-center gap-2 self-start lg:self-center shrink-0">
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+        Xuất Bảng Giá
+      </button>
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">upload_file</span>
+        Nhập Dữ Liệu Excel
+      </button>
+<button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-high text-primary font-label-md text-label-md hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">history</span>
+        Phiên bản 4.2
+      </button>
+<button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md shadow-sm hover:opacity-95 transition-opacity" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+        + Thêm Kỹ Thuật Mới
+      </button>
+</div>
+</div>
+<!-- KPI Metrics Banner (Bento 4-card grid) -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-start justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Tổng Số Kỹ Thuật Đang Dùng</span>
+<div class="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">medical_services</span>
+</div>
+</div>
+<div class="mt-3">
+<div class="flex items-baseline gap-2">
+<span class="font-display text-display text-on-surface">542</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">100% mã BYT</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+          Khám: <strong class="text-on-surface">24</strong> • CLS: <strong class="text-on-surface">280</strong> • CĐHA: <strong class="text-on-surface">146</strong> • PTTT: <strong class="text-on-surface">92</strong>
+</p>
+</div>
+<div class="w-full bg-surface-container-low h-1.5 rounded-full mt-4 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 100%"></div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-start justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Danh Mục BHYT Chi Trả</span>
+<div class="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[20px]">health_and_safety</span>
+</div>
+</div>
+<div class="mt-3">
+<div class="flex items-baseline gap-2">
+<span class="font-display text-display text-on-surface">418</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">77.1% danh mục</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+          100% khớp mã Giám định BHXH, 0 dịch vụ treo phê duyệt
+        </p>
+</div>
+<div class="w-full bg-surface-container-low h-1.5 rounded-full mt-4 overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 77.1%"></div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-start justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Biên Lợi Nhuận Gộp Định Mức</span>
+<div class="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">trending_up</span>
+</div>
+</div>
+<div class="mt-3">
+<div class="flex items-baseline gap-2">
+<span class="font-display text-display text-on-surface">68.4%</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">+2.1% tối ưu</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+          Định mức vật tư tiêu hao &amp; khấu hao máy đo theo thời gian thực
+        </p>
+</div>
+<div class="w-full bg-surface-container-low h-1.5 rounded-full mt-4 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 68.4%"></div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-start justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Phiên Bản Giá &amp; Hiệu Lực</span>
+<div class="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+</div>
+</div>
+<div class="mt-3">
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg text-on-surface">v2026.4</span>
+<span class="inline-flex px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-semibold">Đang hiệu lực</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+          Áp dụng từ 01/10/2026 • <strong>06 kỹ thuật</strong> chờ ký số duyệt
+        </p>
+</div>
+<div class="w-full bg-surface-container-low h-1.5 rounded-full mt-4 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 90%"></div>
+</div>
+</div>
+</div>
+<!-- Operational Filter Toolbar -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col gap-3">
+<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+<!-- Search Input -->
+<div class="relative flex-1 min-w-[320px]">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="w-full h-10 pl-9 pr-10 py-2 bg-surface-container-low text-on-surface text-body-md font-body-md rounded-lg focus:outline-none focus:bg-surface-container transition-all" id="serviceSearch" placeholder="Tìm theo tên dịch vụ, mã nội bộ (DV-XN-005), mã BYT (04.0015.009)..." type="text"/>
+<button class="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Category Filter Dropdowns -->
+<div class="flex flex-wrap items-center gap-2">
+<select class="h-10 px-3 bg-surface-container-low text-on-surface text-body-sm font-body-sm rounded-lg focus:outline-none cursor-pointer">
+<option>Tất cả nhóm kỹ thuật (5 nhóm)</option>
+<option>1. Khám chuyên khoa &amp; Hội chẩn</option>
+<option>2. Xét nghiệm Huyết học / Sinh hóa / Vi sinh</option>
+<option>3. Chẩn đoán hình ảnh (X-quang, CT, MRI, US)</option>
+<option>4. Thăm dò chức năng (ECG, Nội soi tiêu hóa)</option>
+<option>5. Thủ thuật can thiệp lâm sàng</option>
+</select>
+<select class="h-10 px-3 bg-surface-container-low text-on-surface text-body-sm font-body-sm rounded-lg focus:outline-none cursor-pointer">
+<option>Tất cả phạm vi thanh toán</option>
+<option>BHYT &amp; Viện phí đồng chi trả</option>
+<option>Thu phí dịch vụ tự nguyện 100%</option>
+<option>Dịch vụ Chuyên gia / VIP</option>
+<option>Gói khám sức khỏe Doanh nghiệp</option>
+</select>
+<select class="h-10 px-3 bg-surface-container-low text-on-surface text-body-sm font-body-sm rounded-lg focus:outline-none cursor-pointer">
+<option>Trạng thái: Đang áp dụng</option>
+<option>Chờ Giám đốc phê duyệt giá</option>
+<option>Tạm dừng kỹ thuật</option>
+<option>Ngưng áp dụng (Archived)</option>
+</select>
+<button class="h-10 px-3 bg-surface-container-high text-primary rounded-lg font-label-md text-label-md flex items-center gap-1 hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+          Bộ lọc nâng cao
+        </button>
+</div>
+</div>
+<!-- Quick Badges Sub-bar -->
+<div class="flex flex-wrap items-center gap-2 pt-2">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-semibold uppercase tracking-wider mr-1">Lối tắt:</span>
+<button class="px-3 py-1 rounded-full bg-primary-container text-on-primary font-label-xs text-label-xs transition-opacity hover:opacity-90" type="button">
+        Tất cả dịch vụ (542)
+      </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-low text-on-surface font-label-xs text-label-xs hover:bg-surface-container transition-colors" type="button">
+        Danh mục hưởng BHYT (418)
+      </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-low text-on-surface font-label-xs text-label-xs hover:bg-surface-container transition-colors" type="button">
+        Gói KSK Doanh Nghiệp (18)
+      </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-low text-on-surface font-label-xs text-label-xs hover:bg-surface-container transition-colors" type="button">
+        Cập nhật Thông tư 13/2023 (64)
+      </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-low text-on-surface font-label-xs text-label-xs hover:bg-surface-container transition-colors" type="button">
+        Chênh lệch viện phí &gt; 150% (82)
+      </button>
+</div>
+</div>
+<!-- Master Data Table Section -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Table Header Info Bar -->
+<div class="px-6 py-4 bg-surface-container-lowest flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+<h2 class="font-title-md text-title-md text-on-surface">Biểu Giá &amp; Định Mức Chi Phí Toàn Viện</h2>
+<span class="px-2 py-0.5 rounded-md bg-surface-container-high text-primary font-label-xs text-label-xs font-semibold">Live HIS/LIS sync</span>
+</div>
+<div class="flex items-center gap-3 font-body-sm text-body-sm text-on-surface-variant">
+<span>Đơn vị tính: <strong>VNĐ</strong></span>
+<span>•</span>
+<span>Cập nhật gần nhất: <strong>10:45 Hôm nay</strong></span>
+</div>
+</div>
+<!-- Responsive Master Table -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
+<th class="py-3 px-4 font-semibold">Mã DV &amp; Tên Kỹ Thuật</th>
+<th class="py-3 px-4 font-semibold">Mã BYT &amp; BHYT</th>
+<th class="py-3 px-4 font-semibold">Định Mức &amp; Cấp Thực Hiện</th>
+<th class="py-3 px-4 font-semibold text-right">Giá BHYT (đ)</th>
+<th class="py-3 px-4 font-semibold text-right">Giá Viện Phí (đ)</th>
+<th class="py-3 px-4 font-semibold text-right">Chênh Lệch (đ)</th>
+<th class="py-3 px-4 font-semibold text-center">Lãi Gộp</th>
+<th class="py-3 px-4 font-semibold text-center">Trạng Thái</th>
+<th class="py-3 px-4 font-semibold text-right">Thao Tác</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<!-- Row 1: Khám chuyên khoa Tim mạch -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">stethoscope</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-primary font-mono font-semibold">DV-KB-001</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-surface-container text-on-surface-variant uppercase font-semibold">Khám Bệnh</span>
+</div>
+<span class="font-title-md text-body-md text-on-surface truncate font-medium">Khám chuyên khoa Nội Tim Mạch (BS.CKII)</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col font-mono text-body-sm">
+<span class="text-on-surface font-medium">01.0012.001</span>
+<span class="text-on-surface-variant font-sans font-label-xs text-label-xs text-primary">Chi trả 100% trần</span>
+</div>
+</td>
+<td class="py-3.5 px-4 text-body-sm text-on-surface-variant">
+<div>Bác sĩ CKII / Trưởng khoa</div>
+<div class="text-[12px] text-outline">Thời gian: 20 - 30 phút</div>
+</td>
+<td class="py-3.5 px-4 text-right font-mono font-medium text-body-md text-on-surface-variant">
+              42.100
+            </td>
+<td class="py-3.5 px-4 text-right font-mono font-semibold text-body-md text-primary">
+              250.000
+            </td>
+<td class="py-3.5 px-4 text-right font-mono text-body-sm text-on-surface">
+              +207.900
+            </td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-semibold">
+                82%
+              </span>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-primary font-label-xs text-label-xs font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Áp dụng
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chi tiết cấu thành giá" type="button">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chỉnh sửa định mức" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Điện tim 12 đạo trình (ECG 12-Leads) -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">monitor_heart</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-primary font-mono font-semibold">DV-TD-014</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-surface-container text-on-surface-variant uppercase font-semibold">Thăm Dò CN</span>
+</div>
+<span class="font-title-md text-body-md text-on-surface truncate font-medium">Điện tim 12 đạo trình (ECG 12-Leads)</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col font-mono text-body-sm">
+<span class="text-on-surface font-medium">03.0118.042</span>
+<span class="text-on-surface-variant font-sans font-label-xs text-label-xs text-primary">Chi trả 100% trần</span>
+</div>
+</td>
+<td class="py-3.5 px-4 text-body-sm text-on-surface-variant">
+<div>KTV Tim mạch / Điều dưỡng</div>
+<div class="text-[12px] text-outline">Thời gian: 10 phút • Nihon Kohden</div>
+</td>
+<td class="py-3.5 px-4 text-right font-mono font-medium text-body-md text-on-surface-variant">
+              48.600
+            </td>
+<td class="py-3.5 px-4 text-right font-mono font-semibold text-body-md text-primary">
+              150.000
+            </td>
+<td class="py-3.5 px-4 text-right font-mono text-body-sm text-on-surface">
+              +101.400
+            </td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-semibold">
+                74%
+              </span>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-primary font-label-xs text-label-xs font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Áp dụng
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chi tiết cấu thành giá" type="button">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chỉnh sửa định mức" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Siêu âm Tim Doppler màu chuyên sâu -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">stream</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-primary font-mono font-semibold">DV-HA-022</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-surface-container text-on-surface-variant uppercase font-semibold">CĐ Hình Ảnh</span>
+</div>
+<span class="font-title-md text-body-md text-on-surface truncate font-medium">Siêu âm Tim Doppler màu chuyên sâu (EPIQ Elite)</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col font-mono text-body-sm">
+<span class="text-on-surface font-medium">02.0045.018</span>
+<span class="text-on-surface-variant font-sans font-label-xs text-label-xs text-primary">Chi trả 100% trần</span>
+</div>
+</td>
+<td class="py-3.5 px-4 text-body-sm text-on-surface-variant">
+<div>BS. CKI / CKII CĐHA</div>
+<div class="text-[12px] text-outline">Thời gian: 25 - 35 phút</div>
+</td>
+<td class="py-3.5 px-4 text-right font-mono font-medium text-body-md text-on-surface-variant">
+              235.000
+            </td>
+<td class="py-3.5 px-4 text-right font-mono font-semibold text-body-md text-primary">
+              550.000
+            </td>
+<td class="py-3.5 px-4 text-right font-mono text-body-sm text-on-surface">
+              +315.000
+            </td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-semibold">
+                76%
+              </span>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-primary font-label-xs text-label-xs font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Áp dụng
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chi tiết cấu thành giá" type="button">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chỉnh sửa định mức" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Glucose máu -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">bloodtype</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-primary font-mono font-semibold">DV-XN-005</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-surface-container text-on-surface-variant uppercase font-semibold">Sinh Hóa</span>
+</div>
+<span class="font-title-md text-body-md text-on-surface truncate font-medium">Định lượng Glucose máu tĩnh mạch (Cobas c501)</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col font-mono text-body-sm">
+<span class="text-on-surface font-medium">04.0015.009</span>
+<span class="text-on-surface-variant font-sans font-label-xs text-label-xs text-primary">Chi trả 100% trần</span>
+</div>
+</td>
+<td class="py-3.5 px-4 text-body-sm text-on-surface-variant">
+<div>Cử nhân Kỹ thuật XN</div>
+<div class="text-[12px] text-outline">Thời gian: 30 phút • Tự động</div>
+</td>
+<td class="py-3.5 px-4 text-right font-mono font-medium text-body-md text-on-surface-variant">
+              24.200
+            </td>
+<td class="py-3.5 px-4 text-right font-mono font-semibold text-body-md text-primary">
+              65.000
+            </td>
+<td class="py-3.5 px-4 text-right font-mono text-body-sm text-on-surface">
+              +40.800
+            </td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-semibold">
+                65%
+              </span>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-primary font-label-xs text-label-xs font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Áp dụng
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chi tiết cấu thành giá" type="button">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chỉnh sửa định mức" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5: HbA1c -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">biotech</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-primary font-mono font-semibold">DV-XN-008</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-surface-container text-on-surface-variant uppercase font-semibold">Sinh Hóa</span>
+</div>
+<span class="font-title-md text-body-md text-on-surface truncate font-medium">Đo hoạt độ HbA1c máu (Phương pháp sắc ký lỏng HPLC)</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col font-mono text-body-sm">
+<span class="text-on-surface font-medium">04.0028.014</span>
+<span class="text-on-surface-variant font-sans font-label-xs text-label-xs text-primary">Chi trả 100% trần</span>
+</div>
+</td>
+<td class="py-3.5 px-4 text-body-sm text-on-surface-variant">
+<div>KTV Xét nghiệm Cao cấp</div>
+<div class="text-[12px] text-outline">Thời gian: 45 phút • Chuẩn IFCC</div>
+</td>
+<td class="py-3.5 px-4 text-right font-mono font-medium text-body-md text-on-surface-variant">
+              86.500
+            </td>
+<td class="py-3.5 px-4 text-right font-mono font-semibold text-body-md text-primary">
+              180.000
+            </td>
+<td class="py-3.5 px-4 text-right font-mono text-body-sm text-on-surface">
+              +93.500
+            </td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-semibold">
+                68%
+              </span>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-primary font-label-xs text-label-xs font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Áp dụng
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chi tiết cấu thành giá" type="button">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chỉnh sửa định mức" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 6: X-quang Ngực thẳng -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">radiology</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-primary font-mono font-semibold">DV-HA-004</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-surface-container text-on-surface-variant uppercase font-semibold">X-Quang</span>
+</div>
+<span class="font-title-md text-body-md text-on-surface truncate font-medium">Chụp X-quang ngực thẳng kỹ thuật số (DR PACS)</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col font-mono text-body-sm">
+<span class="text-on-surface font-medium">02.0012.003</span>
+<span class="text-on-surface-variant font-sans font-label-xs text-label-xs text-primary">Chi trả 100% trần</span>
+</div>
+</td>
+<td class="py-3.5 px-4 text-body-sm text-on-surface-variant">
+<div>KTV X-Quang / Bác sĩ CĐHA</div>
+<div class="text-[12px] text-outline">Thời gian: 10 phút • Số hóa DR</div>
+</td>
+<td class="py-3.5 px-4 text-right font-mono font-medium text-body-md text-on-surface-variant">
+              72.400
+            </td>
+<td class="py-3.5 px-4 text-right font-mono font-semibold text-body-md text-primary">
+              190.000
+            </td>
+<td class="py-3.5 px-4 text-right font-mono text-body-sm text-on-surface">
+              +117.600
+            </td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-semibold">
+                71%
+              </span>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-primary font-label-xs text-label-xs font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Áp dụng
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chi tiết cấu thành giá" type="button">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chỉnh sửa định mức" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 7: Nội soi dạ dày tá tràng can thiệp -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">microbiology</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-primary font-mono font-semibold">DV-NS-019</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-surface-container text-on-surface-variant uppercase font-semibold">Nội Soi</span>
+</div>
+<span class="font-title-md text-body-md text-on-surface truncate font-medium">Nội soi Dạ dày - Tá tràng không đau (Tiền mê &amp; Can thiệp)</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-4">
+<div class="flex flex-col font-mono text-body-sm">
+<span class="text-on-surface font-medium">03.0245.031</span>
+<span class="text-on-surface-variant font-sans font-label-xs text-label-xs text-primary">Chi trả 80% kỹ thuật</span>
+</div>
+</td>
+<td class="py-3.5 px-4 text-body-sm text-on-surface-variant">
+<div>BS.CKII Tiêu hóa + BS. Gây mê</div>
+<div class="text-[12px] text-outline">Thời gian: 40 - 60 phút • Olympus EVIS</div>
+</td>
+<td class="py-3.5 px-4 text-right font-mono font-medium text-body-md text-on-surface-variant">
+              780.000
+            </td>
+<td class="py-3.5 px-4 text-right font-mono font-semibold text-body-md text-primary">
+              1.850.000
+            </td>
+<td class="py-3.5 px-4 text-right font-mono text-body-sm text-on-surface">
+              +1.070.000
+            </td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-semibold">
+                70%
+              </span>
+</td>
+<td class="py-3.5 px-4 text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-primary font-label-xs text-label-xs font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Áp dụng
+              </span>
+</td>
+<td class="py-3.5 px-4 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chi tiết cấu thành giá" type="button">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Chỉnh sửa định mức" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination & Footer -->
+<div class="p-4 bg-surface-container-lowest flex flex-col sm:flex-row items-center justify-between gap-3">
+<div class="font-body-sm text-body-sm text-on-surface-variant">
+        Hiển thị <span class="font-semibold text-on-surface">1 - 7</span> trên tổng số <span class="font-semibold text-on-surface">542</span> dịch vụ kỹ thuật đã ánh xạ
+      </div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-colors disabled:opacity-50" type="button">
+          Trước
+        </button>
+<button class="w-8 h-8 rounded-lg bg-primary text-on-primary font-semibold flex items-center justify-center" type="button">
+          1
+        </button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container flex items-center justify-center" type="button">
+          2
+        </button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container flex items-center justify-center" type="button">
+          3
+        </button>
+<span class="px-1 text-outline">...</span>
+<button class="w-8 h-8 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container flex items-center justify-center" type="button">
+          78
+        </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container transition-colors" type="button">
+          Sau
+        </button>
+</div>
+</div>
+</div>
+<!-- Deep Analytical & Executive Panels (3-Card Layout) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Panel 1: Cost-Breakdown Model -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">pie_chart</span>
+<h3 class="font-title-md text-title-md text-on-surface">Cơ Cấu Cấu Thành Giá Dịch Vụ</h3>
+</div>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-semibold">DV-HA-022</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+          Mô hình chi phí định mức ca: <strong class="text-on-surface">Siêu âm Tim Doppler màu (550.000 đ)</strong>
+</p>
+<!-- Visual Segmented Bar -->
+<div class="w-full h-3 rounded-full flex overflow-hidden mt-4 bg-surface-container-low">
+<div class="bg-primary h-full" style="width: 32%" title="Nhân công y bác sĩ: 32%"></div>
+<div class="bg-primary-container h-full" style="width: 24%" title="Khấu hao máy siêu âm: 24%"></div>
+<div class="bg-secondary h-full" style="width: 22%" title="Tích lũy tái đầu tư: 22%"></div>
+<div class="bg-tertiary h-full" style="width: 14%" title="Vật tư tiêu hao: 14%"></div>
+<div class="bg-outline-variant h-full" style="width: 8%" title="Vận hành chung: 8%"></div>
+</div>
+<!-- Metric Details List -->
+<div class="flex flex-col gap-2.5 mt-4 font-body-sm text-body-sm">
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-2 text-on-surface-variant">
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+              Nhân công Y Bác sĩ CKII &amp; KTV
+            </span>
+<span class="font-mono font-medium text-on-surface">32% (176.000 đ)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-2 text-on-surface-variant">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+              Khấu hao Máy Philips EPIQ Elite &amp; PACS
+            </span>
+<span class="font-mono font-medium text-on-surface">24% (132.000 đ)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-2 text-on-surface-variant">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+              Lợi nhuận tích lũy tái đầu tư y tế
+            </span>
+<span class="font-mono font-medium text-on-surface">22% (121.000 đ)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-2 text-on-surface-variant">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span>
+              Vật tư tiêu hao (Gel, giấy in, găng vô khuẩn)
+            </span>
+<span class="font-mono font-medium text-on-surface">14% (77.000 đ)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="flex items-center gap-2 text-on-surface-variant">
+<span class="w-2.5 h-2.5 rounded-full bg-outline-variant"></span>
+              Chi phí gián tiếp &amp; vận hành phòng khám
+            </span>
+<span class="font-mono font-medium text-on-surface">8% (44.000 đ)</span>
+</div>
+</div>
+</div>
+<div class="pt-4 mt-2 flex items-center justify-between">
+<span class="font-label-xs text-label-xs text-primary font-semibold">Tối ưu định mức tự động chuẩn ISO</span>
+<button class="font-label-sm text-label-sm text-primary hover:underline font-semibold" type="button">
+          Xem định mức toàn khoa →
+        </button>
+</div>
+</div>
+<!-- Panel 2: Corporate Packages Management -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">corporate_fare</span>
+<h3 class="font-title-md text-title-md text-on-surface">Gói Khám Doanh Nghiệp (B2B)</h3>
+</div>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-semibold">Q3/2026</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+          Chính sách chiết khấu bậc thang theo số lượng nhân sự đoàn khám
+        </p>
+<!-- Packages List -->
+<div class="flex flex-col gap-3 mt-4">
+<!-- Item 1 -->
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-title-md text-body-md text-on-surface truncate font-semibold">Gói Khám Tổng Quát Tiêu Chuẩn</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">14 kỹ thuật cơ bản • Định kỳ hàng năm</span>
+</div>
+<div class="text-right shrink-0">
+<div class="font-mono font-semibold text-primary">2.200.000 đ</div>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-semibold">Ưu đãi 10%</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-title-md text-body-md text-on-surface truncate font-semibold">Tầm Soát Tim Mạch &amp; Đột Quỵ</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">22 kỹ thuật (ECG, Siêu âm tim, CT Não)</span>
+</div>
+<div class="text-right shrink-0">
+<div class="font-mono font-semibold text-primary">4.850.000 đ</div>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-semibold">Ưu đãi 15%</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-title-md text-body-md text-on-surface truncate font-semibold">Tầm Soát Ung Thư Toàn Diện VIP</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">30 kỹ thuật + Dấu ấn ung thư chuyên sâu</span>
+</div>
+<div class="text-right shrink-0">
+<div class="font-mono font-semibold text-primary">6.900.000 đ</div>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-semibold">Ưu đãi 18%</span>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-4 mt-2 flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Đã ký kết: <strong class="text-on-surface font-semibold">24 đoàn</strong> trong quý</span>
+<button class="font-label-sm text-label-sm text-primary hover:underline font-semibold" type="button">
+          Cấu hình gói mới →
+        </button>
+</div>
+</div>
+<!-- Panel 3: Approval & Digital Signature -->
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">draw</span>
+<h3 class="font-title-md text-title-md text-on-surface">Ký Số &amp; Phê Duyệt Biểu Giá</h3>
+</div>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-semibold">Đợt Q4/2026</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+          Hồ sơ điều chỉnh giá <strong>06 kỹ thuật</strong> theo Thông tư BYT mới
+        </p>
+<!-- Sign-off Workflow Cards -->
+<div class="flex flex-col gap-2.5 mt-4">
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-semibold text-label-sm">
+                VN
+              </div>
+<div class="flex flex-col">
+<span class="font-title-md text-body-sm text-on-surface font-semibold">ThS. Vũ Đức Nam</span>
+<span class="font-body-sm text-label-xs text-on-surface-variant">Giám Đốc Tài Chính (CFO)</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 font-label-xs text-label-xs text-primary font-semibold">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+              Đã trình duyệt
+            </span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-semibold text-label-sm">
+                KH
+              </div>
+<div class="flex flex-col">
+<span class="font-title-md text-body-sm text-on-surface font-semibold">Phòng Kế Hoạch Tổng Hợp</span>
+<span class="font-body-sm text-label-xs text-on-surface-variant">Thẩm định Quy trình &amp; Mã BYT</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 font-label-xs text-label-xs text-primary font-semibold">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+              Hợp chuẩn 100%
+            </span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-high/60 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-semibold text-label-sm">
+                NP
+              </div>
+<div class="flex flex-col">
+<span class="font-title-md text-body-sm text-on-surface font-semibold">BS.CKII Trần Nam Phong</span>
+<span class="font-body-sm text-label-xs text-primary font-semibold">Tổng Giám Đốc / Viện Trưởng</span>
+</div>
+</div>
+<span class="font-label-xs text-label-xs px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-semibold">Chờ ký số CA</span>
+</div>
+</div>
+</div>
+<!-- Action Button for Digital Signature -->
+<div class="pt-4 mt-2 flex flex-col gap-2">
+<button class="w-full py-2.5 px-4 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-semibold flex items-center justify-center gap-2 shadow-sm hover:opacity-95 transition-opacity" id="btnSignApprove" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+          Ký Số CA &amp; Công Bố Bảng Giá Mới
+        </button>
+<span class="font-label-xs text-label-xs text-center text-on-surface-variant">Chứng thư số Viện Trưởng có hiệu lực đến 12/2028</span>
+</div>
+</div>
+</div>
+</div>
+
+<script src="js/pages/AdminServices.js"></script>

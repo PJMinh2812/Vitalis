@@ -1,0 +1,733 @@
+@page "/pharmacy/receipt"
+@layout PharmacyLayout
+
+<PageTitle>Nhập thuốc · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full">
+<!-- Content Canvas Container -->
+<div class="p-space-lg max-w-[1720px] mx-auto w-full space-y-space-md">
+<!-- Section 1: Breadcrumb, Page Title & Action Bar -->
+<section class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-space-md">
+<!-- Left: Hierarchy & Titles -->
+<div class="space-y-1">
+<nav aria-label="Breadcrumb" class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span>Phòng khám Vitalis</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>Kho Dược &amp; Nhà thuốc</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Nhập kho &amp; Nhà cung cấp (VC-19)</span>
+</nav>
+<div class="flex flex-wrap items-center gap-3 pt-1">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Quản Lý Nhập Kho Dược &amp; Nhà Cung Cấp</h1>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-xs text-label-xs bg-primary-fixed text-on-primary-fixed">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+              Tiêu chuẩn Thực hành tốt bảo quản thuốc GSP
+            </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-surface-container text-on-surface-variant">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+              Cập nhật tức thời: 08:42:15
+            </span>
+</div>
+</div>
+<!-- Right: Primary Actions & Shortcuts -->
+<div class="flex flex-wrap items-center gap-space-xs">
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant bg-surface-container-low hover:bg-surface-container hover:text-on-surface transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">table_view</span>
+<span>Xuất Excel</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant bg-surface-container-low hover:bg-surface-container hover:text-on-surface transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">contact_page</span>
+<span>Danh bạ NCC (48)</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-label-md text-label-md text-primary bg-primary-fixed/50 hover:bg-primary-fixed transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+<span>Nhập XML e-Invoice</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg font-label-md text-label-md bg-primary-container text-on-primary shadow-sm hover:opacity-95 transition-opacity" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>+ Tạo phiếu nhập mới</span>
+<kbd class="ml-1 text-[11px] bg-primary/40 px-1 rounded text-on-primary">F2</kbd>
+</button>
+</div>
+</div>
+</section>
+<!-- Section 2: Top KPI Cards (Clinical Pharmacy Intelligence) -->
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Card 1: Giá trị nhập -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Tổng giá trị nhập tháng 10/2026</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mt-1">482.350.000 <span class="font-label-md text-label-md text-on-surface-variant">đ</span></h3>
+</div>
+<div class="w-10 h-10 rounded-lg bg-primary-fixed/40 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">payments</span>
+</div>
+</div>
+<div class="mt-3 pt-3 bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between">
+<div class="flex items-center gap-1 font-label-xs text-label-xs text-primary font-semibold">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span>+8.4% so với T09</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">24 đợt nhập thành công</span>
+</div>
+</div>
+<!-- Card 2: Chờ kiểm nghiệm GSP -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Chờ kiểm nghiệm GSP</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mt-1">03 <span class="font-headline-sm text-headline-sm text-on-surface-variant">phiếu</span></h3>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[22px]">biotech</span>
+</div>
+</div>
+<div class="mt-3 pt-3 bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between">
+<span class="font-label-xs text-label-xs font-semibold text-secondary">Giá trị: 68.200.000 đ</span>
+<span class="font-label-xs text-label-xs text-error font-medium flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>2 phiếu đối soát nhiệt
+          </span>
+</div>
+</div>
+<!-- Card 3: Nhà cung cấp hoạt động -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Nhà cung cấp hoạt động</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mt-1">48 <span class="font-headline-sm text-headline-sm text-on-surface-variant">đối tác</span></h3>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[22px]">domain</span>
+</div>
+</div>
+<div class="mt-3 pt-3 bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between">
+<span class="font-label-xs text-label-xs text-primary font-semibold">100% đạt chuẩn GDP/GSP</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">5 NCC chiến lược</span>
+</div>
+</div>
+<!-- Card 4: Tỷ lệ đúng hẹn & CO/CQ -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Chuẩn hóa CO/CQ &amp; Lô</p>
+<h3 class="font-headline-lg text-headline-lg text-primary mt-1">99.2%</h3>
+</div>
+<div class="w-10 h-10 rounded-lg bg-primary-fixed/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">verified_user</span>
+</div>
+</div>
+<div class="mt-3 pt-3 bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between">
+<span class="font-label-xs text-label-xs text-on-surface-variant">Kiểm soát dược phẩm đầu vào</span>
+<span class="font-label-xs text-label-xs text-primary font-medium">0 sự cố lô hỏng</span>
+</div>
+</div>
+</section>
+<!-- Section 3: Filters, Search & Segmented Quick Tags -->
+<section class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-sm">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-space-sm">
+<!-- Main Search Input -->
+<div class="lg:col-span-4 relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-[18px]">search</span>
+<input class="w-full h-10 pl-9 pr-3 bg-surface-container-low rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Tìm theo mã phiếu, số HĐ, tên NCC, tên thuốc/hoạt chất..." type="text" value="PNK-2026-1024"/>
+</div>
+<!-- Trạng thái -->
+<div class="lg:col-span-2">
+<select class="w-full h-10 px-3 bg-surface-container-low rounded-lg font-body-sm text-body-sm text-on-surface outline-none cursor-pointer">
+<option>Trạng thái: Tất cả</option>
+<option selected="">Đã duyệt nhập kho</option>
+<option>Chờ kiểm nghiệm GSP</option>
+<option>Bản nháp</option>
+<option>Tạm giữ mẫu kiểm định</option>
+</select>
+</div>
+<!-- Kho nhập -->
+<div class="lg:col-span-2">
+<select class="w-full h-10 px-3 bg-surface-container-low rounded-lg font-body-sm text-body-sm text-on-surface outline-none cursor-pointer">
+<option>Kho Chẵn Ngoại trú (Tầng 1)</option>
+<option>Kho Vắc xin &amp; Sinh phẩm (Lạnh)</option>
+<option>Kho Vật tư Y tế Tiêu hao</option>
+</select>
+</div>
+<!-- Thời gian -->
+<div class="lg:col-span-2">
+<select class="w-full h-10 px-3 bg-surface-container-low rounded-lg font-body-sm text-body-sm text-on-surface outline-none cursor-pointer">
+<option selected="">Tháng 10/2026 (Hiện tại)</option>
+<option>Tháng 09/2026</option>
+<option>Quý 3/2026</option>
+<option>Tùy chọn khoảng ngày...</option>
+</select>
+</div>
+<!-- NCC Dropdown -->
+<div class="lg:col-span-2">
+<select class="w-full h-10 px-3 bg-surface-container-low rounded-lg font-body-sm text-body-sm text-on-surface outline-none cursor-pointer">
+<option>Nhà cung cấp: Tất cả</option>
+<option>Sanofi-Aventis VN</option>
+<option>AstraZeneca VN</option>
+<option>Zuellig Pharma</option>
+<option>Pharbaco TW 1</option>
+<option>DHG Pharma</option>
+</select>
+</div>
+</div>
+<!-- Quick Filter Chips -->
+<div class="flex flex-wrap items-center gap-2 pt-1">
+<span class="font-label-xs text-label-xs text-on-surface-variant font-semibold mr-1">Bộ lọc nhanh:</span>
+<button class="px-3 py-1 rounded-full font-label-xs text-label-xs bg-primary-container text-on-primary font-semibold shadow-sm">
+          Tất cả (24)
+        </button>
+<button class="px-3 py-1 rounded-full font-label-xs text-label-xs bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors">
+          Chờ kiểm duyệt GSP (3)
+        </button>
+<button class="px-3 py-1 rounded-full font-label-xs text-label-xs bg-surface-container text-error hover:bg-error-container transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">bolt</span>
+          Nhập khẩn cấp (2)
+        </button>
+<button class="px-3 py-1 rounded-full font-label-xs text-label-xs bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">lock</span>
+          Thuốc kiểm soát đặc biệt (4)
+        </button>
+<button class="px-3 py-1 rounded-full font-label-xs text-label-xs bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors">
+          Hóa đơn đã đối soát (21)
+        </button>
+</div>
+</section>
+<!-- Section 4: Split Master-Detail Layout -->
+<section class="grid grid-cols-1 xl:grid-cols-12 gap-space-md items-start">
+<!-- LEFT / MAIN TABLE AREA (65% width: xl:col-span-8) -->
+<div class="xl:col-span-8 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Table Toolbar Title -->
+<div class="px-space-md py-3 bg-surface-container-lowest flex items-center justify-between border-b border-surface-container">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">inventory_2</span>
+<span class="font-title-md text-title-md text-on-surface">Danh Sách Phiếu Nhập Kho Gần Đây</span>
+<span class="px-2 py-0.5 rounded-full font-label-xs text-label-xs bg-surface-container text-on-surface-variant">5/24 phiếu</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container" title="Làm mới">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container" title="Cột hiển thị">
+<span class="material-symbols-outlined text-[18px]">view_column</span>
+</button>
+</div>
+</div>
+<!-- Interactive Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-xs text-label-xs uppercase tracking-wider sticky top-0 z-10">
+<th class="py-3 px-space-md">Mã Phiếu / Số HĐ</th>
+<th class="py-3 px-3">Thời gian</th>
+<th class="py-3 px-3">Nhà Cung Cấp</th>
+<th class="py-3 px-3">Hạng mục &amp; Mặt hàng</th>
+<th class="py-3 px-3 text-right">Tổng tiền (VNĐ)</th>
+<th class="py-3 px-3">GSP &amp; Nhiệt độ</th>
+<th class="py-3 px-space-md text-center">Trạng thái</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-sm text-body-sm text-on-surface">
+<!-- Row 1: Selected -->
+<tr class="bg-primary-fixed/20 hover:bg-primary-fixed/30 cursor-pointer transition-colors relative" onclick="selectReceipt('PNK-2026-1024')">
+<td class="py-3.5 px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary shrink-0"></span>
+<div>
+<div class="font-label-md text-label-md font-bold text-primary">PNK-2026-1024</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">HĐ: 0048291</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 whitespace-nowrap">
+<div>24/10/2026</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">08:30 sáng</div>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-label-md text-label-md font-semibold text-on-surface truncate max-w-[190px]">Cty CP Sanofi-Aventis VN</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Mã số thuế: 0300819231</span>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-label-sm text-label-sm font-medium">12 mặt hàng</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Tim mạch &amp; Nội tiết</span>
+</td>
+<td class="py-3.5 px-3 text-right whitespace-nowrap font-label-md text-label-md font-bold text-on-surface">
+                  142.500.000
+                </td>
+<td class="py-3.5 px-3">
+<div class="inline-flex items-center gap-1 font-label-xs text-label-xs text-primary font-semibold">
+<span class="material-symbols-outlined text-[15px]">thermostat</span>
+<span>21.8°C (Đạt GSP)</span>
+</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Cảm quan: Tốt</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-primary-fixed text-on-primary-fixed font-semibold">
+                    Đã nhập kho
+                  </span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low cursor-pointer transition-colors" onclick="selectReceipt('PNK-2026-1023')">
+<td class="py-3.5 px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary shrink-0"></span>
+<div>
+<div class="font-label-md text-label-md font-bold text-on-surface">PNK-2026-1023</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">HĐ: 8841209</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 whitespace-nowrap">
+<div>23/10/2026</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">15:10 chiều</div>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-label-md text-label-md font-medium text-on-surface truncate max-w-[190px]">Cty Dược TW 1 (Pharbaco)</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Mã số thuế: 0100109312</span>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-label-sm text-label-sm font-medium">8 mặt hàng</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Kháng sinh &amp; Kháng viêm</span>
+</td>
+<td class="py-3.5 px-3 text-right whitespace-nowrap font-label-md text-label-md font-semibold text-on-surface">
+                  64.800.000
+                </td>
+<td class="py-3.5 px-3">
+<div class="inline-flex items-center gap-1 font-label-xs text-label-xs text-secondary font-semibold">
+<span class="material-symbols-outlined text-[15px]">pending_actions</span>
+<span>Chờ Dược sĩ CKI duyệt</span>
+</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Lô mẫu lưu: 02</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-surface-container text-on-surface-variant font-semibold">
+                    Chờ duyệt GSP
+                  </span>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low cursor-pointer transition-colors" onclick="selectReceipt('PNK-2026-1022')">
+<td class="py-3.5 px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary shrink-0"></span>
+<div>
+<div class="font-label-md text-label-md font-bold text-on-surface">PNK-2026-1022</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">HĐ: 1109348</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 whitespace-nowrap">
+<div>22/10/2026</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">10:00 sáng</div>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-label-md text-label-md font-medium text-on-surface truncate max-w-[190px]">AstraZeneca Vietnam</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Mã số thuế: 0314589021</span>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-label-sm text-label-sm font-medium">4 mặt hàng</div>
+<span class="font-label-xs text-label-xs text-primary font-medium">Bảo quản lạnh (2-8°C)</span>
+</td>
+<td class="py-3.5 px-3 text-right whitespace-nowrap font-label-md text-label-md font-semibold text-on-surface">
+                  89.200.000
+                </td>
+<td class="py-3.5 px-3">
+<div class="inline-flex items-center gap-1 font-label-xs text-label-xs text-primary font-semibold">
+<span class="material-symbols-outlined text-[15px]">ac_unit</span>
+<span>DataLogger 4.2°C</span>
+</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Cold Chain Pass</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-primary-fixed text-on-primary-fixed font-semibold">
+                    Đã nhập kho
+                  </span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low cursor-pointer transition-colors" onclick="selectReceipt('PNK-2026-1021')">
+<td class="py-3.5 px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary shrink-0"></span>
+<div>
+<div class="font-label-md text-label-md font-bold text-on-surface">PNK-2026-1021</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">HĐ: 4920193</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 whitespace-nowrap">
+<div>21/10/2026</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">14:20 chiều</div>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-label-md text-label-md font-medium text-on-surface truncate max-w-[190px]">Cty TNHH Zuellig Pharma VN</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Mã số thuế: 0301726354</span>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-label-sm text-label-sm font-medium">15 mặt hàng</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Hạ áp &amp; Tiểu đường</span>
+</td>
+<td class="py-3.5 px-3 text-right whitespace-nowrap font-label-md text-label-md font-semibold text-on-surface">
+                  115.350.000
+                </td>
+<td class="py-3.5 px-3">
+<div class="inline-flex items-center gap-1 font-label-xs text-label-xs text-primary font-semibold">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+<span>Đạt chuẩn GSP</span>
+</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Kho Chẵn T1 tiếp nhận</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-primary-fixed text-on-primary-fixed font-semibold">
+                    Đã nhập kho
+                  </span>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low cursor-pointer transition-colors" onclick="selectReceipt('PNK-2026-1020')">
+<td class="py-3.5 px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary shrink-0"></span>
+<div>
+<div class="font-label-md text-label-md font-bold text-on-surface">PNK-2026-1020</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">HĐ: 0092147</div>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-3 whitespace-nowrap">
+<div>20/10/2026</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">09:15 sáng</div>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-label-md text-label-md font-medium text-on-surface truncate max-w-[190px]">Cty CP Dược Hậu Giang (DHG)</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Mã số thuế: 1800156801</span>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-label-sm text-label-sm font-medium">6 mặt hàng</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Hạ sốt &amp; Kháng dị ứng</span>
+</td>
+<td class="py-3.5 px-3 text-right whitespace-nowrap font-label-md text-label-md font-semibold text-on-surface">
+                  28.600.000
+                </td>
+<td class="py-3.5 px-3">
+<div class="inline-flex items-center gap-1 font-label-xs text-label-xs text-primary font-semibold">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+<span>Đạt chuẩn GSP</span>
+</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">22.5°C đạt chuẩn</div>
+</td>
+<td class="py-3.5 px-space-md text-center whitespace-nowrap">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-xs text-label-xs bg-primary-fixed text-on-primary-fixed font-semibold">
+                    Đã nhập kho
+                  </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer / Pagination -->
+<div class="px-space-md py-3 bg-surface-container-low flex flex-col sm:flex-row items-center justify-between gap-2">
+<div class="font-label-xs text-label-xs text-on-surface-variant">
+            Hiển thị <span class="font-semibold text-on-surface">1 - 5</span> trên tổng số <span class="font-semibold text-on-surface">24</span> phiếu nhập kho
+          </div>
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface font-label-xs text-label-xs disabled:opacity-40" disabled="">Trước</button>
+<button class="w-7 h-7 rounded bg-primary-container text-on-primary font-label-xs text-label-xs font-semibold">1</button>
+<button class="w-7 h-7 rounded bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container font-label-xs text-label-xs">2</button>
+<button class="w-7 h-7 rounded bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container font-label-xs text-label-xs">3</button>
+<button class="px-2.5 py-1 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface font-label-xs text-label-xs">Sau</button>
+</div>
+</div>
+</div>
+<!-- RIGHT DETAIL PANEL (35% width: xl:col-span-4) -->
+<div class="xl:col-span-4 bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col space-y-space-sm">
+<!-- Header Panel with Verified Status -->
+<div class="p-space-md bg-gradient-to-br from-surface-container-low to-surface-container-lowest relative">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-label-xs text-label-xs font-bold uppercase tracking-wider text-primary">Chi tiết phiếu nhập</span>
+<span class="inline-flex items-center px-2 py-0.2 rounded-full font-label-xs text-[10px] bg-primary text-on-primary">
+                  Đã duyệt nhập kho
+                </span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mt-1">PNK-2026-1024</h2>
+<p class="font-label-xs text-label-xs text-on-surface-variant mt-0.5">
+                Hóa đơn VAT: <strong class="text-on-surface font-mono">0048291</strong> (Ký điện tử bởi Sanofi lúc 08:15 24/10/2026)
+              </p>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[24px]">task_alt</span>
+</div>
+</div>
+<!-- Giao nhận & Chuẩn GSP Check Block -->
+<div class="mt-3 p-2.5 rounded-lg bg-surface-container-lowest space-y-1.5 shadow-sm">
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span class="text-on-surface-variant">Người giao hàng:</span>
+<span class="font-medium text-on-surface">Nguyễn Văn Tuấn (Sanofi-Aventis)</span>
+</div>
+<div class="flex items-center justify-between font-label-xs text-label-xs">
+<span class="text-on-surface-variant">Người kiểm nhận:</span>
+<span class="font-medium text-primary">DS.CKI Lê Hoàng Nam (Phụ trách kho)</span>
+</div>
+<div class="flex items-center justify-between font-label-xs text-label-xs pt-1 border-t border-surface-container">
+<span class="text-on-surface-variant">Nhiệt độ mở thùng GSP:</span>
+<span class="font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">thermostat</span>
+                21.8°C <span class="font-normal text-[11px] text-on-surface-variant">(Chuẩn 15 - 25°C)</span>
+</span>
+</div>
+</div>
+</div>
+<!-- Drugs Detail List Container -->
+<div class="px-space-md space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Mặt hàng nhập kho (3/12 đã duyệt)</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Đạt 100% chỉ tiêu CO/CQ</span>
+</div>
+<!-- Item 1: Plavix -->
+<div class="p-3 bg-surface-container-low rounded-lg space-y-1 hover:bg-surface-container transition-colors">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-md text-label-md font-bold text-on-surface">Plavix 75mg</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant block">Clopidogrel | Hộp 30 viên (3 vỉ)</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-on-surface">64.000.000 đ</span>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-1 pt-1 font-label-xs text-label-xs text-on-surface-variant">
+<span>SL: <strong class="text-on-surface">200 hộp</strong> × 320.000 đ</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest font-mono font-medium text-on-surface">Lô: LOT26081</span>
+<span>HSD: 12/2027</span>
+</div>
+<div class="flex items-center gap-1 font-label-xs text-label-xs text-primary pt-0.5">
+<span class="material-symbols-outlined text-[13px]">verified</span>
+<span>CO/CQ đầy đủ | Cảm quan &amp; niêm phong chuẩn GSP</span>
+</div>
+</div>
+<!-- Item 2: Aprovel -->
+<div class="p-3 bg-surface-container-low rounded-lg space-y-1 hover:bg-surface-container transition-colors">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-md text-label-md font-bold text-on-surface">Aprovel 150mg</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant block">Irbesartan | Hộp 28 viên</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-on-surface">36.750.000 đ</span>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-1 pt-1 font-label-xs text-label-xs text-on-surface-variant">
+<span>SL: <strong class="text-on-surface">150 hộp</strong> × 245.000 đ</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest font-mono font-medium text-on-surface">Lô: APR9921</span>
+<span>HSD: 08/2028</span>
+</div>
+<div class="flex items-center gap-1 font-label-xs text-label-xs text-primary pt-0.5">
+<span class="material-symbols-outlined text-[13px]">verified</span>
+<span>CO/CQ: Đạt kiểm tra tem chống hàng giả</span>
+</div>
+</div>
+<!-- Item 3: Lantus Solostar (Cold Chain) -->
+<div class="p-3 bg-primary-fixed/20 rounded-lg space-y-1">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1">
+<span class="font-label-md text-label-md font-bold text-on-surface">Lantus Solostar 100IU/ml</span>
+<span class="material-symbols-outlined text-primary text-[14px]">ac_unit</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant block">Insulin Glargine | Bút tiêm 3ml</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-on-surface">24.800.000 đ</span>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-1 pt-1 font-label-xs text-label-xs text-on-surface-variant">
+<span>SL: <strong class="text-on-surface">80 bút</strong> × 310.000 đ</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-lowest font-mono font-medium text-on-surface">Lô: LAN3042</span>
+<span>HSD: 05/2027</span>
+</div>
+<div class="flex items-center justify-between pt-0.5 font-label-xs text-label-xs">
+<span class="text-primary font-medium">Bảo quản lạnh 2°C - 8°C</span>
+<span class="font-semibold text-primary">Sensor: 4.8°C (PASS)</span>
+</div>
+</div>
+</div>
+<!-- Financial Summary Box -->
+<div class="p-space-md bg-surface-container-low rounded-b-xl space-y-2">
+<div class="space-y-1 font-label-xs text-label-xs">
+<div class="flex justify-between text-on-surface-variant">
+<span>Tiền hàng trước thuế:</span>
+<span class="font-medium text-on-surface">125.550.000 đ</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>Thuế VAT (5% Dược phẩm):</span>
+<span class="font-medium text-on-surface">6.277.500 đ</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>VAT các mặt hàng khác &amp; phụ phí:</span>
+<span class="font-medium text-on-surface">10.672.500 đ</span>
+</div>
+<div class="flex justify-between font-title-md text-title-md pt-2 border-t border-surface-container text-primary">
+<span>Tổng thanh toán:</span>
+<span>142.500.000 đ</span>
+</div>
+</div>
+<!-- Bottom Operational Action Buttons -->
+<div class="grid grid-cols-2 gap-2 pt-2">
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg font-label-sm text-label-sm bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[16px]">print</span>
+<span>In BB GSP (Ctrl+P)</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg font-label-sm text-label-sm bg-primary-container text-on-primary hover:opacity-90 transition-opacity shadow-sm">
+<span class="material-symbols-outlined text-[16px]">approval</span>
+<span>Ký duyệt CA-Token</span>
+</button>
+</div>
+<button class="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg font-label-xs text-label-xs text-primary hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[14px]">file_open</span>
+<span>Xem hóa đơn điện tử gốc (XML / PDF bản quyền)</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Section 5: Bottom Strategic Supplier Directory Snapshot -->
+<section class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">handshake</span>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Danh Bạ Đối Tác Cung Ứng Dược Hàng Đầu</h3>
+<p class="font-label-xs text-label-xs text-on-surface-variant">Đánh giá tín nhiệm phân phối theo tiêu chuẩn Thực hành tốt phân phối thuốc GDP</p>
+</div>
+</div>
+<button class="inline-flex items-center gap-1 font-label-sm text-label-sm text-primary hover:underline">
+<span>Xem tất cả 48 nhà cung cấp</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-sm pt-1">
+<!-- Supplier 1 -->
+<div class="p-3.5 bg-surface-container-low rounded-lg space-y-2 hover:bg-surface-container transition-all">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center font-bold text-primary font-headline-sm">
+                S
+              </div>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-on-surface">Sanofi-Aventis VN</h4>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Tập đoàn Dược phẩm</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full font-label-xs text-label-xs bg-primary-fixed text-on-primary-fixed font-bold">
+              AAA
+            </span>
+</div>
+<div class="space-y-1 font-label-xs text-label-xs text-on-surface-variant pt-1 border-t border-surface-container">
+<div class="flex justify-between">
+<span>Hạn mức công nợ:</span>
+<span class="font-medium text-on-surface">45 ngày (3 tỷ đ)</span>
+</div>
+<div class="flex justify-between">
+<span>Nợ đến hạn:</span>
+<span class="font-semibold text-primary">0 đ (Tốt)</span>
+</div>
+<div class="flex justify-between">
+<span>Thời gian giao hàng:</span>
+<span class="font-medium text-on-surface">2 - 4 giờ</span>
+</div>
+</div>
+</div>
+<!-- Supplier 2 -->
+<div class="p-3.5 bg-surface-container-low rounded-lg space-y-2 hover:bg-surface-container transition-all">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center font-bold text-secondary font-headline-sm">
+                Z
+              </div>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-on-surface">Zuellig Pharma VN</h4>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Phân phối Dược đa quốc gia</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full font-label-xs text-label-xs bg-primary-fixed text-on-primary-fixed font-bold">
+              AAA
+            </span>
+</div>
+<div class="space-y-1 font-label-xs text-label-xs text-on-surface-variant pt-1 border-t border-surface-container">
+<div class="flex justify-between">
+<span>Hạn mức công nợ:</span>
+<span class="font-medium text-on-surface">30 ngày (5 tỷ đ)</span>
+</div>
+<div class="flex justify-between">
+<span>Cold chain logistics:</span>
+<span class="font-semibold text-primary">Đạt chuẩn WHO</span>
+</div>
+<div class="flex justify-between">
+<span>Thời gian giao hàng:</span>
+<span class="font-medium text-on-surface">Trong ngày</span>
+</div>
+</div>
+</div>
+<!-- Supplier 3 -->
+<div class="p-3.5 bg-surface-container-low rounded-lg space-y-2 hover:bg-surface-container transition-all">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center font-bold text-tertiary font-headline-sm">
+                P
+              </div>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-on-surface">Dược phẩm TW 1</h4>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Pharbaco Việt Nam</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full font-label-xs text-label-xs bg-surface-container-high text-on-surface font-bold">
+              AA
+            </span>
+</div>
+<div class="space-y-1 font-label-xs text-label-xs text-on-surface-variant pt-1 border-t border-surface-container">
+<div class="flex justify-between">
+<span>Hạn mức công nợ:</span>
+<span class="font-medium text-on-surface">30 ngày (1.5 tỷ đ)</span>
+</div>
+<div class="flex justify-between">
+<span>Nhóm chính:</span>
+<span class="font-medium text-on-surface">Kháng sinh tiêm truyền</span>
+</div>
+<div class="flex justify-between">
+<span>Thời gian giao:</span>
+<span class="font-medium text-on-surface">12 - 24 giờ</span>
+</div>
+</div>
+</div>
+<!-- Supplier 4 -->
+<div class="p-3.5 bg-surface-container-low rounded-lg space-y-2 hover:bg-surface-container transition-all">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center font-bold text-primary font-headline-sm">
+                D
+              </div>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-on-surface">DHG Pharma</h4>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Dược Hậu Giang Japan-GMP</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full font-label-xs text-label-xs bg-primary-fixed text-on-primary-fixed font-bold">
+              AAA
+            </span>
+</div>
+<div class="space-y-1 font-label-xs text-label-xs text-on-surface-variant pt-1 border-t border-surface-container">
+<div class="flex justify-between">
+<span>Hạn mức công nợ:</span>
+<span class="font-medium text-on-surface">60 ngày (2 tỷ đ)</span>
+</div>
+<div class="flex justify-between">
+<span>Tiêu chuẩn nhà máy:</span>
+<span class="font-semibold text-primary">Japan-GMP</span>
+</div>
+<div class="flex justify-between">
+<span>Thời gian giao:</span>
+<span class="font-medium text-on-surface">Trong 24 giờ</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+
+<script src="js/pages/PharmacyReceipt.js"></script>

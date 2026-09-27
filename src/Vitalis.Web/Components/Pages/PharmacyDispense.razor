@@ -1,0 +1,645 @@
+@page "/pharmacy/dispense"
+@layout PharmacyLayout
+
+<PageTitle>Phát thuốc · Vitalis</PageTitle>
+
+<div class="flex flex-col w-full">
+<!-- Interactive script for active dispense desk -->
+
+<div class="p-space-lg space-y-space-md max-w-[1600px] mx-auto w-full">
+<!-- Breadcrumb & Module Navigation Meta -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pb-space-xs">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[18px]">prescriptions</span>
+</span>
+<div class="flex items-center gap-1.5 font-body-sm text-body-sm text-on-surface-variant">
+<span class="font-title-md text-title-md text-on-surface font-bold tracking-tight">Cấp Phát Thuốc Ngoại Trú</span>
+<span class="text-outline-variant">/</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">VC-17 Dispense Station</span>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-xs text-label-xs font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Quầy 01 - Hoạt động
+        </span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-xs text-label-xs text-on-surface-variant">Hệ thống dược trực tuyến:</span>
+<span class="inline-flex items-center gap-1 text-primary font-label-xs text-label-xs font-semibold">
+<span class="material-symbols-outlined text-[14px]">wifi</span> HIS • VITALIS Connected
+        </span>
+<span class="text-outline-variant mx-1">|</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Phiên làm việc:</span>
+<span class="font-label-xs text-label-xs text-on-surface font-semibold">DS. Lê Hoàng Nam</span>
+</div>
+</div>
+<!-- 1. Top KPI Summary Cards (4 Bento Stats) -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Card 1: Chờ cấp phát -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-xs text-label-xs uppercase tracking-wider text-on-surface-variant font-bold">Chờ cấp phát hôm nay</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-display text-display text-on-surface font-bold">18</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">đơn thuốc</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">pending_actions</span>
+</div>
+</div>
+<div class="flex flex-wrap gap-1.5 mt-space-sm pt-space-xs border-none">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-[11px] font-semibold">4 BHYT ưu tiên</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-low text-tertiary font-label-xs text-[11px] font-medium">2 đã thanh toán chờ lấy</span>
+</div>
+</div>
+<!-- Card 2: Hoàn thành cấp phát -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-xs text-label-xs uppercase tracking-wider text-on-surface-variant font-bold">Đã hoàn thành cấp phát</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-display text-display text-primary font-bold">76</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">/ 94 dự kiến</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-xs text-label-xs mt-space-sm pt-space-xs">
+<span>Sản lượng: <strong class="text-on-surface">342</strong> hộp • vỉ</span>
+<span class="text-primary font-semibold">80.8% tiến độ</span>
+</div>
+</div>
+<!-- Card 3: Thời gian soạn TB -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-xs text-label-xs uppercase tracking-wider text-on-surface-variant font-bold">Thời gian soạn &amp; kiểm soát</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-display text-display text-on-surface font-bold">3.8</span>
+<span class="font-title-md text-title-md text-on-surface-variant">phút/đơn</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[22px]">timer</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 mt-space-sm pt-space-xs">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-[11px] font-semibold">
+<span class="material-symbols-outlined text-[12px] mr-0.5">trending_down</span> Chuẩn &lt; 5.0p
+          </span>
+<span class="text-on-surface-variant font-label-xs text-[11px]">Nhanh hơn 1.2p so với ca qua</span>
+</div>
+</div>
+<!-- Card 4: Cảnh báo Dược lâm sàng -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-xs text-label-xs uppercase tracking-wider text-error font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">verified_user</span> Dược lâm sàng trong ngày
+            </span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-display text-display text-error font-bold">03</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">can thiệp</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">warning</span>
+</div>
+</div>
+<div class="text-on-surface-variant font-label-xs text-[11px] mt-space-sm pt-space-xs leading-relaxed truncate">
+          2 tương tác nhẹ • 1 đề xuất đổi liều đã BS xác nhận
+        </div>
+</div>
+</section>
+<!-- 2. Action Header & Barcode Scanner Bar -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[28px]">qr_code_scanner</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Quầy Cấp Phát Thuốc Ngoại Trú (Counter 01)</h2>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-primary font-label-xs text-label-xs font-semibold">Sẵn sàng quét mã</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Đang mở phiên đối soát tự động qua mã vạch DataMatrix &amp; CCCD gắn chip</p>
+</div>
+</div>
+<!-- Barcode / QR Scanner Input + Fast Hotkeys -->
+<div class="flex-1 max-w-2xl flex flex-col md:flex-row items-center gap-space-xs">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary text-[20px]">barcode_scanner</span>
+<input class="w-full h-11 pl-10 pr-24 rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant outline-none focus:bg-surface-container-lowest transition-all" placeholder="Quét mã vạch đơn thuốc (F1) hoặc CCCD / Mã BN..." type="text" value="DT-2026-08942"/>
+<button class="absolute right-1.5 top-1.5 bottom-1.5 px-3 rounded-lg bg-primary text-on-primary font-label-xs text-label-xs font-semibold flex items-center gap-1 hover:bg-tertiary-container transition-colors" onclick="scanAllItems()" type="button">
+<span class="material-symbols-outlined text-[16px]">qr_code</span> Quét tự động (F1)
+          </button>
+</div>
+<button class="w-full md:w-auto h-11 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold flex items-center justify-center gap-2 whitespace-nowrap transition-colors" type="button">
+<span class="material-symbols-outlined text-primary text-[18px]">volume_up</span>
+<span>Gọi số nhận thuốc (F2)</span>
+</button>
+</div>
+</div>
+<!-- Filter chips for Prescriptions queue -->
+<div class="flex items-center justify-between overflow-x-auto pb-1 gap-2">
+<div class="flex items-center gap-1.5">
+<button class="px-3.5 py-1.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm font-semibold flex items-center gap-1 shadow-sm">
+<span>Tất cả đơn</span>
+<span class="px-1.5 py-0.2 rounded-full bg-surface-container-lowest/20 text-on-primary text-[10px]">18</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium flex items-center gap-1 transition-colors">
+<span>BHYT ngoại trú</span>
+<span class="px-1.5 py-0.2 rounded-full bg-surface-container-high text-primary text-[10px]">11</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium flex items-center gap-1 transition-colors">
+<span>Thu phí / Dịch vụ</span>
+<span class="px-1.5 py-0.2 rounded-full bg-surface-container text-on-surface text-[10px]">5</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium flex items-center gap-1 transition-colors">
+<span>Ưu tiên • Hẹn giờ</span>
+<span class="px-1.5 py-0.2 rounded-full bg-error-container text-on-error-container text-[10px]">2</span>
+</button>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-xs text-label-xs shrink-0">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> Khớp mã barcode</span>
+<span class="flex items-center gap-1 ml-2"><span class="w-2 h-2 rounded-full bg-surface-variant"></span> Chưa đối chiếu</span>
+</div>
+</div>
+<!-- 3. Two-Column Workspace Layout (65% Left / 35% Right) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
+<!-- ================= LEFT COLUMN: CHI TIẾT ĐƠN SOẠN PHÁT (8/12 cols) ================= -->
+<div class="lg:col-span-8 space-y-space-md">
+<!-- Patient & Prescription Banner (High Polish Master Card) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-md">
+<div class="flex flex-wrap items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-14 h-14 rounded-xl bg-surface-container-low flex items-center justify-center text-primary font-display text-[22px] font-bold">
+                PB
+              </div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Phạm Quốc Bảo</h3>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-xs text-label-xs font-semibold">Nam, 58 tuổi</span>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-mono">Mã BN: BN0048</span>
+</div>
+<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-on-surface-variant font-body-sm text-body-sm mt-0.5">
+<span class="text-primary font-semibold font-mono">Đơn: DT-2026-08942</span>
+<span>•</span>
+<span>BHYT: <strong class="text-on-surface font-mono font-medium">DN4790123456789 (80%)</strong></span>
+<span>•</span>
+<span>Phòng khám Nội Tim Mạch: <strong class="text-on-surface">P.203</strong></span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-end gap-1">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-bold shadow-sm">
+<span class="material-symbols-outlined text-[16px]">paid</span> Đã thu phí ngoại trú
+              </span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">
+                Kê lúc 09:15 • Thu tiền 09:22 (Chờ phát: 8 phút)
+              </span>
+</div>
+</div>
+<!-- Doctor & Diagnostic Note Bar -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">stethoscope</span>
+<div class="text-left font-body-sm text-body-sm">
+<span class="text-on-surface-variant">Bác sĩ kê:</span>
+<span class="font-semibold text-on-surface ml-1">BS.CKII Nguyễn Văn Linh</span>
+<span class="text-on-surface-variant text-label-xs ml-1">(Khoa Tim Mạch Can Thiệp)</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[20px]">assignment</span>
+<div class="font-body-sm text-body-sm text-on-surface truncate">
+<span class="text-on-surface-variant">Chẩn đoán:</span>
+<span class="font-medium ml-1">Bệnh tim thiếu máu cục bộ mãn - Tăng huyết áp độ II (I25.1, I10)</span>
+</div>
+</div>
+</div>
+<!-- CẢNH BÁO DỊ ỨNG NỔI BẬT (CRITICAL MEDICAL ALERT) -->
+<div class="p-space-sm rounded-xl bg-error-container/40 flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-error text-on-error flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-error font-bold uppercase tracking-wider">Tiền sử Dị ứng Cần Lưu Ý Khi Cấp Phát:</span>
+<span class="font-label-xs text-[10px] text-error font-semibold bg-surface-container-lowest px-2 py-0.5 rounded-full">Hồ sơ xác thực bởi Bác sĩ</span>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-error text-on-error font-label-xs text-label-xs font-bold shadow-sm">
+<span class="material-symbols-outlined text-[14px]">dangerous</span> DỊ ỨNG PENICILLIN (Tiền sử Sốc phản vệ độ III)
+                </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-high text-tertiary font-label-xs text-label-xs font-semibold">
+<span class="material-symbols-outlined text-[14px]">info</span> DỊ ỨNG HẢI SẢN (Mẩn ngứa nhẹ)
+                </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant ml-1">
+                  Đơn hiện tại <strong class="text-on-surface">KHÔNG</strong> chứa nhóm Beta-lactam.
+                </span>
+</div>
+</div>
+</div>
+<!-- Clinical Pharmacy Verification Banner (Vitalis AI Guardian & Dược lâm sàng) -->
+<div class="p-space-sm rounded-xl bg-surface-container-low flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-primary font-bold">Vitalis Clinical AI Guardian • Dược lâm sàng đã thẩm duyệt</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container-high text-primary font-label-xs text-[10px] font-semibold">Tự động đối soát</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-0.5 leading-relaxed">
+                Đã kiểm tra tương tác thuốc: <strong class="text-primary font-semibold">AN TOÀN</strong>. 
+                <span class="text-on-surface-variant">BS đã điều chỉnh thay thế Aspirin bằng</span>
+<strong class="text-on-surface">Clopidogrel 75mg</strong>
+<span class="text-on-surface-variant">theo khuyến cáo lâm sàng do người bệnh có tiền sử viêm loét dạ dày - tá tràng.</span>
+</p>
+</div>
+</div>
+</div>
+<!-- BẢNG DANH MỤC THUỐC CẦN SOẠN & PHÁT (Prescription Items Table) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="px-space-md py-space-sm bg-surface-container-low flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-on-surface font-bold">Danh Mục Thuốc Cần Soạn &amp; Phát</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-xs text-label-xs font-semibold">4 Biệt dược</span>
+</div>
+<div class="flex items-center gap-2 font-label-xs text-label-xs">
+<span class="text-on-surface-variant">Tiến độ đối soát vạch:</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-bold"><span id="verified-count-num">2</span> / 4 thuốc</span>
+<button class="ml-2 text-primary hover:underline font-semibold flex items-center gap-0.5" onclick="scanAllItems()">
+<span class="material-symbols-outlined text-[14px]">done_all</span> Khớp nhanh tất cả
+              </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest text-on-surface-variant font-label-xs text-label-xs uppercase tracking-wider">
+<th class="py-3 px-3 text-center w-10">STT</th>
+<th class="py-3 px-4">Tên biệt dược • Hoạt chất</th>
+<th class="py-3 px-3">Quy cách • Vị trí kệ</th>
+<th class="py-3 px-3 text-center">SL Kê</th>
+<th class="py-3 px-3 text-center">SL Soạn</th>
+<th class="py-3 px-3">Số lô • Hạn dùng</th>
+<th class="py-3 px-4 text-center">Trạng thái mã vạch</th>
+</tr>
+</thead>
+<tbody class="divide-none font-body-sm text-body-sm text-on-surface">
+<!-- Row 1: Clopidogrel 75mg (Verified) -->
+<tr class="hover:bg-surface-container-low/70 transition-colors" id="item-row-1">
+<td class="py-3.5 px-3 text-center font-bold text-on-surface-variant">01</td>
+<td class="py-3.5 px-4">
+<div class="font-title-md text-title-md text-primary font-bold">Clopidogrel 75mg (Plavix)</div>
+<div class="text-on-surface-variant font-label-xs text-label-xs">Hoạt chất: Clopidogrel bisulfate</div>
+<span class="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-xs text-[10px]">Đường uống • Sau ăn</span>
+</td>
+<td class="py-3.5 px-3">
+<div class="text-on-surface font-medium">Hộp 30 viên (3 vỉ)</div>
+<div class="inline-flex items-center gap-1 font-label-xs text-label-xs font-semibold text-primary mt-0.5">
+<span class="material-symbols-outlined text-[13px]">shelves</span> Kệ A2-04
+                    </div>
+</td>
+<td class="py-3.5 px-3 text-center font-bold text-on-surface text-base">30</td>
+<td class="py-3.5 px-3 text-center">
+<input class="qty-picked w-14 h-8 text-center rounded bg-surface-container-low text-primary font-bold text-base outline-none" data-max="30" readonly="" type="number" value="30"/>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-mono font-semibold text-on-surface">LOT26081</div>
+<div class="text-on-surface-variant font-label-xs text-label-xs">HSD: 12/2027</div>
+</td>
+<td class="py-3.5 px-4 text-center">
+<button class="scan-status-badge inline-flex items-center gap-1 px-space-xs py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-[11px] font-semibold" data-status="verified" onclick="toggleScanRow('item-row-1')" type="button">
+<span class="material-symbols-outlined text-[14px] scan-status-icon">check_circle</span>
+<span class="scan-status-text">Đã khớp vạch</span>
+</button>
+</td>
+</tr>
+<!-- Row 2: Nitromint 2.6mg (Verified) -->
+<tr class="hover:bg-surface-container-low/70 transition-colors bg-surface-container-lowest" id="item-row-2">
+<td class="py-3.5 px-3 text-center font-bold text-on-surface-variant">02</td>
+<td class="py-3.5 px-4">
+<div class="font-title-md text-title-md text-primary font-bold">Nitromint 2.6mg retard</div>
+<div class="text-on-surface-variant font-label-xs text-label-xs">Hoạt chất: Nitroglycerin phóng thích chậm</div>
+<span class="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-xs text-[10px]">Giãn mạch vành • Uống nguyên viên</span>
+</td>
+<td class="py-3.5 px-3">
+<div class="text-on-surface font-medium">Lọ 30 viên</div>
+<div class="inline-flex items-center gap-1 font-label-xs text-label-xs font-semibold text-primary mt-0.5">
+<span class="material-symbols-outlined text-[13px]">shelves</span> Kệ B1-12
+                    </div>
+</td>
+<td class="py-3.5 px-3 text-center font-bold text-on-surface text-base">30</td>
+<td class="py-3.5 px-3 text-center">
+<input class="qty-picked w-14 h-8 text-center rounded bg-surface-container-low text-primary font-bold text-base outline-none" data-max="30" readonly="" type="number" value="30"/>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-mono font-semibold text-on-surface">NIT9043</div>
+<div class="text-on-surface-variant font-label-xs text-label-xs">HSD: 08/2027</div>
+</td>
+<td class="py-3.5 px-4 text-center">
+<button class="scan-status-badge inline-flex items-center gap-1 px-space-xs py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-[11px] font-semibold" data-status="verified" onclick="toggleScanRow('item-row-2')" type="button">
+<span class="material-symbols-outlined text-[14px] scan-status-icon">check_circle</span>
+<span class="scan-status-text">Đã khớp vạch</span>
+</button>
+</td>
+</tr>
+<!-- Row 3: Concor 2.5mg (Pending Scan) -->
+<tr class="hover:bg-surface-container-low/70 transition-colors bg-surface-container-lowest" id="item-row-3">
+<td class="py-3.5 px-3 text-center font-bold text-on-surface-variant">03</td>
+<td class="py-3.5 px-4">
+<div class="font-title-md text-title-md text-on-surface font-bold">Concor 2.5mg</div>
+<div class="text-on-surface-variant font-label-xs text-label-xs">Hoạt chất: Bisoprolol fumarate</div>
+<span class="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-xs text-[10px]">Chẹn Beta giao cảm</span>
+</td>
+<td class="py-3.5 px-3">
+<div class="text-on-surface font-medium">Hộp 30 viên (3 vỉ)</div>
+<div class="inline-flex items-center gap-1 font-label-xs text-label-xs font-semibold text-on-surface mt-0.5">
+<span class="material-symbols-outlined text-[13px]">shelves</span> Kệ A1-08
+                    </div>
+</td>
+<td class="py-3.5 px-3 text-center font-bold text-on-surface text-base">30</td>
+<td class="py-3.5 px-3 text-center">
+<input class="qty-picked w-14 h-8 text-center rounded bg-surface-container-low text-on-surface font-semibold text-base outline-none" data-max="30" type="number" value="30"/>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-mono font-semibold text-on-surface">CON3312</div>
+<div class="text-on-surface-variant font-label-xs text-label-xs">HSD: 04/2028</div>
+</td>
+<td class="py-3.5 px-4 text-center">
+<button class="scan-status-badge inline-flex items-center gap-1 px-space-xs py-0.5 rounded-full bg-surface-container-highest text-tertiary font-label-xs text-[11px] font-semibold cursor-pointer" data-status="pending" onclick="toggleScanRow('item-row-3')" type="button">
+<span class="material-symbols-outlined text-[14px] scan-status-icon">hourglass_empty</span>
+<span class="scan-status-text">Chờ quét mã</span>
+</button>
+</td>
+</tr>
+<!-- Row 4: Lipitor 20mg (Pending Scan) -->
+<tr class="hover:bg-surface-container-low/70 transition-colors bg-surface-container-lowest" id="item-row-4">
+<td class="py-3.5 px-3 text-center font-bold text-on-surface-variant">04</td>
+<td class="py-3.5 px-4">
+<div class="font-title-md text-title-md text-on-surface font-bold">Lipitor 20mg</div>
+<div class="text-on-surface-variant font-label-xs text-label-xs">Hoạt chất: Atorvastatin calcium</div>
+<span class="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-label-xs text-[10px]">Hạ lipid máu • Uống tối</span>
+</td>
+<td class="py-3.5 px-3">
+<div class="text-on-surface font-medium">Hộp 30 viên (3 vỉ)</div>
+<div class="inline-flex items-center gap-1 font-label-xs text-label-xs font-semibold text-on-surface mt-0.5">
+<span class="material-symbols-outlined text-[13px]">shelves</span> Kệ C3-02
+                    </div>
+</td>
+<td class="py-3.5 px-3 text-center font-bold text-on-surface text-base">30</td>
+<td class="py-3.5 px-3 text-center">
+<input class="qty-picked w-14 h-8 text-center rounded bg-surface-container-low text-on-surface font-semibold text-base outline-none" data-max="30" type="number" value="30"/>
+</td>
+<td class="py-3.5 px-3">
+<div class="font-mono font-semibold text-on-surface">LIP5520</div>
+<div class="text-on-surface-variant font-label-xs text-label-xs">HSD: 10/2027</div>
+</td>
+<td class="py-3.5 px-4 text-center">
+<button class="scan-status-badge inline-flex items-center gap-1 px-space-xs py-0.5 rounded-full bg-surface-container-highest text-tertiary font-label-xs text-[11px] font-semibold cursor-pointer" data-status="pending" onclick="toggleScanRow('item-row-4')" type="button">
+<span class="material-symbols-outlined text-[14px] scan-status-icon">hourglass_empty</span>
+<span class="scan-status-text">Chờ quét mã</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Khối hướng dẫn sử dụng & In nhãn phụ (Usage Instructions & Auxiliary Label) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-sm">
+<div class="flex flex-wrap items-center justify-between gap-space-xs pb-space-xs">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">label</span>
+<h4 class="font-title-md text-title-md text-on-surface font-bold">Hướng Dẫn Liều Dùng &amp; Nhãn Phụ Dược Phẩm</h4>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-xs text-label-xs font-semibold flex items-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">print</span> In tem nhãn phụ liều dùng (Ctrl+P)
+              </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-xs text-label-xs font-semibold flex items-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">description</span> Phiếu hướng dẫn dùng thuốc
+              </button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm">
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between">
+<div class="flex items-start justify-between gap-2">
+<span class="font-label-sm text-label-sm font-bold text-primary">1. Clopidogrel 75mg</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-label-xs text-[10px]">1 viên/ngày</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-1">Uống 1 viên vào buổi sáng sau ăn no. Tuyệt đối không tự ý ngưng thuốc phòng ngừa huyết khối.</p>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between">
+<div class="flex items-start justify-between gap-2">
+<span class="font-label-sm text-label-sm font-bold text-primary">2. Nitromint 2.6mg</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-label-xs text-[10px]">2 viên/ngày</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-1">Uống 1 viên x 2 lần/ngày (08h sáng - 14h chiều). Nuốt nguyên viên, không nhai vỡ.</p>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between">
+<div class="flex items-start justify-between gap-2">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">3. Concor 2.5mg</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-label-xs text-[10px]">1 viên/ngày</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-1">Uống 1 viên vào buổi sáng lúc 08:00. Theo dõi nhịp tim (báo BS nếu nhịp dưới 55 l/p).</p>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between">
+<div class="flex items-start justify-between gap-2">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">4. Lipitor 20mg</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-label-xs text-[10px]">1 viên/ngày</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface mt-1">Uống 1 viên vào buổi tối trước khi đi ngủ. Tránh dùng cùng nước ép bưởi chùm.</p>
+</div>
+</div>
+</div>
+<!-- BOTTOM WORKBENCH ACTION BAR (Sticky-ready style) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-md flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-2">
+<button class="px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">pause_circle</span> Tạm hoãn đơn
+            </button>
+<button class="px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">inventory</span> Báo thiếu / Chuyển kho
+            </button>
+<button class="px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">clinical_notes</span> Xem EMR bệnh án
+            </button>
+</div>
+<div class="flex items-center gap-3">
+<div class="hidden xl:flex flex-col text-right">
+<span class="font-label-xs text-label-xs text-on-surface-variant">Tổng chi trả BHYT + BN:</span>
+<span class="font-title-md text-title-md text-primary font-bold">1.285.000 VNĐ</span>
+</div>
+<button class="px-6 py-3 rounded-lg bg-primary hover:bg-tertiary-container text-on-primary font-title-md text-title-md font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer" onclick="scanAllItems()" type="button">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+<span>XÁC NHẬN CẤP PHÁT &amp; HOÀN TẤT ĐƠN (F10)</span>
+</button>
+</div>
+</div>
+</div>
+<!-- ================= RIGHT COLUMN: QUEUE & CLINICAL ASSISTANT (4/12 cols) ================= -->
+<div class="lg:col-span-4 space-y-space-md">
+<!-- Real-time Dispense Queue -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">queue</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Hàng Chờ Soạn Thuốc</h3>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-xs text-label-xs font-semibold">18 đơn chờ</span>
+</div>
+<!-- Queue mini tabs -->
+<div class="flex items-center gap-1 p-1 rounded-lg bg-surface-container-low text-on-surface-variant font-label-xs text-label-xs">
+<button class="flex-1 py-1 rounded bg-surface-container-lowest text-primary font-bold shadow-xs">Chờ soạn (6)</button>
+<button class="flex-1 py-1 rounded hover:text-on-surface">Đang kiểm tra (2)</button>
+<button class="flex-1 py-1 rounded hover:text-on-surface">Chờ lấy (4)</button>
+<button class="flex-1 py-1 rounded hover:text-on-surface">Đã phát (76)</button>
+</div>
+<!-- Queue Cards Stack -->
+<div class="space-y-space-xs pt-1">
+<!-- Card 1: Active Patient -->
+<div class="p-space-sm rounded-lg bg-surface-container-low cursor-pointer transition-all">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-primary font-bold">Phạm Quốc Bảo</span>
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+</div>
+<span class="font-mono text-label-xs text-primary font-semibold">DT-2026-08942 • BN0048</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-primary text-on-primary font-label-xs text-[10px] font-bold">ĐANG SOẠN</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-xs text-label-xs mt-2">
+<span>4 mặt hàng thuốc</span>
+<span>Thanh toán: 09:22 (Chờ 8p)</span>
+</div>
+</div>
+<!-- Card 2: Nguyen Van An (Priority) -->
+<div class="p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-all">
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-on-surface font-bold">Nguyễn Văn An</span>
+<span class="px-1.5 py-0.2 rounded bg-error-container text-on-error-container font-label-xs text-[10px] font-bold">ƯU TIÊN</span>
+</div>
+<span class="font-mono text-label-xs text-on-surface-variant">DT-2026-08940 • BHYT 100%</span>
+</div>
+<span class="font-label-xs text-label-xs text-error font-semibold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]">alarm</span> Chờ 14p
+                </span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-xs text-label-xs mt-2">
+<span>3 mặt hàng thuốc</span>
+<span>BS. Trần Thuỳ Trang (P.104)</span>
+</div>
+</div>
+<!-- Card 3: Do Trong Duc -->
+<div class="p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-all">
+<div class="flex items-start justify-between">
+<div>
+<div class="font-title-md text-title-md text-on-surface font-bold">Đỗ Trọng Đức</div>
+<span class="font-mono text-label-xs text-on-surface-variant">DT-2026-08943 • Dịch vụ VIP</span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant font-medium">Chờ 5p</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-xs text-label-xs mt-2">
+<span>5 mặt hàng thuốc</span>
+<span class="text-primary font-semibold">Đã quét kệ A</span>
+</div>
+</div>
+<!-- Card 4: Vu Kim Oanh -->
+<div class="p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-all">
+<div class="flex items-start justify-between">
+<div>
+<div class="font-title-md text-title-md text-on-surface font-bold">Vũ Kim Oanh</div>
+<span class="font-mono text-label-xs text-on-surface-variant">DT-2026-08945 • BHYT</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-xs text-[10px]">Vừa nạp tiền</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-xs text-label-xs mt-2">
+<span>2 mặt hàng thuốc</span>
+<span>P. Khám Nội Tổng Quát</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Tra cứu Dược lâm sàng & Tương tác nhanh -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">psychology_alt</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Tra Cứu Dược • Trao Đổi Bác Sĩ</h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Kiểm tra tức thời cơ chế phối hợp hoạt chất theo Dược thư Quốc gia Việt Nam:
+          </p>
+<div class="space-y-2">
+<div class="relative">
+<input class="w-full h-9 px-3 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-on-surface outline-none" placeholder="Thuốc 1: Nhập tên hoạt chất..." type="text" value="Clopidogrel 75mg"/>
+</div>
+<div class="relative">
+<input class="w-full h-9 px-3 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-on-surface outline-none" placeholder="Thuốc 2: Nhập tên hoạt chất cần đối chiếu..." type="text" value="Aspirin 81mg"/>
+</div>
+<button class="w-full py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold flex items-center justify-center gap-1.5 transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">compare_arrows</span> Kiểm tra cặp tương tác
+            </button>
+</div>
+<!-- Alert summary note -->
+<div class="p-space-sm rounded-lg bg-surface-container-low text-label-xs text-label-xs space-y-1">
+<div class="flex items-center gap-1 text-tertiary font-bold">
+<span class="material-symbols-outlined text-[14px]">info</span> Ghi chú Dược sĩ lâm sàng:
+            </div>
+<p class="text-on-surface leading-normal">
+              BN có tiền sử trào ngược dạ dày, kết hợp DAPT tăng nguy cơ xuất huyết tiêu hoá. Bác sĩ chỉ định Clopidogrel đơn trị liệu là hoàn toàn phù hợp.
+            </p>
+</div>
+<!-- Thông tin liên hệ nhanh bác sĩ kê đơn -->
+<div class="p-space-sm rounded-lg bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary font-bold text-label-sm">
+                NL
+              </div>
+<div>
+<div class="font-label-sm text-label-sm font-bold text-on-surface">BS.CKII Nguyễn Văn Linh</div>
+<div class="font-label-xs text-label-xs text-on-surface-variant">Phòng 203 • Ext: <span class="font-mono font-bold text-primary">2031</span></div>
+</div>
+</div>
+<button class="px-2.5 py-1.5 rounded-lg bg-primary text-on-primary font-label-xs text-label-xs font-semibold flex items-center gap-1 hover:bg-tertiary transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">call</span> Gọi nội bộ
+            </button>
+</div>
+</div>
+<!-- Bàn giao & Ký nhận bệnh nhân preview -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-on-surface font-bold">Biên Nhận Bàn Giao</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">verified</span>
+</div>
+<div class="space-y-1.5 font-body-sm text-body-sm">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span>Người nhận thuốc:</span>
+<span class="font-semibold text-on-surface">Phạm Quốc Bảo (Chính chủ)</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span>Phương thức nhận:</span>
+<span class="font-semibold text-on-surface">Nhận trực tiếp tại Quầy 01</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span>Tư vấn dùng thuốc:</span>
+<span class="text-primary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check</span> Đã sẵn sàng dặn dò
+              </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script src="js/pages/PharmacyDispense.js"></script>
