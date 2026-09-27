@@ -1,14 +1,16 @@
 @page "/my-appointments"
 @layout PatientLayout
+@attribute [Authorize(Roles = "Patient")]
+@using Vitalis.Application.Common
+@using Vitalis.Application.DTOs.Appointments
+@using Vitalis.Application.DTOs.Doctors
+@using Vitalis.Domain.Enums
+@inject VitalisApiClient Api
+@inject NavigationManager Navigation
 
 <PageTitle>Lịch hẹn của tôi · Vitalis</PageTitle>
 
 <div class="max-w-7xl mx-auto px-6 lg:px-12 py-8"><div class="flex flex-col w-full">
-<!-- Dynamic Notification Banner -->
-<div class="fixed top-20 right-6 z-50 transform translate-y-[-20px] opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-3 bg-surface-container-lowest text-on-surface px-4 py-3 rounded-xl shadow-xl" id="toastNotification">
-<span class="material-symbols-outlined text-primary text-[22px]">check_circle</span>
-<span class="font-label-md text-label-md font-semibold text-on-surface" id="toastMsg">Yêu cầu đã được xử lý</span>
-</div>
 <!-- Page Header Area -->
 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6">
 <div class="flex flex-col gap-1.5">
@@ -23,12 +25,22 @@
 </div>
 <!-- Quick Primary Action -->
 <div class="flex items-center gap-3 shrink-0">
-<button class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-container text-on-primary rounded-xl font-label-md text-label-md hover:bg-primary transition-all shadow-sm active:scale-95" onclick="showNotification('Chuyển hướng đến màn hình đặt hẹn khám mới...')" type="button">
+<button class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-container text-on-primary rounded-xl font-label-md text-label-md hover:bg-primary transition-all shadow-sm active:scale-95" type="button" @onclick='() => Navigation.NavigateTo("/booking")'>
 <span class="material-symbols-outlined text-[20px]">add</span>
 <span>Đặt lịch khám mới</span>
 </button>
 </div>
 </div>
+@if (ErrorMessage is not null)
+{
+<div class="mb-6 flex items-start gap-3 p-3.5 rounded-xl bg-error-container text-on-error-container shadow-sm">
+<span class="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">error</span>
+<p class="flex-1 font-body-sm text-body-sm">@ErrorMessage</p>
+<button class="text-on-error-container hover:opacity-75" @onclick="() => ErrorMessage = null" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+}
 <!-- Summary Metric Strip -->
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
 <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center justify-between">
@@ -38,10 +50,9 @@
 </div>
 <div>
 <p class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">Lịch hẹn sắp tới</p>
-<p class="font-headline-sm text-headline-sm text-on-surface font-bold">02</p>
+<p class="font-headline-sm text-headline-sm text-on-surface font-bold">@UpcomingAppointments.Count.ToString("00")</p>
 </div>
 </div>
-<span class="font-label-xs text-label-xs text-primary bg-primary-fixed/40 px-2 py-0.5 rounded-full">Trong 48h</span>
 </div>
 <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center justify-between">
 <div class="flex items-center gap-3">
@@ -50,10 +61,9 @@
 </div>
 <div>
 <p class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">Lịch sử hoàn tất</p>
-<p class="font-headline-sm text-headline-sm text-on-surface font-bold">08</p>
+<p class="font-headline-sm text-headline-sm text-on-surface font-bold">@CompletedAppointments.Count.ToString("00")</p>
 </div>
 </div>
-<span class="font-label-xs text-label-xs text-secondary bg-secondary-fixed/50 px-2 py-0.5 rounded-full">Năm 2026</span>
 </div>
 <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center justify-between">
 <div class="flex items-center gap-3">
@@ -62,73 +72,65 @@
 </div>
 <div>
 <p class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">Đã hủy bỏ</p>
-<p class="font-headline-sm text-headline-sm text-on-surface font-bold">01</p>
+<p class="font-headline-sm text-headline-sm text-on-surface font-bold">@CancelledAppointments.Count.ToString("00")</p>
 </div>
 </div>
-<span class="font-label-xs text-label-xs text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded-full">Theo yêu cầu</span>
 </div>
 </div>
 <!-- Main Workstation Card -->
 <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden mb-12">
 <!-- Tab Controls with Count Badges -->
 <div class="flex items-center gap-1 sm:gap-2 px-6 pt-3 bg-surface-container-lowest">
-<button class="relative flex items-center gap-2 py-3 px-3 font-label-md text-label-md text-primary font-semibold transition-all" id="tabUpcoming" onclick="switchTab('upcoming')" type="button">
+<button class="relative flex items-center gap-2 py-3 px-3 font-label-md text-label-md transition-all @(ActiveTab == "upcoming" ? "text-primary font-semibold" : "text-on-surface-variant hover:text-on-surface")" type="button" @onclick='() => ActiveTab = "upcoming"'>
 <span>Sắp tới</span>
-<span class="inline-flex items-center justify-center text-on-primary bg-primary text-[11px] font-bold px-2 py-0.5 rounded-full">2</span>
-<span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" id="tabUpcomingIndicator"></span>
+<span class="inline-flex items-center justify-center text-on-primary bg-primary text-[11px] font-bold px-2 py-0.5 rounded-full">@UpcomingAppointments.Count</span>
+@if (ActiveTab == "upcoming")
+{
+<span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></span>
+}
 </button>
-<button class="relative flex items-center gap-2 py-3 px-3 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-all" id="tabCompleted" onclick="switchTab('completed')" type="button">
+<button class="relative flex items-center gap-2 py-3 px-3 font-label-md text-label-md transition-all @(ActiveTab == "completed" ? "text-primary font-semibold" : "text-on-surface-variant hover:text-on-surface")" type="button" @onclick='() => ActiveTab = "completed"'>
 <span>Đã khám</span>
-<span class="inline-flex items-center justify-center text-on-surface-variant bg-surface-container-highest text-[11px] font-bold px-2 py-0.5 rounded-full">8</span>
-<span class="absolute bottom-0 left-0 right-0 h-0.5 bg-transparent rounded-full" id="tabCompletedIndicator"></span>
+<span class="inline-flex items-center justify-center text-on-surface-variant bg-surface-container-highest text-[11px] font-bold px-2 py-0.5 rounded-full">@CompletedAppointments.Count</span>
+@if (ActiveTab == "completed")
+{
+<span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></span>
+}
 </button>
-<button class="relative flex items-center gap-2 py-3 px-3 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-all" id="tabCancelled" onclick="switchTab('cancelled')" type="button">
+<button class="relative flex items-center gap-2 py-3 px-3 font-label-md text-label-md transition-all @(ActiveTab == "cancelled" ? "text-primary font-semibold" : "text-on-surface-variant hover:text-on-surface")" type="button" @onclick='() => ActiveTab = "cancelled"'>
 <span>Đã huỷ</span>
-<span class="inline-flex items-center justify-center text-on-surface-variant bg-surface-container-highest text-[11px] font-bold px-2 py-0.5 rounded-full">1</span>
-<span class="absolute bottom-0 left-0 right-0 h-0.5 bg-transparent rounded-full" id="tabCancelledIndicator"></span>
+<span class="inline-flex items-center justify-center text-on-surface-variant bg-surface-container-highest text-[11px] font-bold px-2 py-0.5 rounded-full">@CancelledAppointments.Count</span>
+@if (ActiveTab == "cancelled")
+{
+<span class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></span>
+}
 </button>
 </div>
-<!-- Filters & Search Toolbar -->
+<!-- Search Toolbar -->
 <div class="p-4 sm:p-6 bg-surface-container-low/40 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-<!-- Search Input -->
 <div class="relative w-full lg:w-80">
 <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[20px] text-outline">search</span>
-<input class="w-full h-10 pl-10 pr-4 bg-surface-container-lowest text-on-surface rounded-lg font-body-md text-body-md placeholder:text-outline shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all" id="searchInput" oninput="filterAppointments()" placeholder="Tìm kiếm mã phiếu, bác sĩ, phòng khám..." type="text"/>
-</div>
-<!-- Specialty & Date Filter -->
-<div class="flex flex-wrap items-center gap-3">
-<div class="relative min-w-[180px]">
-<select class="w-full h-10 appearance-none bg-surface-container-lowest text-on-surface pl-3.5 pr-10 rounded-lg font-body-md text-body-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20" id="specialtyFilter" onchange="filterAppointments()">
-<option value="">Tất cả chuyên khoa</option>
-<option value="Nội tổng quát">Nội tổng quát</option>
-<option value="Tim mạch">Tim mạch học</option>
-<option value="Tai Mũi Họng">Tai Mũi Họng</option>
-<option value="Nhi khoa">Nhi khoa</option>
-</select>
-<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[20px]">keyboard_arrow_down</span>
-</div>
-<div class="relative min-w-[160px]">
-<select class="w-full h-10 appearance-none bg-surface-container-lowest text-on-surface pl-3.5 pr-10 rounded-lg font-body-md text-body-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20" id="timeRangeFilter">
-<option value="all">Khoảng thời gian: Tất cả</option>
-<option value="7days">Trong 7 ngày tới</option>
-<option value="30days">Trong 30 ngày</option>
-<option value="custom">Tùy chọn khoảng ngày</option>
-</select>
-<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[20px]">calendar_today</span>
-</div>
-<button class="h-10 px-3 bg-surface-container-highest text-on-surface-variant hover:text-on-surface rounded-lg font-label-sm text-label-sm flex items-center gap-1.5 transition-colors" onclick="resetFilters()" type="button">
-<span class="material-symbols-outlined text-[18px]">filter_alt_off</span>
-<span>Đặt lại</span>
-</button>
+<input class="w-full h-10 pl-10 pr-4 bg-surface-container-lowest text-on-surface rounded-lg font-body-md text-body-md placeholder:text-outline shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all" placeholder="Tìm kiếm mã phiếu, bác sĩ..." type="text" @bind="SearchQuery" @bind:event="oninput"/>
 </div>
 </div>
-<!-- Active Table View: Sắp tới (Upcoming) -->
-<div class="overflow-x-auto" id="upcomingTableWrapper">
+@if (IsLoading)
+{
+<p class="p-6 font-body-sm text-body-sm text-on-surface-variant">Đang tải lịch hẹn...</p>
+}
+else if (ActiveTab == "upcoming")
+{
+@if (FilteredUpcoming.Count == 0)
+{
+@RenderEmptyState("Bạn chưa có lịch hẹn nào sắp tới", "Chăm sóc sức khỏe chủ động cùng đội ngũ bác sĩ chuyên khoa hàng đầu tại Vitalis Clinic. Hãy đăng ký lịch thăm khám thuận tiện ngay hôm nay.")
+}
+else
+{
+<div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
 <thead class="sticky top-0 bg-surface-container-high/60 backdrop-blur-sm z-10">
 <tr>
 <th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Mã phiếu</th>
-<th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Bác sĩ &amp; Chuyên khoa</th>
+<th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Bác sĩ</th>
 <th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Thời gian khám</th>
 <th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Phí khám</th>
 <th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Trạng thái</th>
@@ -136,222 +138,125 @@
 </tr>
 </thead>
 <tbody class="divide-y divide-surface-container-high/50 font-body-md text-body-md">
-<!-- Row 1: Can Reschedule or Cancel (>2h) -->
+@foreach (var appt in FilteredUpcoming)
+{
+var canModify = CanModify(appt);
 <tr class="hover:bg-surface-container-low transition-colors group">
 <td class="py-4 px-6 align-middle">
-<span class="font-label-sm text-label-sm font-bold text-primary bg-primary-fixed/40 px-2.5 py-1 rounded-md">LH-20260926-001</span>
-<p class="font-label-xs text-label-xs text-on-surface-variant mt-1">Khám định kỳ</p>
+<span class="font-label-sm text-label-sm font-bold text-primary bg-primary-fixed/40 px-2.5 py-1 rounded-md">@(appt.AppointmentCode ?? $"#{appt.Id}")</span>
+@if (!string.IsNullOrWhiteSpace(appt.Reason))
+{
+<p class="font-label-xs text-label-xs text-on-surface-variant mt-1">@appt.Reason</p>
+}
 </td>
 <td class="py-4 px-6 align-middle">
 <div class="flex items-center gap-3">
-<div class="relative w-11 h-11 shrink-0 rounded-full overflow-hidden shadow-sm bg-surface-container-high">
-<img class="w-full h-full object-cover" data-alt="Chân dung bác sĩ chuyên khoa II Nguyễn Văn Linh, nam giới trung niên nét mặt hiền từ, khoác áo blouse trắng y tế có logo Vitalis Clinic thêu tinh xảo, phông nền phòng khám hiện đại với ánh sáng tự nhiên dịu mát sắc xanh teal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCb4-7GitUnu5QNZ4PDXkPNAVABb7HbNCeRnIGp58jT7hEAD1mAvtR9WO3WAHtneTGy4Isj4mlTPr87oc9_3-y3S-i4VoHLPC63AbrrEFgXXlc8z1uPP9F6KRihFG4BDiFgE1LHlubVbmjbCmwWVkkTu4V6w4ETwjI81HWWhsOcbbl6PL5Un8UIU4VOKs4qZo_6piBrD84ZXiGrNn980VJzkvDw5vIb2-jrSitUqnkv_j40yW2aoTts"/>
-</div>
-<div class="min-w-0">
-<p class="font-title-md text-title-md font-semibold text-on-surface truncate">BS.CKII Nguyễn Văn Linh</p>
-<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1 mt-0.5">
-<span class="material-symbols-outlined text-[16px] text-tertiary">stethoscope</span>
-<span class="truncate">Nội tổng quát · Phòng 203 (Tầng 2)</span>
-</p>
-</div>
+<div class="w-11 h-11 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">@Initials(appt.DoctorName)</div>
+<p class="font-title-md text-title-md font-semibold text-on-surface truncate">@appt.DoctorName</p>
 </div>
 </td>
 <td class="py-4 px-6 align-middle">
 <div class="flex items-start gap-2 text-on-surface">
 <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">schedule</span>
 <div>
-<p class="font-label-md text-label-md font-semibold">09:00 - Thứ 2</p>
-<p class="font-body-sm text-body-sm text-on-surface-variant">29/09/2026</p>
+<p class="font-label-md text-label-md font-semibold">@appt.StartTime.ToString("HH:mm") - @WeekdayLabel(appt.StartTime)</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">@appt.StartTime.ToString("dd/MM/yyyy")</p>
 </div>
 </div>
 </td>
 <td class="py-4 px-6 align-middle">
-<span class="font-title-md text-title-md font-semibold text-on-surface">150.000₫</span>
-<span class="block font-label-xs text-label-xs text-tertiary">Chưa thanh toán</span>
+<span class="font-title-md text-title-md font-semibold text-on-surface">@(appt.FeeSnapshot is null ? "—" : $"{appt.FeeSnapshot:N0}đ")</span>
 </td>
 <td class="py-4 px-6 align-middle">
-<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-amber-50 text-amber-800 ring-1 ring-amber-200">
-<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                Chờ xác nhận
-              </span>
+@RenderStatusPill(appt.Status)
 </td>
 <td class="py-4 px-6 align-middle text-right">
 <div class="inline-flex items-center justify-end gap-2">
-<button class="px-3 py-1.5 bg-surface-container text-primary font-label-sm text-label-sm font-semibold rounded-lg hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" onclick="openRescheduleModal('LH-20260926-001', 'BS.CKII Nguyễn Văn Linh', '09:00 - 29/09/2026')" type="button">
+<button class="px-3 py-1.5 bg-surface-container text-primary font-label-sm text-label-sm font-semibold rounded-lg hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled="@(!canModify)" type="button" @onclick="() => OpenRescheduleModalAsync(appt)">
                   Đổi giờ
                 </button>
-<button class="px-3 py-1.5 bg-error-container/60 text-error font-label-sm text-label-sm font-semibold rounded-lg hover:bg-error hover:text-on-error transition-colors" onclick="openCancelModal('LH-20260926-001', 'BS.CKII Nguyễn Văn Linh', '09:00 - Thứ 2, 29/09/2026')" type="button">
+<button class="px-3 py-1.5 bg-error-container/60 text-error font-label-sm text-label-sm font-semibold rounded-lg hover:bg-error hover:text-on-error transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled="@(!canModify)" title="@(canModify ? "" : "Không thể huỷ lịch trong vòng 2 tiếng trước giờ khám")" type="button" @onclick="() => OpenCancelModal(appt)">
                   Huỷ lịch
                 </button>
 </div>
 </td>
 </tr>
-<!-- Row 2: In-person Check-in soon (<2h) -> Cancel DISABLED with clinical tooltip rule -->
-<tr class="hover:bg-surface-container-low transition-colors group">
-<td class="py-4 px-6 align-middle">
-<span class="font-label-sm text-label-sm font-bold text-primary bg-primary-fixed/40 px-2.5 py-1 rounded-md">LH-20260926-002</span>
-<p class="font-label-xs text-label-xs text-on-surface-variant mt-1">Tái khám định kỳ</p>
-</td>
-<td class="py-4 px-6 align-middle">
-<div class="flex items-center gap-3">
-<div class="relative w-11 h-11 shrink-0 rounded-full overflow-hidden shadow-sm bg-surface-container-high">
-<img class="w-full h-full object-cover" data-alt="Chân dung nữ bác sĩ ThS.BS Trần Mai Phương rạng rỡ, đeo ống nghe y khoa cao cấp, ánh mắt ân cần chu đáo, không gian phòng chuẩn đoán tim mạch hiện đại tiêu chuẩn quốc tế tông trắng ngọc lam." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIsd9DKlw7eN2Jl14RZPkHFOqTkY6JMey0-gorXJq3A4hWkT2apFlMwsNtOD-1wGp_wuK7Wi6QzvPAYst4qcfpODABuxWhs_epfyyEc37vFZhczsmDciyCWiSG7JlZE5nrIUvQGGXAJqaDXfEZgaap090487oCXr8VaFgYnpGFkcG0Ub9SAyyhRHWQOiER5ZJkkKVpSlZRxm8Wep8fTvOGFru7md45fMe45p5p1iekp9sWlSUw3qie"/>
-</div>
-<div class="min-w-0">
-<p class="font-title-md text-title-md font-semibold text-on-surface truncate">ThS.BS Trần Mai Phương</p>
-<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1 mt-0.5">
-<span class="material-symbols-outlined text-[16px] text-tertiary">cardiology</span>
-<span class="truncate">Tim mạch · Phòng 105 (Tầng 1)</span>
-</p>
-</div>
-</div>
-</td>
-<td class="py-4 px-6 align-middle">
-<div class="flex items-start gap-2 text-on-surface">
-<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">event_upcoming</span>
-<div>
-<p class="font-label-md text-label-md font-semibold text-error">10:30 - Hôm nay</p>
-<p class="font-body-sm text-body-sm text-error font-medium">(Còn 1h 15 phút)</p>
-</div>
-</div>
-</td>
-<td class="py-4 px-6 align-middle">
-<span class="font-title-md text-title-md font-semibold text-on-surface">200.000₫</span>
-<span class="block font-label-xs text-label-xs text-primary font-medium">Đã thanh toán Online</span>
-</td>
-<td class="py-4 px-6 align-middle">
-<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-blue-50 text-blue-800 ring-1 ring-blue-200">
-<span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                Đã check-in kiosk
-              </span>
-</td>
-<td class="py-4 px-6 align-middle text-right">
-<div class="inline-flex items-center justify-end gap-2">
-<button class="px-3 py-1.5 bg-surface-container text-primary font-label-sm text-label-sm font-semibold rounded-lg hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" onclick="openRescheduleModal('LH-20260926-002', 'ThS.BS Trần Mai Phương', '10:30 - Hôm nay')" type="button">
-                  Đổi giờ
-                </button>
-<!-- Disabled Cancel button with precise medical tooltip -->
-<div class="relative group/tooltip inline-block">
-<button class="px-3 py-1.5 bg-surface-container-high/60 text-outline font-label-sm text-label-sm font-semibold rounded-lg cursor-not-allowed opacity-60 flex items-center gap-1" disabled="" type="button">
-<span class="material-symbols-outlined text-[16px]">lock_clock</span>
-<span>Huỷ lịch</span>
-</button>
-<div class="absolute right-0 bottom-full mb-2 w-64 p-2.5 bg-inverse-surface text-inverse-on-surface font-body-sm text-body-sm rounded-lg shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-30 pointer-events-none">
-<div class="flex items-start gap-1.5">
-<span class="material-symbols-outlined text-amber-300 text-[18px] shrink-0 mt-0.5">warning</span>
-<p class="text-[12px] leading-snug">Không thể huỷ lịch trong vòng 2 tiếng trước giờ khám. Vui lòng liên hệ <span class="text-primary-fixed font-bold">1900 6868</span> nếu có khẩn cấp.</p>
-</div>
-</div>
-</div>
-</div>
-</td>
-</tr>
+}
 </tbody>
 </table>
 </div>
-<!-- Completed Table View: Đã khám (Hidden by default, switched via tab) -->
-<div class="overflow-x-auto hidden" id="completedTableWrapper">
+}
+}
+else if (ActiveTab == "completed")
+{
+@if (FilteredCompleted.Count == 0)
+{
+@RenderEmptyState("Chưa có lượt khám hoàn tất", "Các lượt khám đã hoàn tất tại Vitalis Clinic sẽ hiển thị tại đây.")
+}
+else
+{
+<div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
 <thead class="sticky top-0 bg-surface-container-high/60 backdrop-blur-sm z-10">
 <tr>
 <th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Mã phiếu</th>
-<th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Bác sĩ &amp; Chuyên khoa</th>
+<th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Bác sĩ</th>
 <th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Thời gian hoàn thành</th>
-<th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Tổng chi phí</th>
+<th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Chi phí</th>
 <th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">Trạng thái</th>
 <th class="py-3 px-6 font-label-sm text-label-sm text-outline uppercase tracking-wider text-right">Hồ sơ y tế</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-surface-container-high/50 font-body-md text-body-md">
+@foreach (var appt in FilteredCompleted)
+{
 <tr class="hover:bg-surface-container-low transition-colors">
 <td class="py-4 px-6 align-middle">
-<span class="font-label-sm text-label-sm font-bold text-on-surface-variant bg-surface-container-high px-2.5 py-1 rounded-md">LH-20260814-045</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface-variant bg-surface-container-high px-2.5 py-1 rounded-md">@(appt.AppointmentCode ?? $"#{appt.Id}")</span>
 </td>
 <td class="py-4 px-6 align-middle">
 <div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-                  PL
-                </div>
-<div>
-<p class="font-title-md text-title-md font-semibold text-on-surface">BS.CKI Phan Long</p>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Tai Mũi Họng · Phòng 302</p>
-</div>
+<div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">@Initials(appt.DoctorName)</div>
+<p class="font-title-md text-title-md font-semibold text-on-surface">@appt.DoctorName</p>
 </div>
 </td>
 <td class="py-4 px-6 align-middle text-on-surface">
-<p class="font-label-md text-label-md font-semibold">14:00 - 14/08/2026</p>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Khám &amp; Nội soi vòm họng</p>
+<p class="font-label-md text-label-md font-semibold">@appt.CompletedAt?.ToString("HH:mm - dd/MM/yyyy")</p>
 </td>
 <td class="py-4 px-6 align-middle">
-<span class="font-title-md text-title-md font-semibold text-on-surface">450.000₫</span>
-<span class="block font-label-xs text-label-xs text-primary">Đã thanh toán</span>
+<span class="font-title-md text-title-md font-semibold text-on-surface">@(appt.FeeSnapshot is null ? "—" : $"{appt.FeeSnapshot:N0}đ")</span>
 </td>
 <td class="py-4 px-6 align-middle">
-<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200">
-<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                Hoàn thành
-              </span>
+@RenderStatusPill(appt.Status)
 </td>
 <td class="py-4 px-6 align-middle text-right">
 <div class="inline-flex items-center justify-end gap-3">
-<button class="inline-flex items-center gap-1 text-primary hover:underline font-label-sm text-label-sm font-semibold" onclick="showNotification('Đang mở Hồ sơ bệnh án điện tử #LH-20260814-045...')" type="button">
+<button class="inline-flex items-center gap-1 text-primary hover:underline font-label-sm text-label-sm font-semibold" type="button" @onclick='() => Navigation.NavigateTo("/my-records")'>
 <span class="material-symbols-outlined text-[18px]">clinical_notes</span>
 <span>Xem bệnh án</span>
 </button>
-<button class="inline-flex items-center gap-1 text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm font-semibold" onclick="showNotification('Đang tải hoá đơn điện tử VAT...')" type="button">
+<button class="inline-flex items-center gap-1 text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm font-semibold" type="button" @onclick='() => Navigation.NavigateTo("/my-invoices")'>
 <span class="material-symbols-outlined text-[18px]">receipt_long</span>
 <span>Hoá đơn</span>
 </button>
 </div>
 </td>
 </tr>
-<tr class="hover:bg-surface-container-low transition-colors">
-<td class="py-4 px-6 align-middle">
-<span class="font-label-sm text-label-sm font-bold text-on-surface-variant bg-surface-container-high px-2.5 py-1 rounded-md">LH-20260702-019</span>
-</td>
-<td class="py-4 px-6 align-middle">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-full bg-secondary/10 text-secondary flex items-center justify-center font-bold">
-                  TH
-                </div>
-<div>
-<p class="font-title-md text-title-md font-semibold text-on-surface">ThS.BS Nguyễn Thu Hà</p>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Nhi khoa tổng quát · Phòng 108</p>
-</div>
-</div>
-</td>
-<td class="py-4 px-6 align-middle text-on-surface">
-<p class="font-label-md text-label-md font-semibold">08:30 - 02/07/2026</p>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Tư vấn dinh dưỡng &amp; Tiêm chủng</p>
-</td>
-<td class="py-4 px-6 align-middle">
-<span class="font-title-md text-title-md font-semibold text-on-surface">620.000₫</span>
-<span class="block font-label-xs text-label-xs text-primary">Đã thanh toán</span>
-</td>
-<td class="py-4 px-6 align-middle">
-<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200">
-<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                Hoàn thành
-              </span>
-</td>
-<td class="py-4 px-6 align-middle text-right">
-<div class="inline-flex items-center justify-end gap-3">
-<button class="inline-flex items-center gap-1 text-primary hover:underline font-label-sm text-label-sm font-semibold" onclick="showNotification('Đang mở Hồ sơ bệnh án điện tử #LH-20260702-019...')" type="button">
-<span class="material-symbols-outlined text-[18px]">clinical_notes</span>
-<span>Xem bệnh án</span>
-</button>
-<button class="inline-flex items-center gap-1 text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm font-semibold" onclick="showNotification('Đang tải hoá đơn điện tử VAT...')" type="button">
-<span class="material-symbols-outlined text-[18px]">receipt_long</span>
-<span>Hoá đơn</span>
-</button>
-</div>
-</td>
-</tr>
+}
 </tbody>
 </table>
 </div>
-<!-- Cancelled Table View: Đã huỷ (Hidden by default) -->
-<div class="overflow-x-auto hidden" id="cancelledTableWrapper">
+}
+}
+else
+{
+@if (FilteredCancelled.Count == 0)
+{
+@RenderEmptyState("Không có lịch hẹn đã huỷ", "Các lịch hẹn bị huỷ sẽ hiển thị tại đây.")
+}
+else
+{
+<div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
 <thead class="sticky top-0 bg-surface-container-high/60 backdrop-blur-sm z-10">
 <tr>
@@ -364,71 +269,39 @@
 </tr>
 </thead>
 <tbody class="divide-y divide-surface-container-high/50 font-body-md text-body-md">
+@foreach (var appt in FilteredCancelled)
+{
 <tr class="hover:bg-surface-container-low transition-colors">
 <td class="py-4 px-6 align-middle">
-<span class="font-label-sm text-label-sm font-bold text-outline line-through bg-surface-container-high px-2.5 py-1 rounded-md">LH-20260610-012</span>
+<span class="font-label-sm text-label-sm font-bold text-outline line-through bg-surface-container-high px-2.5 py-1 rounded-md">@(appt.AppointmentCode ?? $"#{appt.Id}")</span>
 </td>
 <td class="py-4 px-6 align-middle">
-<p class="font-title-md text-title-md font-semibold text-on-surface">BS.CKII Nguyễn Văn Linh</p>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Nội tổng quát</p>
+<p class="font-title-md text-title-md font-semibold text-on-surface">@appt.DoctorName</p>
 </td>
 <td class="py-4 px-6 align-middle text-on-surface">
-<p class="font-body-md text-body-md">15:30 - 10/06/2026</p>
+<p class="font-body-md text-body-md">@appt.StartTime.ToString("HH:mm - dd/MM/yyyy")</p>
 </td>
 <td class="py-4 px-6 align-middle text-body-sm text-body-sm text-on-surface-variant max-w-xs truncate">
-              Bận công tác đột xuất tại Đà Nẵng
+              @(appt.CancelReason ?? "—")
             </td>
 <td class="py-4 px-6 align-middle">
-<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-rose-50 text-rose-800 ring-1 ring-rose-200">
-<span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
-                Đã huỷ
-              </span>
+@RenderStatusPill(appt.Status)
 </td>
 <td class="py-4 px-6 align-middle text-right">
-<button class="inline-flex items-center gap-1 text-primary hover:underline font-label-sm text-label-sm font-semibold" onclick="showNotification('Đang tạo phiên đặt lịch lại với BS.CKII Nguyễn Văn Linh...')" type="button">
+<button class="inline-flex items-center gap-1 text-primary hover:underline font-label-sm text-label-sm font-semibold" type="button" @onclick='() => Navigation.NavigateTo("/booking")'>
 <span class="material-symbols-outlined text-[18px]">replay</span>
 <span>Đặt lại</span>
 </button>
 </td>
 </tr>
+}
 </tbody>
 </table>
 </div>
-<!-- Empty State Component (Shown when filters return 0 or tab has no records) -->
-<div class="hidden p-12 text-center flex flex-col items-center justify-center" id="emptyStateBox">
-<div class="w-20 h-20 rounded-full bg-primary-fixed/50 flex items-center justify-center text-primary mb-4 shadow-inner">
-<span class="material-symbols-outlined text-[40px]">calendar_month</span>
+}
+}
 </div>
-<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mb-2">Bạn chưa có lịch hẹn nào sắp tới</h3>
-<p class="font-body-md text-body-md text-on-surface-variant max-w-md mb-6">
-        Chăm sóc sức khỏe chủ động cùng đội ngũ bác sĩ chuyên khoa hàng đầu tại Vitalis Clinic. Hãy đăng ký lịch thăm khám thuận tiện ngay hôm nay.
-      </p>
-<button class="inline-flex items-center gap-2 px-6 py-3 bg-primary-container text-on-primary rounded-xl font-label-md text-label-md hover:bg-primary transition-all shadow-sm" onclick="showNotification('Chuyển hướng đến màn hình đặt hẹn khám mới...')" type="button">
-<span class="material-symbols-outlined text-[20px]">calendar_add_on</span>
-<span>Đặt lịch khám ngay</span>
-</button>
-</div>
-<!-- Table Pagination Footer -->
-<div class="px-6 py-4 bg-surface-container-lowest flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-surface-container-high/60">
-<div class="font-body-sm text-body-sm text-on-surface-variant">
-        Hiển thị <span class="font-semibold text-on-surface">1 - 2</span> trong số <span class="font-semibold text-on-surface">2</span> lịch hẹn sắp tới
-      </div>
-<div class="flex items-center gap-1.5">
-<button class="h-9 px-3 rounded-lg bg-surface-container text-outline opacity-50 cursor-not-allowed font-label-sm text-label-sm flex items-center gap-1" disabled="" type="button">
-<span class="material-symbols-outlined text-[18px]">chevron_left</span>
-<span>Trước</span>
-</button>
-<button class="h-9 w-9 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold flex items-center justify-center shadow-sm" type="button">
-          1
-        </button>
-<button class="h-9 px-3 rounded-lg bg-surface-container text-outline opacity-50 cursor-not-allowed font-label-sm text-label-sm flex items-center gap-1" disabled="" type="button">
-<span>Sau</span>
-<span class="material-symbols-outlined text-[18px]">chevron_right</span>
-</button>
-</div>
-</div>
-</div>
-<!-- Medical Clinic Guidelines / Information Card (Supplemental Value) -->
+<!-- Medical Clinic Guidelines / Information Card -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
 <div class="bg-surface-container-low p-6 rounded-xl flex items-start gap-4">
 <div class="p-2.5 rounded-lg bg-primary/10 text-primary shrink-0">
@@ -458,12 +331,11 @@
 </div>
 </div>
 </div>
-<!-- ========================================================================= -->
-<!-- MODAL 1: HỦY LỊCH HẸN (Cancel Appointment Confirmation)                   -->
-<!-- ========================================================================= -->
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-inverse-surface/50 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300" id="cancelAppointmentModal">
-<div class="bg-surface-container-lowest rounded-xl max-w-lg w-full p-6 sm:p-8 shadow-2xl transform scale-95 transition-transform duration-300">
-<!-- Modal Header -->
+<!-- MODAL 1: HỦY LỊCH HẸN -->
+@if (CancelTarget is not null)
+{
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-inverse-surface/50 backdrop-blur-sm">
+<div class="bg-surface-container-lowest rounded-xl max-w-lg w-full p-6 sm:p-8 shadow-2xl">
 <div class="flex items-start gap-3 mb-4">
 <div class="w-12 h-12 rounded-full bg-error-container text-error flex items-center justify-center shrink-0">
 <span class="material-symbols-outlined text-[28px]">crisis_alert</span>
@@ -473,166 +345,349 @@
 <p class="font-body-sm text-body-sm text-on-surface-variant">Phiếu hẹn thăm khám sẽ bị xoá khỏi lịch làm việc của bác sĩ phụ trách.</p>
 </div>
 </div>
-<!-- Appointment Detail Summary Card -->
 <div class="bg-surface-container-low p-4 rounded-xl mb-4 space-y-2">
 <div class="flex justify-between items-center text-body-sm">
 <span class="text-on-surface-variant">Mã phiếu hẹn:</span>
-<span class="font-semibold text-on-surface" id="modalCancelCode">LH-20260926-001</span>
+<span class="font-semibold text-on-surface">@(CancelTarget.AppointmentCode ?? $"#{CancelTarget.Id}")</span>
 </div>
 <div class="flex justify-between items-center text-body-sm">
 <span class="text-on-surface-variant">Bác sĩ:</span>
-<span class="font-semibold text-on-surface" id="modalCancelDoctor">BS.CKII Nguyễn Văn Linh</span>
+<span class="font-semibold text-on-surface">@CancelTarget.DoctorName</span>
 </div>
 <div class="flex justify-between items-center text-body-sm">
 <span class="text-on-surface-variant">Thời gian:</span>
-<span class="font-semibold text-primary" id="modalCancelTime">09:00 - Thứ 2, 29/09/2026</span>
+<span class="font-semibold text-primary">@CancelTarget.StartTime.ToString("HH:mm - dd/MM/yyyy")</span>
 </div>
 </div>
-<!-- Medical Policy Alert Notice -->
 <div class="bg-amber-50 rounded-xl p-3.5 mb-5 flex items-start gap-2.5 text-amber-900 text-[13px] leading-relaxed">
 <span class="material-symbols-outlined text-amber-600 text-[20px] shrink-0 mt-0.5">info</span>
 <div>
 <strong>Lưu ý quan trọng:</strong> Bạn chỉ có thể huỷ lịch hẹn trước giờ khám tối thiểu <strong>2 tiếng</strong>. Sau thời gian này hệ thống tự động khóa hủy trực tuyến, vui lòng gọi hotline <strong>1900 6868</strong> để được điều dưỡng hỗ trợ.
         </div>
 </div>
-<!-- Cancellation Reason Input Form -->
 <div class="mb-6">
-<label class="block font-label-md text-label-md font-semibold text-on-surface mb-2" for="cancelReasonInput">
+<label class="block font-label-md text-label-md font-semibold text-on-surface mb-2">
           Lý do huỷ <span class="text-error">*</span>
 </label>
-<textarea class="w-full p-3 bg-surface-container-lowest text-on-surface rounded-lg font-body-md text-body-md shadow-sm focus:outline-none focus:ring-2 focus:ring-error transition-all placeholder:text-outline resize-none" id="cancelReasonInput" placeholder="Vui lòng nhập lý do huỷ khám (bận đột xuất, đổi kế hoạch, triệu chứng đã thuyên giảm,...)*" rows="3"></textarea>
-<p class="font-body-sm text-body-sm text-error mt-1 hidden" id="cancelReasonError">Vui lòng cung cấp lý do để phòng khám ghi nhận hồ sơ.</p>
+<textarea class="w-full p-3 bg-surface-container-lowest text-on-surface rounded-lg font-body-md text-body-md shadow-sm focus:outline-none focus:ring-2 focus:ring-error transition-all placeholder:text-outline resize-none" placeholder="Vui lòng nhập lý do huỷ khám (bận đột xuất, đổi kế hoạch, triệu chứng đã thuyên giảm,...)*" rows="3" @bind="CancelReason"></textarea>
+@if (CancelError is not null)
+{
+<p class="font-body-sm text-body-sm text-error mt-1">@CancelError</p>
+}
 </div>
-<!-- Action Buttons -->
 <div class="flex items-center justify-end gap-3 pt-2">
-<button class="px-5 py-2.5 bg-surface-container text-on-surface-variant font-label-md text-label-md font-semibold rounded-lg hover:bg-surface-container-high transition-colors" onclick="closeCancelModal()" type="button">
+<button class="px-5 py-2.5 bg-surface-container text-on-surface-variant font-label-md text-label-md font-semibold rounded-lg hover:bg-surface-container-high transition-colors" type="button" @onclick="() => CancelTarget = null">
           Giữ lịch hẹn
         </button>
-<button class="px-5 py-2.5 bg-error text-on-error font-label-md text-label-md font-semibold rounded-lg hover:bg-rose-700 transition-colors shadow-sm" onclick="confirmCancelAppointment()" type="button">
-          Xác nhận huỷ
+<button class="px-5 py-2.5 bg-error text-on-error font-label-md text-label-md font-semibold rounded-lg hover:bg-rose-700 transition-colors shadow-sm disabled:opacity-60" disabled="@IsCancelling" type="button" @onclick="ConfirmCancelAsync">
+          @(IsCancelling ? "Đang xử lý..." : "Xác nhận huỷ")
         </button>
 </div>
 </div>
 </div>
-<!-- ========================================================================= -->
-<!-- MODAL 2: ĐỔI GIỜ KHÁM (Reschedule Appointment)                           -->
-<!-- ========================================================================= -->
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-inverse-surface/50 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300" id="rescheduleAppointmentModal">
-<div class="bg-surface-container-lowest rounded-xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl transform scale-95 transition-transform duration-300 max-h-[92vh] overflow-y-auto">
-<!-- Modal Header -->
+}
+<!-- MODAL 2: ĐỔI GIỜ KHÁM -->
+@if (RescheduleTarget is not null)
+{
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-inverse-surface/50 backdrop-blur-sm">
+<div class="bg-surface-container-lowest rounded-xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl max-h-[92vh] overflow-y-auto">
 <div class="flex items-center justify-between pb-4 mb-4 border-b border-surface-container-high">
 <div>
 <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Đổi thời gian khám</h2>
-<p class="font-body-sm text-body-sm text-primary font-medium mt-0.5" id="modalRescheduleSubtitle">LH-20260926-001 · BS.CKII Nguyễn Văn Linh</p>
+<p class="font-body-sm text-body-sm text-primary font-medium mt-0.5">@(RescheduleTarget.AppointmentCode ?? $"#{RescheduleTarget.Id}") · @RescheduleTarget.DoctorName</p>
 </div>
-<button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface" onclick="closeRescheduleModal()" type="button">
+<button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:text-on-surface" type="button" @onclick="() => RescheduleTarget = null">
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </div>
-<!-- Doctor Banner Preview -->
-<div class="flex items-center gap-3 bg-surface-container-low p-3.5 rounded-xl mb-6">
-<span class="material-symbols-outlined text-primary text-[26px]">medical_services</span>
-<div class="text-body-sm">
-<p class="font-semibold text-on-surface">Phòng khám chuyên khoa Vitalis Clinic Central</p>
-<p class="text-on-surface-variant">Lựa chọn ngày hẹn mới phù hợp với lịch trực của bác sĩ phụ trách.</p>
-</div>
-</div>
-<!-- 7-Day Quick Strip Selector -->
+@if (RescheduleError is not null)
+{
+<div class="mb-4 p-3 rounded-lg bg-error-container text-on-error-container font-body-sm text-body-sm">@RescheduleError</div>
+}
 <div class="mb-6">
 <label class="block font-label-md text-label-md font-semibold text-on-surface mb-2.5">
-          Chọn ngày khám mới (Tháng 09 - 10/2026):
+          Chọn ngày khám mới:
         </label>
 <div class="grid grid-cols-4 sm:grid-cols-7 gap-2">
-<button class="reschedule-date-btn p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition-all bg-surface-container-lowest shadow-sm hover:bg-surface-container" onclick="selectDate(this, '29/09/2026')" type="button">
-<span class="font-label-xs text-label-xs text-on-surface-variant">T2</span>
-<span class="font-headline-sm text-headline-sm font-bold text-on-surface my-0.5">29</span>
-<span class="font-label-xs text-label-xs text-primary font-semibold">Hiện tại</span>
+@foreach (var date in RescheduleDateStrip)
+{
+var selected = date == RescheduleDate;
+<button class="p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition-all @(selected ? "bg-primary-container text-on-primary shadow-md" : "bg-surface-container-lowest shadow-sm hover:bg-surface-container")" type="button" @onclick="() => SelectRescheduleDateAsync(date)">
+<span class="font-label-xs text-label-xs @(selected ? "text-on-primary/80" : "text-on-surface-variant")">@WeekdayLabel(date.ToDateTime(TimeOnly.MinValue))</span>
+<span class="font-headline-sm text-headline-sm font-bold my-0.5 @(selected ? "text-on-primary" : "text-on-surface")">@date.Day.ToString("00")</span>
 </button>
-<button class="reschedule-date-btn p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition-all bg-primary-container text-on-primary shadow-md" onclick="selectDate(this, '30/09/2026')" type="button">
-<span class="font-label-xs text-label-xs text-on-primary/80">T3</span>
-<span class="font-headline-sm text-headline-sm font-bold text-on-primary my-0.5">30</span>
-<span class="font-label-xs text-label-xs text-on-primary font-semibold">Chọn</span>
-</button>
-<button class="reschedule-date-btn p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition-all bg-surface-container-lowest shadow-sm hover:bg-surface-container" onclick="selectDate(this, '01/10/2026')" type="button">
-<span class="font-label-xs text-label-xs text-on-surface-variant">T4</span>
-<span class="font-headline-sm text-headline-sm font-bold text-on-surface my-0.5">01</span>
-<span class="font-label-xs text-label-xs text-tertiary">Còn 4 slot</span>
-</button>
-<button class="reschedule-date-btn p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition-all bg-surface-container-lowest shadow-sm hover:bg-surface-container" onclick="selectDate(this, '02/10/2026')" type="button">
-<span class="font-label-xs text-label-xs text-on-surface-variant">T5</span>
-<span class="font-headline-sm text-headline-sm font-bold text-on-surface my-0.5">02</span>
-<span class="font-label-xs text-label-xs text-tertiary">Còn 6 slot</span>
-</button>
-<button class="reschedule-date-btn p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition-all bg-surface-container-lowest shadow-sm hover:bg-surface-container" onclick="selectDate(this, '03/10/2026')" type="button">
-<span class="font-label-xs text-label-xs text-on-surface-variant">T6</span>
-<span class="font-headline-sm text-headline-sm font-bold text-on-surface my-0.5">03</span>
-<span class="font-label-xs text-label-xs text-tertiary">Còn 2 slot</span>
-</button>
-<button class="p-2.5 rounded-xl flex flex-col items-center justify-center text-center bg-surface-container opacity-40 cursor-not-allowed" disabled="" type="button">
-<span class="font-label-xs text-label-xs text-outline">T7</span>
-<span class="font-headline-sm text-headline-sm font-bold text-outline my-0.5">04</span>
-<span class="font-label-xs text-label-xs text-error">Đầy chỗ</span>
-</button>
-<button class="p-2.5 rounded-xl flex flex-col items-center justify-center text-center bg-surface-container opacity-40 cursor-not-allowed" disabled="" type="button">
-<span class="font-label-xs text-label-xs text-outline">CN</span>
-<span class="font-headline-sm text-headline-sm font-bold text-outline my-0.5">05</span>
-<span class="font-label-xs text-label-xs text-outline">Nghỉ</span>
-</button>
+}
 </div>
 </div>
-<!-- Time Slots Grid -->
 <div class="mb-6">
 <label class="block font-label-md text-label-md font-semibold text-on-surface mb-2">
           Khung giờ trống còn nhận bệnh nhân:
         </label>
-<!-- Morning slots -->
-<p class="font-label-xs text-label-xs uppercase tracking-wider text-outline mb-2">Buổi sáng</p>
-<div class="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-4">
-<button class="reschedule-time-btn py-2 px-3 rounded-lg text-center font-label-sm text-label-sm bg-surface-container hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" onclick="selectTimeSlot(this)" type="button">
-            08:00 - 08:30
-          </button>
-<button class="reschedule-time-btn py-2 px-3 rounded-lg text-center font-label-sm text-label-sm bg-primary-container text-on-primary shadow-sm font-bold" onclick="selectTimeSlot(this)" type="button">
-            09:30 - 10:00
-          </button>
-<button class="reschedule-time-btn py-2 px-3 rounded-lg text-center font-label-sm text-label-sm bg-surface-container hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" onclick="selectTimeSlot(this)" type="button">
-            10:00 - 10:30
-          </button>
-<button class="py-2 px-3 rounded-lg text-center font-label-sm text-label-sm bg-surface-container/60 text-outline line-through cursor-not-allowed opacity-50" disabled="" type="button">
-            10:30 - 11:00
-          </button>
-</div>
-<!-- Afternoon slots -->
-<p class="font-label-xs text-label-xs uppercase tracking-wider text-outline mb-2">Buổi chiều</p>
+@if (IsLoadingRescheduleSlots)
+{
+<p class="font-body-sm text-body-sm text-on-surface-variant">Đang tải khung giờ...</p>
+}
+else if (RescheduleSlots.Count == 0)
+{
+<p class="font-body-sm text-body-sm text-on-surface-variant">Không có khung giờ trống vào ngày này.</p>
+}
+else
+{
 <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
-<button class="reschedule-time-btn py-2 px-3 rounded-lg text-center font-label-sm text-label-sm bg-surface-container hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" onclick="selectTimeSlot(this)" type="button">
-            13:30 - 14:00
+@foreach (var slot in RescheduleSlots)
+{
+@if (!slot.IsAvailable)
+{
+<button class="py-2 px-3 rounded-lg text-center font-label-sm text-label-sm bg-surface-container/60 text-outline line-through cursor-not-allowed opacity-50" disabled="disabled" type="button">
+            @slot.StartTime.ToString("HH:mm")
           </button>
-<button class="reschedule-time-btn py-2 px-3 rounded-lg text-center font-label-sm text-label-sm bg-surface-container hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" onclick="selectTimeSlot(this)" type="button">
-            14:30 - 15:00
+}
+else
+{
+var isSelected = RescheduleSlot == slot.StartTime;
+<button class="py-2 px-3 rounded-lg text-center font-label-sm text-label-sm transition-colors @(isSelected ? "bg-primary-container text-on-primary shadow-sm font-bold" : "bg-surface-container hover:bg-primary-fixed hover:text-on-primary-fixed")" type="button" @onclick="() => RescheduleSlot = slot.StartTime">
+            @slot.StartTime.ToString("HH:mm")
           </button>
-<button class="reschedule-time-btn py-2 px-3 rounded-lg text-center font-label-sm text-label-sm bg-surface-container hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" onclick="selectTimeSlot(this)" type="button">
-            15:30 - 16:00
-          </button>
-<button class="reschedule-time-btn py-2 px-3 rounded-lg text-center font-label-sm text-label-sm bg-surface-container hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors" onclick="selectTimeSlot(this)" type="button">
-            16:00 - 16:30
-          </button>
+}
+}
 </div>
+}
 </div>
-<!-- Action Footer -->
 <div class="flex items-center justify-between pt-4 border-t border-surface-container-high">
-<span class="text-body-sm text-on-surface-variant">Lịch mới: <strong class="text-primary" id="selectedSlotSummary">30/09/2026 (09:30)</strong></span>
+<span class="text-body-sm text-on-surface-variant">Lịch mới: <strong class="text-primary">@(RescheduleSlot is null ? "Chưa chọn" : $"{RescheduleDate:dd/MM/yyyy} ({RescheduleSlot:HH:mm})")</strong></span>
 <div class="flex items-center gap-3">
-<button class="px-5 py-2.5 bg-surface-container text-on-surface font-label-md text-label-md font-semibold rounded-lg hover:bg-surface-container-high transition-colors" onclick="closeRescheduleModal()" type="button">
+<button class="px-5 py-2.5 bg-surface-container text-on-surface font-label-md text-label-md font-semibold rounded-lg hover:bg-surface-container-high transition-colors" type="button" @onclick="() => RescheduleTarget = null">
             Quay lại
           </button>
-<button class="px-5 py-2.5 bg-primary-container text-on-primary font-label-md text-label-md font-semibold rounded-lg hover:bg-primary transition-colors shadow-sm" onclick="confirmRescheduleAppointment()" type="button">
-            Xác nhận đổi giờ
+<button class="px-5 py-2.5 bg-primary-container text-on-primary font-label-md text-label-md font-semibold rounded-lg hover:bg-primary transition-colors shadow-sm disabled:opacity-60" disabled="@IsRescheduling" type="button" @onclick="ConfirmRescheduleAsync">
+            @(IsRescheduling ? "Đang xử lý..." : "Xác nhận đổi giờ")
           </button>
 </div>
 </div>
 </div>
 </div>
-<!-- Interactive Logic Handlers (Vanilla JavaScript) -->
-
+}
 </div></div>
-<script src="js/pages/MyAppointments.js"></script>
+
+@code {
+    private List<AppointmentDto> Appointments = new();
+    private bool IsLoading;
+    private string? ErrorMessage;
+    private string ActiveTab = "upcoming";
+    private string SearchQuery = "";
+    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Today);
+
+    private List<AppointmentDto> UpcomingAppointments => Appointments
+        .Where(a => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed or AppointmentStatus.CheckedIn or AppointmentStatus.InProgress)
+        .OrderBy(a => a.StartTime).ToList();
+    private List<AppointmentDto> CompletedAppointments => Appointments
+        .Where(a => a.Status == AppointmentStatus.Completed)
+        .OrderByDescending(a => a.StartTime).ToList();
+    private List<AppointmentDto> CancelledAppointments => Appointments
+        .Where(a => a.Status is AppointmentStatus.Cancelled or AppointmentStatus.NoShow)
+        .OrderByDescending(a => a.StartTime).ToList();
+
+    private List<AppointmentDto> FilteredUpcoming => ApplySearch(UpcomingAppointments);
+    private List<AppointmentDto> FilteredCompleted => ApplySearch(CompletedAppointments);
+    private List<AppointmentDto> FilteredCancelled => ApplySearch(CancelledAppointments);
+
+    private AppointmentDto? CancelTarget;
+    private string CancelReason = "";
+    private bool IsCancelling;
+    private string? CancelError;
+
+    private AppointmentDto? RescheduleTarget;
+    private DateOnly RescheduleDate = Today;
+    private readonly List<DateOnly> RescheduleDateStrip = Enumerable.Range(0, 7).Select(i => Today.AddDays(i)).ToList();
+    private List<SlotDto> RescheduleSlots = new();
+    private TimeOnly? RescheduleSlot;
+    private bool IsLoadingRescheduleSlots;
+    private bool IsRescheduling;
+    private string? RescheduleError;
+
+    protected override async Task OnInitializedAsync() => await LoadAppointmentsAsync();
+
+    private async Task LoadAppointmentsAsync()
+    {
+        IsLoading = true;
+        try
+        {
+            var result = await Api.GetAsync<PagedResult<AppointmentDto>>("api/appointments?pageSize=100");
+            Appointments = result.Items.ToList();
+        }
+        catch (ApiException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private List<AppointmentDto> ApplySearch(List<AppointmentDto> source) =>
+        string.IsNullOrWhiteSpace(SearchQuery)
+            ? source
+            : source.Where(a =>
+                (a.AppointmentCode ?? "").Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                a.DoctorName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private static bool CanModify(AppointmentDto appt) => appt.StartTime - DateTime.Now > TimeSpan.FromHours(2);
+
+    private void OpenCancelModal(AppointmentDto appt)
+    {
+        CancelTarget = appt;
+        CancelReason = "";
+        CancelError = null;
+    }
+
+    private async Task ConfirmCancelAsync()
+    {
+        if (CancelTarget is null)
+            return;
+        if (string.IsNullOrWhiteSpace(CancelReason))
+        {
+            CancelError = "Vui lòng cung cấp lý do để phòng khám ghi nhận hồ sơ.";
+            return;
+        }
+
+        IsCancelling = true;
+        try
+        {
+            await Api.PatchAsync<CancelAppointmentRequest, AppointmentDto>(
+                $"api/appointments/{CancelTarget.Id}/cancel", new CancelAppointmentRequest(CancelReason));
+            CancelTarget = null;
+            await LoadAppointmentsAsync();
+        }
+        catch (ApiException ex)
+        {
+            CancelError = ex.Message;
+        }
+        finally
+        {
+            IsCancelling = false;
+        }
+    }
+
+    private async Task OpenRescheduleModalAsync(AppointmentDto appt)
+    {
+        RescheduleTarget = appt;
+        RescheduleDate = Today;
+        RescheduleSlot = null;
+        RescheduleError = null;
+        await LoadRescheduleSlotsAsync();
+    }
+
+    private async Task SelectRescheduleDateAsync(DateOnly date)
+    {
+        RescheduleDate = date;
+        await LoadRescheduleSlotsAsync();
+    }
+
+    private async Task LoadRescheduleSlotsAsync()
+    {
+        if (RescheduleTarget is null)
+            return;
+
+        IsLoadingRescheduleSlots = true;
+        RescheduleSlot = null;
+        try
+        {
+            RescheduleSlots = await Api.GetAsync<List<SlotDto>>(
+                $"api/doctors/{RescheduleTarget.DoctorId}/available-slots?date={RescheduleDate:yyyy-MM-dd}");
+        }
+        catch (ApiException ex)
+        {
+            RescheduleError = ex.Message;
+        }
+        finally
+        {
+            IsLoadingRescheduleSlots = false;
+        }
+    }
+
+    private async Task ConfirmRescheduleAsync()
+    {
+        if (RescheduleTarget is null || RescheduleSlot is null)
+        {
+            RescheduleError = "Vui lòng chọn khung giờ mới.";
+            return;
+        }
+
+        IsRescheduling = true;
+        try
+        {
+            await Api.PatchAsync<RescheduleAppointmentRequest, AppointmentDto>(
+                $"api/appointments/{RescheduleTarget.Id}/reschedule",
+                new RescheduleAppointmentRequest(RescheduleDate.ToDateTime(RescheduleSlot.Value)));
+            RescheduleTarget = null;
+            await LoadAppointmentsAsync();
+        }
+        catch (ApiException ex)
+        {
+            RescheduleError = ex.Message;
+        }
+        finally
+        {
+            IsRescheduling = false;
+        }
+    }
+
+    private static string WeekdayLabel(DateTime date) => date.DayOfWeek switch
+    {
+        DayOfWeek.Sunday => "Chủ nhật",
+        DayOfWeek.Monday => "Thứ 2",
+        DayOfWeek.Tuesday => "Thứ 3",
+        DayOfWeek.Wednesday => "Thứ 4",
+        DayOfWeek.Thursday => "Thứ 5",
+        DayOfWeek.Friday => "Thứ 6",
+        _ => "Thứ 7",
+    };
+
+    private static string Initials(string fullName)
+    {
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 0 ? "?" : parts[^1][..1].ToUpperInvariant();
+    }
+
+    private static RenderFragment RenderStatusPill(AppointmentStatus status) => builder =>
+    {
+        var (classes, label) = status switch
+        {
+            AppointmentStatus.Pending => ("bg-amber-50 text-amber-800 ring-1 ring-amber-200", "Chờ xác nhận"),
+            AppointmentStatus.Confirmed => ("bg-blue-50 text-blue-800 ring-1 ring-blue-200", "Đã xác nhận"),
+            AppointmentStatus.CheckedIn => ("bg-blue-50 text-blue-800 ring-1 ring-blue-200", "Đã check-in"),
+            AppointmentStatus.InProgress => ("bg-blue-50 text-blue-800 ring-1 ring-blue-200", "Đang khám"),
+            AppointmentStatus.Completed => ("bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200", "Hoàn thành"),
+            AppointmentStatus.Cancelled => ("bg-rose-50 text-rose-800 ring-1 ring-rose-200", "Đã huỷ"),
+            AppointmentStatus.NoShow => ("bg-rose-50 text-rose-800 ring-1 ring-rose-200", "Không đến khám"),
+            _ => ("bg-surface-container-high text-on-surface-variant", status.ToString()),
+        };
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", $"inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide {classes}");
+        builder.AddContent(2, label);
+        builder.CloseElement();
+    };
+
+    private static RenderFragment RenderEmptyState(string title, string description) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "p-12 text-center flex flex-col items-center justify-center");
+        builder.OpenElement(2, "div");
+        builder.AddAttribute(3, "class", "w-20 h-20 rounded-full bg-primary-fixed/50 flex items-center justify-center text-primary mb-4 shadow-inner");
+        builder.OpenElement(4, "span");
+        builder.AddAttribute(5, "class", "material-symbols-outlined text-[40px]");
+        builder.AddContent(6, "calendar_month");
+        builder.CloseElement();
+        builder.CloseElement();
+        builder.OpenElement(7, "h3");
+        builder.AddAttribute(8, "class", "font-headline-sm text-headline-sm text-on-surface font-bold mb-2");
+        builder.AddContent(9, title);
+        builder.CloseElement();
+        builder.OpenElement(10, "p");
+        builder.AddAttribute(11, "class", "font-body-md text-body-md text-on-surface-variant max-w-md mb-2");
+        builder.AddContent(12, description);
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+}
